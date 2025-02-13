@@ -15,7 +15,7 @@
 #include "headers.h"
 
 #include "time.h"
-// #include <DS1307RTC.h>
+// old #include <DS1307RTC.h>
 
 File myFile;
 
@@ -30,7 +30,6 @@ const int Analogpin2 = 33;
 Surveyor_pH pH = Surveyor_pH(Analogpin);
 #endif
 Surveyor_RTD RTD = Surveyor_RTD(Analogpin2);
-
 
 uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
