@@ -15,11 +15,7 @@
 #include "headers.h"
 
 #include "time.h"
-<<<<<<< HEAD
 // new #include <DS1307RTC.h>
-=======
-// old #include <DS1307RTC.h>
->>>>>>> 72c2332da0d48dd7c0481332fe412850d6592262
 
 File myFile;
 
