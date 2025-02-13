@@ -432,7 +432,7 @@ void loop()
   // Serial.println(RTD.read_RTD_temp_F());
   // RTD.read_RTD_temp_C()
   delay(500);
-
+#ifndef DISABLE_API_REQUEST
   if (counter == 0 || ((millis() - lastTime) > delayTime))
   {
     display.fillTriangle(106, 49, 121, 54, 106, 58, 1);
@@ -512,4 +512,5 @@ void loop()
       LogData(requestBody);
     }
   }
+#endif
 }

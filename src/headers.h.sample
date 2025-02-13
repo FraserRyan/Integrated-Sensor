@@ -24,6 +24,8 @@ const int   daylightOffset_sec = 3600;
 /* 
     Server Information
 */
+// Uncomment the following line if you do not want to make API requests to the server below
+// #define DISABLE_API_REQUEST 
 String hostname = "IPADDRESS:PORT"; //IP ADDRESS and port (if needed) of your server.
 String envDataRequestURL = "http://" + hostname + String("/api/addEnvRecord"); 
 // Change to https if needed.  adjust api endpoint path as needed
