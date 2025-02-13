@@ -27,3 +27,8 @@ const int   daylightOffset_sec = 3600;
 String hostname = "IPADDRESS:PORT"; //IP ADDRESS and port (if needed) of your server.
 String envDataRequestURL = "http://" + hostname + String("/api/addEnvRecord"); 
 // Change to https if needed.  adjust api endpoint path as needed
+
+
+// API Key and ID for server above
+String apiId = "";
+String apiKey = "";
