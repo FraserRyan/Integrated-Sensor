@@ -31,9 +31,6 @@ Surveyor_pH pH = Surveyor_pH(Analogpin);
 #endif
 Surveyor_RTD RTD = Surveyor_RTD(Analogpin2);
 
-// const char* ntpServer = "pool.ntp.org";
-// const long  gmtOffset_sec = -60*60*5;
-// const int   daylightOffset_sec = 3600;
 
 uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
