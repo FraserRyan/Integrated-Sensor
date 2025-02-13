@@ -5,18 +5,25 @@
 */
 int delayTime = 5 * 1000;
 
-/* Calibration for temperature sensor*/
+/* 
+    Calibration for temperature sensor
+*/
 int calibration_ = -2;
 
 // WiFi SSID and password
 const char* ssid = "";
 const char* password = "";
 
-
+/* 
+    NTP settings
+*/
 const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = -60*60*5;
+const long  gmtOffset_sec = -60*60*5; // this is your timezone offset in seconds
 const int   daylightOffset_sec = 3600;
 
-
-String hostname = "IPADDRESS:PORT";
-String envDataRequestURL = "http://" + hostname + String("/api/addEnvRecord");
+/* 
+    Server Information
+*/
+String hostname = "IPADDRESS:PORT"; //IP ADDRESS and port (if needed) of your server.
+String envDataRequestURL = "http://" + hostname + String("/api/addEnvRecord"); 
+// Change to https if needed.  adjust api endpoint path as needed
