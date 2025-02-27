@@ -1,5 +1,3 @@
-
-#include "rtd_surveyor.h"
 #include <WiFi.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -26,10 +24,8 @@ Surveyor_pH_Isolated pH = Surveyor_pH_Isolated(A0);
 #include "ph_surveyor.h"
 const int Analogpin = 34;
 const int Custom_Temp_Analogpin = 35;
-const int Analogpin2 = 33;
 Surveyor_pH pH = Surveyor_pH(Analogpin);
 #endif
-Surveyor_RTD RTD = Surveyor_RTD(Analogpin2);
 
 uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
@@ -39,29 +35,7 @@ char user_data[bufferlen];
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-void parse_cmd(char *string)
-{
-  strupr(string);
-  String cmd = String(string);
-  if (cmd.startsWith("CAL"))
-  {
-    int index = cmd.indexOf(',');
-    if (index != -1)
-    {
-      String param = cmd.substring(index + 1, cmd.length());
-      if (param.equals("CLEAR"))
-      {
-        RTD.cal_clear();
-        Serial.println("CALIBRATION CLEARED");
-      }
-      else
-      {
-        RTD.cal(param.toFloat());
-        Serial.println("RTD CALIBRATED");
-      }
-    }
-  }
-}
+
 
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
 {
@@ -193,8 +167,7 @@ double tempData;
 
 void LogData(String requestBody)
 {
-  pHData = pH.read_ph();
-  tempData = RTD.read_RTD_temp_F();
+  pHData = pH.read_ph(); // I think this pH data isnt even required because the pH sensor data gets passed through the requestBody 
   //  readFile(SD, "/Environmental_Data.txt");
 
   myFile = SD.open("/Environmental_Data.txt", FILE_APPEND);
@@ -321,12 +294,6 @@ void setup()
 {
 
   Serial.begin(115200);
-
-  Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
-  if (RTD.begin())
-  {
-    Serial.println("Loaded EEPROM");
-  }
   Serial.println(WiFi.macAddress());
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -376,23 +343,9 @@ int counter = 0;
 void loop()
 {
 
-  if (Serial.available() > 0)
-  {
-    user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
-  }
-
-  if (user_bytes_received)
-  {
-    parse_cmd(user_data);
-    user_bytes_received = 0;
-    memset(user_data, 0, sizeof(user_data));
-  }
-
   double reading = analogRead(35);
   float voltage = reading * (3.3 / 4096.0);
   float temperatureC = (voltage - 0.5) * 100;
-
-  // Serial.println("Temperature: " + String(RTD.read_RTD_temp_F()));
   Serial.println("Voltage operated: " + String(reading));
   // Serial.println("New Raw Temperature Custom: " + String(analogRead(35)));
   Serial.print(temperatureC);
@@ -410,7 +363,6 @@ void loop()
   display.print("Temperature: ");
   display.setTextSize(2);
   display.setCursor(0, 10);
-  // display.print(String(RTD.read_RTD_temp_F())); // Atlas Scientific Temperature Sensor
   display.print(String(temperatureF));
 
   display.print(" ");
@@ -428,9 +380,6 @@ void loop()
   display.print(String(pH.read_ph()));
   display.print(" ");
   display.display();
-  // Uncomment for readings in F
-  // Serial.println(RTD.read_RTD_temp_F());
-  // RTD.read_RTD_temp_C()
   delay(500);
 #ifndef DISABLE_API_REQUEST
   if (counter == 0 || ((millis() - lastTime) > delayTime))
@@ -487,8 +436,6 @@ void loop()
 
     String requestBody = "{\"unitNumber\":\"";
 
-    // temperatureF
-    // String(RTD.read_RTD_temp_F()) - Atlas scientific read temp
     requestBody += String(1) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"id\": \"" + apiId + String("\",\"key\": \"") + apiKey + String("\"");
