@@ -43,7 +43,7 @@ void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
 
   File root = fs.open(dirname);
   if (!root)
-  {
+  { 
     Serial.println("Failed to open directory");
     return;
   }
