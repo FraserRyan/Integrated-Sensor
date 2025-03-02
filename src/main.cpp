@@ -22,8 +22,8 @@ File myFile;
 Surveyor_pH_Isolated pH = Surveyor_pH_Isolated(A0);
 #else
 #include "ph_surveyor.h"
-const int Analogpin = 34;
-const int Custom_Temp_Analogpin = 35;
+const int Analogpin = 10;
+const int Custom_Temp_Analogpin = 18;
 Surveyor_pH pH = Surveyor_pH(Analogpin);
 #endif
 
