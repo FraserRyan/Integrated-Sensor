@@ -24,9 +24,9 @@ File myFile;
 Surveyor_pH_Isolated pH = Surveyor_pH_Isolated(A0);
 #else
 #include "ph_surveyor.h"
-const int Analogpin = 34;
-const int Custom_Temp_Analogpin = 35;
-const int Analogpin2 = 33;
+const int Analogpin = 10;
+const int Custom_Temp_Analogpin = 18;
+const int Analogpin2 = 11;
 Surveyor_pH pH = Surveyor_pH(Analogpin);
 #endif
 Surveyor_RTD RTD = Surveyor_RTD(Analogpin2);
@@ -388,7 +388,7 @@ void loop()
     memset(user_data, 0, sizeof(user_data));
   }
 
-  double reading = analogRead(35);
+  double reading = analogRead(Custom_Temp_Analogpin);
   float voltage = reading * (3.3 / 4096.0);
   float temperatureC = (voltage - 0.5) * 100;
 
