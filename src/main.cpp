@@ -30,6 +30,9 @@ uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
+#define SDA_PIN 38
+#define SCL_PIN 39
+
 // Moved to headers.h, but to support older versions before this was moved.
 #ifndef SCREEN_WIDTH
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -293,6 +296,9 @@ void printLocalTime()
 
 void setup()
 {
+
+  Wire.begin(SDA_PIN, SCL_PIN);
+
   pinMode(LED12, OUTPUT);
   pinMode(LED13, OUTPUT);
   pinMode(LED14, OUTPUT);
