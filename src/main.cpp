@@ -459,7 +459,7 @@ void loop()
 
     String requestBody = "{\"unitNumber\":\"";
 
-    requestBody += String(1) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
+    requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"id\": \"" + apiId + String("\",\"key\": \"") + apiKey + String("\"");
     requestBody += "}";
