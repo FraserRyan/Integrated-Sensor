@@ -353,14 +353,14 @@ void loop()
   digitalWrite(LED16, HIGH); // turn the LED on (HIGH is the voltage level)
   digitalWrite(LED17, HIGH); // turn the LED on (HIGH is the voltage level)
 
-  delay(300); // wait for a second
+  delay(300); // wait for a moment
   digitalWrite(LED12, LOW);
   digitalWrite(LED13, LOW);
   digitalWrite(LED14, LOW);
   digitalWrite(LED15, LOW);
   digitalWrite(LED16, LOW);
   digitalWrite(LED17, LOW);
-  delay(300); // wait for a second
+  delay(300); // wait for a moment
 
   double reading = analogRead(temp_Pin);
   float voltage = reading * (3.3 / 4096.0);
