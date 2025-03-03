@@ -30,8 +30,12 @@ uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
+// Moved to headers.h, but to support older versions before this was moved.
+#ifndef SCREEN_WIDTH
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#endif
+
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels)

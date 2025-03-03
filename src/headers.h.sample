@@ -44,3 +44,6 @@ const int LED14 = 14;
 const int LED15 = 15;
 const int LED16 = 16;
 const int LED17 = 17;
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
