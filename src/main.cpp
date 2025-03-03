@@ -23,16 +23,7 @@ Surveyor_pH_Isolated pH = Surveyor_pH_Isolated(A0);
 #else
 #include "ph_surveyor.h"
 
-const int LED12 = 12;
-const int LED13 = 13;
-const int LED14 = 14;
-const int LED15 = 15;
-const int LED16 = 16;
-const int LED17 = 17;
-
-const int Analogpin = 10;
-const int Custom_Temp_Analogpin = 18;
-Surveyor_pH pH = Surveyor_pH(Analogpin);
+Surveyor_pH pH = Surveyor_pH(pH_Pin);
 #endif
 
 uint8_t user_bytes_received = 0;
@@ -49,7 +40,7 @@ void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
 
   File root = fs.open(dirname);
   if (!root)
-  { 
+  {
     Serial.println("Failed to open directory");
     return;
   }
@@ -355,27 +346,27 @@ int counter = 0;
 void loop()
 {
 
-  digitalWrite(LED12, HIGH);  // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED13, HIGH);  // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED14, HIGH);  // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED15, HIGH);  // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED16, HIGH);  // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED17, HIGH);  // turn the LED on (HIGH is the voltage level)
+  digitalWrite(LED12, HIGH); // turn the LED on (HIGH is the voltage level)
+  digitalWrite(LED13, HIGH); // turn the LED on (HIGH is the voltage level)
+  digitalWrite(LED14, HIGH); // turn the LED on (HIGH is the voltage level)
+  digitalWrite(LED15, HIGH); // turn the LED on (HIGH is the voltage level)
+  digitalWrite(LED16, HIGH); // turn the LED on (HIGH is the voltage level)
+  digitalWrite(LED17, HIGH); // turn the LED on (HIGH is the voltage level)
 
-  delay(300);                      // wait for a second
+  delay(300); // wait for a second
   digitalWrite(LED12, LOW);
   digitalWrite(LED13, LOW);
   digitalWrite(LED14, LOW);
   digitalWrite(LED15, LOW);
   digitalWrite(LED16, LOW);
   digitalWrite(LED17, LOW);
-  delay(300);                      // wait for a second
+  delay(300); // wait for a second
 
-  double reading = analogRead(Custom_Temp_Analogpin);
+  double reading = analogRead(temp_Pin);
   float voltage = reading * (3.3 / 4096.0);
   float temperatureC = (voltage - 0.5) * 100;
-  //Serial.println("Voltage operated: " + String(reading));
-  //Serial.println("New Raw Temperature Custom: " + String(analogRead(Custom_Temp_Analogpin)));
+  // Serial.println("Voltage operated: " + String(reading));
+  // Serial.println("New Raw Temperature Custom: " + String(analogRead(Custom_Temp_Analogpin)));
   Serial.print(temperatureC);
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.print("C  |  ");
@@ -408,8 +399,6 @@ void loop()
   display.print(String(pH.read_ph()));
   display.print(" ");
   display.display();
-  
-
 
 #ifndef DISABLE_API_REQUEST
   if (counter == 0 || ((millis() - lastTime) > delayTime))
@@ -422,7 +411,6 @@ void loop()
     Serial.print("Loop counter: ");
     Serial.println(++counter);
 
-    
     float average = temperatureF;
 
     http.begin(client, envDataRequestURL.c_str());
