@@ -10,6 +10,9 @@
 #include <SD.h>
 #include "FS.h"
 
+#include "SD_MMC.h" // Include SD_MMC for SDIO this is going to be the first approach with the SD card the function 
+
+
 #include "headers.h"
 
 #include "time.h"
@@ -23,6 +26,12 @@ Surveyor_pH_Isolated pH = Surveyor_pH_Isolated(A0);
 #else
 #include "ph_surveyor.h"
 
+#define SD_CS_PIN 5 // Example: Using GPIO5 for CS
+#define SD_CARD_DETECT_PIN 3 // Example: Using GPIO3 for card detect
+
+
+
+
 Surveyor_pH pH = Surveyor_pH(pH_Pin);
 #endif
 
@@ -30,8 +39,6 @@ uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
-#define SDA_PIN 38
-#define SCL_PIN 39
 
 // Moved to headers.h, but to support older versions before this was moved.
 #ifndef SCREEN_WIDTH
@@ -296,6 +303,19 @@ void printLocalTime()
 
 void setup()
 {
+
+// For SD card Experimental: these pins havent actually been configured in the header yet
+
+// This function is a bool so I dont know if I have to put true as a parameter or instead of SD_MMC 
+SD_MMC.setPins(
+  SD_MMC_CLK_PIN,
+  SD_MMC_CMD_PIN,
+  SD_MMC_DAT0_PIN,
+  SD_MMC_DAT1_PIN,
+  SD_MMC_DAT2_PIN,
+  SD_MMC_DAT3_PIN
+);
+
 
   Wire.begin(SDA_PIN, SCL_PIN);
 
