@@ -9,6 +9,14 @@
 */
 int delayTime = 5 * 1000;
 
+
+#define SD_MMC_DAT1_PIN   1 // Placeholder - Replace with correct definition
+#define SD_MMC_DAT0_PIN   2 // Placeholder - Replace with correct definition
+#define SD_MMC_CMD_PIN    7 // Placeholder - Replace with correct definition
+#define SD_MMC_DAT2_PIN   9 // Placeholder - Replace with correct definition
+#define SD_MMC_DAT3_PIN   8 // Placeholder - Replace with correct definition
+#define SD_MMC_CLK_PIN    5 // Placeholder - Replace with correct definition
+
 /* 
     Calibration for temperature sensor
 */
@@ -51,3 +59,6 @@ const int LED17 = 17;
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+#define SDA_PIN 38
+#define SCL_PIN 39
