@@ -3,45 +3,42 @@
 
 #define UNIT_NUMBER 1
 
-
-/* 
+/*
     How often to send an API request
 */
 int delayTime = 5 * 1000;
 
+#define SD_MMC_DAT1_PIN 1 // Placeholder - Replace with correct definition
+#define SD_MMC_DAT0_PIN 2 // Placeholder - Replace with correct definition
+#define SD_MMC_CMD_PIN 7  // Placeholder - Replace with correct definition
+#define SD_MMC_DAT2_PIN 9 // Placeholder - Replace with correct definition
+#define SD_MMC_DAT3_PIN 8 // Placeholder - Replace with correct definition
+#define SD_MMC_CLK_PIN 5  // Placeholder - Replace with correct definition
 
-#define SD_MMC_DAT1_PIN   1 // Placeholder - Replace with correct definition
-#define SD_MMC_DAT0_PIN   2 // Placeholder - Replace with correct definition
-#define SD_MMC_CMD_PIN    7 // Placeholder - Replace with correct definition
-#define SD_MMC_DAT2_PIN   9 // Placeholder - Replace with correct definition
-#define SD_MMC_DAT3_PIN   8 // Placeholder - Replace with correct definition
-#define SD_MMC_CLK_PIN    5 // Placeholder - Replace with correct definition
-
-/* 
+/*
     Calibration for temperature sensor
 */
 int calibration_ = -2;
 
 // WiFi SSID and password
-const char* ssid = "";
-const char* password = "";
+const char *ssid = "";
+const char *password = "";
 
-/* 
+/*
     NTP settings
 */
-const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = -60*60*5; // this is your timezone offset in seconds
-const int   daylightOffset_sec = 3600;
+const char *ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = -60 * 60 * 5; // this is your timezone offset in seconds
+const int daylightOffset_sec = 3600;
 
-/* 
+/*
     Server Information
 */
 // Uncomment the following line if you do not want to make API requests to the server below
-// #define DISABLE_API_REQUEST 
-String hostname = "IPADDRESS:PORT"; //IP ADDRESS and port (if needed) of your server.
-String envDataRequestURL = "http://" + hostname + String("/api/addEnvRecord"); 
+// #define DISABLE_API_REQUEST
+String hostname = "IPADDRESS:PORT"; // IP ADDRESS and port (if needed) of your server.
+String envDataRequestURL = "http://" + hostname + String("/api/addEnvRecord");
 // Change to https if needed.  adjust api endpoint path as needed
-
 
 // API Key and ID for server above
 String apiId = "";
