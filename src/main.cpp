@@ -423,6 +423,7 @@ void loop()
       Serial.println("Button held for WM, starting config portal");
       display.clearDisplay();
       display.setCursor(0, 0);
+      display.setTextSize(1);
       String AP_Name = "ESP_UNIT_";
       AP_Name += String(UNIT_NUMBER);
       display.println("Starting Configuration. Join WiFi:");
