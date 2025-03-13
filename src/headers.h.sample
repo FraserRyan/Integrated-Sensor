@@ -59,3 +59,5 @@ const int LED17 = 17;
 
 #define SDA_PIN 38
 #define SCL_PIN 39
+
+#define WIFIMANAGER_TRIGGER_PIN 0

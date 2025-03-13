@@ -3,6 +3,10 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Arduino.h>
+#include <WiFiManager.h>
+int wifiManagerTimeout = 120; // in seconds
+
+WiFiManager wm;
 
 #include <HTTPClient.h>
 #include <Arduino_JSON.h>
@@ -10,8 +14,7 @@
 #include <SD.h>
 #include "FS.h"
 
-#include "SD_MMC.h" // Include SD_MMC for SDIO this is going to be the first approach with the SD card the function 
-
+#include "SD_MMC.h" // Include SD_MMC for SDIO this is going to be the first approach with the SD card the function
 
 #include "headers.h"
 
@@ -26,11 +29,8 @@ Surveyor_pH_Isolated pH = Surveyor_pH_Isolated(A0);
 #else
 #include "ph_surveyor.h"
 
-#define SD_CS_PIN 5 // Example: Using GPIO5 for CS
+#define SD_CS_PIN 5          // Example: Using GPIO5 for CS
 #define SD_CARD_DETECT_PIN 3 // Example: Using GPIO3 for card detect
-
-
-
 
 Surveyor_pH pH = Surveyor_pH(pH_Pin);
 #endif
@@ -39,12 +39,13 @@ uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
-
 // Moved to headers.h, but to support older versions before this was moved.
 #ifndef SCREEN_WIDTH
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #endif
+
+// void useWiFiManager();
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
@@ -304,18 +305,16 @@ void printLocalTime()
 void setup()
 {
 
-// For SD card Experimental: these pins havent actually been configured in the header yet
+  // For SD card Experimental: these pins havent actually been configured in the header yet
 
-// This function is a bool so I dont know if I have to put true as a parameter or instead of SD_MMC 
-SD_MMC.setPins(
-  SD_MMC_CLK_PIN,
-  SD_MMC_CMD_PIN,
-  SD_MMC_DAT0_PIN,
-  SD_MMC_DAT1_PIN,
-  SD_MMC_DAT2_PIN,
-  SD_MMC_DAT3_PIN
-);
-
+  // This function is a bool so I dont know if I have to put true as a parameter or instead of SD_MMC
+  SD_MMC.setPins(
+      SD_MMC_CLK_PIN,
+      SD_MMC_CMD_PIN,
+      SD_MMC_DAT0_PIN,
+      SD_MMC_DAT1_PIN,
+      SD_MMC_DAT2_PIN,
+      SD_MMC_DAT3_PIN);
 
   Wire.begin(SDA_PIN, SCL_PIN);
 
@@ -327,36 +326,73 @@ SD_MMC.setPins(
   pinMode(LED17, OUTPUT);
 
   Serial.begin(115200);
-  Serial.println(WiFi.macAddress());
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi ..");
-  int wait_time = 0;
-  while ((WiFi.status() != WL_CONNECTED) && (wait_time < 10))
-  {
-    Serial.print('.');
-    delay(500);
-    wait_time++;
-    if (wait_time > 18)
-    {
-      Serial.print("WiFi Failed to connect.");
-    }
-    // Serial.print(wait_time);
-  }
-  Serial.println(WiFi.localIP());
-  // This will get and print the time
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  printLocalTime();
 
+  Serial.println(WiFi.macAddress());
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
       ;
   }
-  delay(2000);
-  display.clearDisplay();
+
+  WiFi.mode(WIFI_STA);
+  // Serial.println("1");
+  // WiFi.begin(ssid, password);
+  // Serial.println("2");
   display.setTextColor(WHITE);
+  // Serial.println("3");
+  display.clearDisplay();
+  // Serial.println("4");
+  display.display();
+  // Serial.println("5");
+  display.setCursor(0, 0);
+  display.println(WiFi.macAddress());
+  if (wm.getWiFiIsSaved())
+  {
+
+    // {
+
+    display.println("Connecting to previously saved WiFi network:");
+    display.println(wm.getWiFiSSID());
+    display.display();
+    WiFi.begin(wm.getWiFiSSID(), wm.getWiFiPass());
+    // WiFi.begin(ssid, password);
+
+    Serial.print("Connecting to Saved WiFi ..");
+    int wait_time = 0;
+    while ((WiFi.status() != WL_CONNECTED) && (wait_time < 10))
+    {
+      Serial.print('.');
+      display.print(".");
+      display.display();
+      delay(500);
+      wait_time++;
+      if (wait_time > 18)
+      {
+        Serial.print("WiFi Failed to connect.");
+        display.println();
+        display.println("WiFi failed to Connect.\nPress the BOOT button for 3 seconds to start the config.");
+        display.display();
+      }
+      // Serial.print(wait_time);
+    }
+    Serial.println(WiFi.localIP());
+    display.println(WiFi.localIP());
+    display.display();
+  }
+  else
+  {
+    display.println("No WiFi saved.");
+    display.println("Press the BOOT button for 3 seconds to start the config.");
+    display.display();
+  }
+  // This will get and print the time
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
+  printLocalTime();
+
+  delay(3000);
+  display.clearDisplay();
 
   SD.begin();
   // File file = SD.open("/Environmental_Data.txt");
@@ -366,6 +402,7 @@ SD_MMC.setPins(
   //   // return;
   // }
   // file.close();
+  pinMode(WIFIMANAGER_TRIGGER_PIN, INPUT_PULLUP);
 }
 
 unsigned int lastTime = 0;
@@ -373,9 +410,37 @@ unsigned int lastTime = 0;
 
 int counter = 0;
 
+int button_held_wifi_manager = 0;
 void loop()
 {
 
+  if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
+  { // button pressed
+    // nneds to be held for 3 seconds
+    delay(3000);
+    if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
+    {
+      Serial.println("Button held for WM, starting config portal");
+      display.clearDisplay();
+      display.setCursor(0, 0);
+      String AP_Name = "ESP_UNIT_";
+      AP_Name += String(UNIT_NUMBER);
+      display.println("Starting Configuration. Join WiFi:");
+      display.println(AP_Name);
+      display.println("fa9s8dS7d92J");
+      display.println("And go to 192.168.4.1");
+      display.display();
+      wm.setConfigPortalTimeout(wifiManagerTimeout);
+
+      if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
+      {
+        Serial.println("failed to connect or hit timeout");
+        display.clearDisplay();
+        display.setCursor(0, 0);
+        display.println("Failed to get configuration.");
+      }
+    }
+  }
   digitalWrite(LED12, HIGH); // turn the LED on (HIGH is the voltage level)
   digitalWrite(LED13, HIGH); // turn the LED on (HIGH is the voltage level)
   digitalWrite(LED14, HIGH); // turn the LED on (HIGH is the voltage level)
