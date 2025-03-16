@@ -5,9 +5,14 @@
 #include <Arduino.h>
 #include <WiFiManager.h>
 #include <WiFiClientSecure.h>
+#include <Preferences.h>
 int wifiManagerTimeout = 120; // in seconds
 
 WiFiManager wm;
+
+Preferences config;
+int UNIT_NUMBER;
+WiFiManagerParameter unit_number_param("unit_number", "Unit Number", String(UNIT_NUMBER).c_str(), 4);
 
 #include <HTTPClient.h>
 #include <Arduino_JSON.h>
@@ -61,6 +66,7 @@ void deleteFile(fs::FS &fs, const char *path);
 void testFileIO(fs::FS &fs, const char *path);
 void printLocalTime();
 void IRAM_ATTR startOnDemandWiFiManager();
+void saveWMConfig();
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
@@ -77,6 +83,12 @@ void setup()
       SD_MMC_DAT1_PIN,
       SD_MMC_DAT2_PIN,
       SD_MMC_DAT3_PIN);
+
+  config.begin("config");
+  // strcpy(UNIT_NUMBER, config.getString("UNIT_NUMBER", "0").c_str());
+  UNIT_NUMBER = config.getInt("unit_number", 0);
+  // UNIT_NUMBER = config.getString("UNIT_NUMBER", "0");
+  config.end();
 
   Wire.begin(SDA_PIN, SCL_PIN);
 
@@ -166,6 +178,7 @@ void setup()
   // file.close();
   pinMode(WIFIMANAGER_TRIGGER_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(WIFIMANAGER_TRIGGER_PIN), startOnDemandWiFiManager, FALLING);
+  wm.addParameter(&unit_number_param);
 }
 
 unsigned int lastTime = 0;
@@ -176,6 +189,7 @@ int counter = 0;
 int onDemandManagerTrigger = false;
 
 int button_held_wifi_manager = 0;
+
 void loop()
 {
   if (onDemandManagerTrigger == true)
@@ -187,6 +201,7 @@ void loop()
     // delay(3000);
     // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
     // {
+    config.begin("config");
     display.setTextSize(1);
     Serial.println("Button held for WM, starting config portal");
     display.clearDisplay();
@@ -201,14 +216,21 @@ void loop()
     display.display();
     // wm.setConfigPortalBlocking(false);
     wm.setConfigPortalTimeout(wifiManagerTimeout);
+    wm.setBreakAfterConfig(true);
+    wm.setSaveConfigCallback(saveWMConfig);
 
+       // char unit_number_test[3] = "2";
+
+    // config.end();
     if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
     {
-      Serial.println("failed to connect or hit timeout");
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.println("Failed to get configuration.");
+      // Serial.println("failed to connect or hit timeout");
+      // display.clearDisplay();
+      // display.setCursor(0, 0);
+      // display.println("Failed to get configuration.");
     }
+    // UNIT_NUMBER = atoi(unit_number_param.getValue());
+    // config.end();
   }
   digitalWrite(LED12, HIGH); // turn the LED on (HIGH is the voltage level)
   digitalWrite(LED13, HIGH); // turn the LED on (HIGH is the voltage level)
@@ -383,6 +405,15 @@ void IRAM_ATTR startOnDemandWiFiManager()
   // }
   // }
 }
+
+void saveWMConfig()
+{
+  config.begin("config");
+  UNIT_NUMBER = atoi(unit_number_param.getValue());
+  config.putInt("unit_number", UNIT_NUMBER);
+  config.end();
+}
+
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
 {
   Serial.printf("Listing directory: %s\n", dirname);
