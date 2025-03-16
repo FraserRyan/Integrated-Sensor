@@ -60,6 +60,7 @@ void renameFile(fs::FS &fs, const char *path1, const char *path2);
 void deleteFile(fs::FS &fs, const char *path);
 void testFileIO(fs::FS &fs, const char *path);
 void printLocalTime();
+void IRAM_ATTR startOnDemandWiFiManager();
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
@@ -164,6 +165,7 @@ void setup()
   // }
   // file.close();
   pinMode(WIFIMANAGER_TRIGGER_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(WIFIMANAGER_TRIGGER_PIN), startOnDemandWiFiManager, FALLING);
 }
 
 unsigned int lastTime = 0;
@@ -171,37 +173,41 @@ unsigned int lastTime = 0;
 
 int counter = 0;
 
+int onDemandManagerTrigger = false;
+
 int button_held_wifi_manager = 0;
 void loop()
 {
-
-  if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
-  { // button pressed
+  if (onDemandManagerTrigger == true)
+  {
+    onDemandManagerTrigger == false;
+    // { // button pressed
     // nneds to be held for 3 seconds
-    delay(3000);
-    if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
+
+    // delay(3000);
+    // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
+    // {
+    display.setTextSize(1);
+    Serial.println("Button held for WM, starting config portal");
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(1);
+    String AP_Name = "ESP_UNIT_";
+    AP_Name += String(UNIT_NUMBER);
+    display.println("Starting Configuration. Join WiFi:");
+    display.println(AP_Name);
+    display.println("fa9s8dS7d92J");
+    display.println("And go to 192.168.4.1");
+    display.display();
+    // wm.setConfigPortalBlocking(false);
+    wm.setConfigPortalTimeout(wifiManagerTimeout);
+
+    if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
     {
-      display.setTextSize(1);
-      Serial.println("Button held for WM, starting config portal");
+      Serial.println("failed to connect or hit timeout");
       display.clearDisplay();
       display.setCursor(0, 0);
-      display.setTextSize(1);
-      String AP_Name = "ESP_UNIT_";
-      AP_Name += String(UNIT_NUMBER);
-      display.println("Starting Configuration. Join WiFi:");
-      display.println(AP_Name);
-      display.println("fa9s8dS7d92J");
-      display.println("And go to 192.168.4.1");
-      display.display();
-      wm.setConfigPortalTimeout(wifiManagerTimeout);
-
-      if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
-      {
-        Serial.println("failed to connect or hit timeout");
-        display.clearDisplay();
-        display.setCursor(0, 0);
-        display.println("Failed to get configuration.");
-      }
+      display.println("Failed to get configuration.");
     }
   }
   digitalWrite(LED12, HIGH); // turn the LED on (HIGH is the voltage level)
@@ -340,6 +346,43 @@ void loop()
 #endif
 }
 
+void IRAM_ATTR startOnDemandWiFiManager()
+{
+  Serial.println("Interrupt started");
+  onDemandManagerTrigger = true;
+  return;
+  // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
+  // { // button pressed
+  // nneds to be held for 3 seconds
+
+  // delay(3000);
+  // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
+  // {
+  display.setTextSize(1);
+  Serial.println("Button held for WM, starting config portal");
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.setTextSize(1);
+  String AP_Name = "ESP_UNIT_";
+  AP_Name += String(UNIT_NUMBER);
+  display.println("Starting Configuration. Join WiFi:");
+  display.println(AP_Name);
+  display.println("fa9s8dS7d92J");
+  display.println("And go to 192.168.4.1");
+  display.display();
+  wm.setConfigPortalBlocking(false);
+  wm.setConfigPortalTimeout(wifiManagerTimeout);
+
+  if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
+  {
+    Serial.println("failed to connect or hit timeout");
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("Failed to get configuration.");
+  }
+  // }
+  // }
+}
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
 {
   Serial.printf("Listing directory: %s\n", dirname);
