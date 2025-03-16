@@ -302,6 +302,9 @@ void loop()
   display.setCursor(0, 45);
   display.print(String(pH.read_ph()));
   display.print(" ");
+
+  Serial.print(WiFi.RSSI());
+
   display.display();
 
 #ifndef DISABLE_API_REQUEST
