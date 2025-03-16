@@ -13,6 +13,10 @@ WiFiManager wm;
 Preferences config;
 int UNIT_NUMBER;
 WiFiManagerParameter unit_number_param("unit_number", "Unit Number", String(UNIT_NUMBER).c_str(), 4);
+// String apiId, apiKey;
+char apiId[40], apiKey[40];
+WiFiManagerParameter api_id_param("api_id", "API ID", apiId, 40);
+WiFiManagerParameter api_key_param("api_key", "API Key", apiKey, 40);
 
 #include <HTTPClient.h>
 #include <Arduino_JSON.h>
@@ -87,6 +91,8 @@ void setup()
   config.begin("config");
   // strcpy(UNIT_NUMBER, config.getString("UNIT_NUMBER", "0").c_str());
   UNIT_NUMBER = config.getInt("unit_number", 0);
+  strcpy(apiKey, config.getString("api_key", "").c_str());
+  strcpy(apiId, config.getString("api_id", "").c_str());
   // UNIT_NUMBER = config.getString("UNIT_NUMBER", "0");
   config.end();
 
@@ -177,8 +183,10 @@ void setup()
   // }
   // file.close();
   pinMode(WIFIMANAGER_TRIGGER_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(WIFIMANAGER_TRIGGER_PIN), startOnDemandWiFiManager, FALLING);
+  attachInterrupt(digitalPinToInterrupt(WIFIMANAGER_TRIGGER_PIN), startOnDemandWiFiManager, RISING);
   wm.addParameter(&unit_number_param);
+  wm.addParameter(&api_id_param);
+  wm.addParameter(&api_key_param);
 }
 
 unsigned int lastTime = 0;
@@ -187,13 +195,23 @@ unsigned int lastTime = 0;
 int counter = 0;
 
 int onDemandManagerTrigger = false;
-
+int lastButtonPress = 0;
+int didLastManager = 0;
 int button_held_wifi_manager = 0;
 
 void loop()
 {
   if (onDemandManagerTrigger == true)
   {
+    if (millis() < didLastManager)
+    {
+      Serial.println("too soon");
+      didLastManager = 0;
+      onDemandManagerTrigger = false;
+      return;
+    }
+    Serial.println("In trigger code");
+    didLastManager = millis() + 5000 + (wifiManagerTimeout * 1000);
     onDemandManagerTrigger == false;
     // { // button pressed
     // nneds to be held for 3 seconds
@@ -219,7 +237,7 @@ void loop()
     wm.setBreakAfterConfig(true);
     wm.setSaveConfigCallback(saveWMConfig);
 
-       // char unit_number_test[3] = "2";
+    // char unit_number_test[3] = "2";
 
     // config.end();
     if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
@@ -287,7 +305,8 @@ void loop()
   display.display();
 
 #ifndef DISABLE_API_REQUEST
-  if (counter == 0 || ((millis() - lastTime) > delayTime))
+  Serial.println(apiId);
+  if ((counter == 0 || ((millis() - lastTime) > delayTime)) && UNIT_NUMBER != 0 && strcmp(apiId, "") != 0 && strcmp(apiKey, "") != 0)
   {
     display.fillTriangle(106, 49, 121, 54, 106, 58, 1);
     display.display();
@@ -344,7 +363,7 @@ void loop()
 
     requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
-    requestBody += ",\"id\": \"" + apiId + String("\",\"key\": \"") + apiKey + String("\"");
+    requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
 
     Serial.println("Request Body:");
@@ -372,6 +391,7 @@ void IRAM_ATTR startOnDemandWiFiManager()
 {
   Serial.println("Interrupt started");
   onDemandManagerTrigger = true;
+  lastButtonPress = millis();
   return;
   // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
   // { // button pressed
@@ -394,6 +414,9 @@ void IRAM_ATTR startOnDemandWiFiManager()
   display.display();
   wm.setConfigPortalBlocking(false);
   wm.setConfigPortalTimeout(wifiManagerTimeout);
+  api_id_param.setValue(apiId, 40);
+  api_key_param.setValue(apiKey, 40);
+  unit_number_param.setValue(String(UNIT_NUMBER).c_str(), 4);
 
   if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
   {
@@ -409,9 +432,17 @@ void IRAM_ATTR startOnDemandWiFiManager()
 void saveWMConfig()
 {
   config.begin("config");
+
   UNIT_NUMBER = atoi(unit_number_param.getValue());
   config.putInt("unit_number", UNIT_NUMBER);
+
+  strcpy(apiId, api_id_param.getValue());
+  config.putString("api_id", apiId);
+  strcpy(apiKey, api_key_param.getValue());
+  config.putString("api_key", apiKey);
+
   config.end();
+  Serial.println("config saved");
 }
 
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels)

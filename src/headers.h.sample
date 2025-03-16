@@ -41,8 +41,8 @@ String envDataRequestURL = "https://" + hostname + String("/api/addEnvRecord");
 // Change to https if needed.  adjust api endpoint path as needed
 
 // API Key and ID for server above
-String apiId = "";
-String apiKey = "";
+//String apiId = "";
+//String apiKey = "";
 
 const int pH_Pin = 10;
 const int temp_Pin = 18;
