@@ -10,3 +10,4 @@
 
 src/*.txt
 src/headers.h
+*.crt

@@ -4,6 +4,7 @@
 #include <Adafruit_SSD1306.h>
 #include <Arduino.h>
 #include <WiFiManager.h>
+#include <WiFiClientSecure.h>
 int wifiManagerTimeout = 120; // in seconds
 
 WiFiManager wm;
@@ -503,7 +504,8 @@ void loop()
     display.fillTriangle(106, 49, 121, 54, 106, 58, 1);
     display.display();
     HTTPClient http;
-    WiFiClient client;
+    WiFiClientSecure client;
+    client.setCACert(root_ca);
 
     Serial.print("Loop counter: ");
     Serial.println(++counter);
