@@ -205,12 +205,12 @@ void loop()
   {
     if (millis() < didLastManager)
     {
-      Serial.println("too soon");
+      // Serial.println("too soon");
       didLastManager = 0;
       onDemandManagerTrigger = false;
       return;
     }
-    Serial.println("In trigger code");
+    // Serial.println("In trigger code");
     didLastManager = millis() + 5000 + (wifiManagerTimeout * 1000);
     onDemandManagerTrigger == false;
     // { // button pressed
@@ -305,7 +305,7 @@ void loop()
   display.display();
 
 #ifndef DISABLE_API_REQUEST
-  Serial.println(apiId);
+  // Serial.println(apiId);
   if ((counter == 0 || ((millis() - lastTime) > delayTime)) && UNIT_NUMBER != 0 && strcmp(apiId, "") != 0 && strcmp(apiKey, "") != 0)
   {
     display.fillTriangle(106, 49, 121, 54, 106, 58, 1);
