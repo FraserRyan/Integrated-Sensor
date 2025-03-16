@@ -420,6 +420,7 @@ void loop()
     delay(3000);
     if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
     {
+      display.setTextSize(1);
       Serial.println("Button held for WM, starting config portal");
       display.clearDisplay();
       display.setCursor(0, 0);
