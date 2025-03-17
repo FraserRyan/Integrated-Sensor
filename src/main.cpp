@@ -305,9 +305,16 @@ void loop()
   display.setTextSize(2);
   display.setCursor(0, 45);
   display.print(String(pH.read_ph()));
-  display.print(" ");
+  display.println(" ");
 
-  Serial.print(WiFi.RSSI());
+  Serial.print(" RSSI: ");
+  Serial.println(WiFi.RSSI());
+  display.setCursor(100, 44);
+  display.setTextSize(1);
+  display.println("RSSI");
+  display.setCursor(82, 54);
+  display.print(WiFi.RSSI());
+  display.print("dBm");
 
   display.display();
 
@@ -315,7 +322,7 @@ void loop()
   // Serial.println(apiId);
   if ((counter == 0 || ((millis() - lastTime) > delayTime)) && UNIT_NUMBER != 0 && strcmp(apiId, "") != 0 && strcmp(apiKey, "") != 0)
   {
-    display.fillTriangle(106, 49, 121, 54, 106, 58, 1);
+    display.fillTriangle(106, 10, 121, 15, 106, 23, 1);
     display.display();
     HTTPClient http;
     WiFiClientSecure client;
@@ -383,7 +390,7 @@ void loop()
     lastTime = millis();
     if (httpResponseCode == 200)
     {
-      display.fillTriangle(106, 49, 121, 54, 106, 58, 0);
+      display.fillTriangle(106, 10, 121, 15, 106, 23, 0);
       display.display();
     }
     else
