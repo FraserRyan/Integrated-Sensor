@@ -64,3 +64,8 @@ const int LED17 = 17;
 
 static const char *root_ca PROGMEM = R"EOF(-----BEGIN CERTIFICATE-----
 -----END CERTIFICATE-----)EOF";
+
+#define SD_CS     3 // Chip Select trying to connect to CMD pin on sd card
+#define SD_MOSI   4   // Data In  THESE ARE PROBABLY WRONG
+#define SD_MISO   6   // Data Out THESE ARE PROBABLY WRONG
+#define SD_SCK    5   // Clock

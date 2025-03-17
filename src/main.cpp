@@ -6,6 +6,7 @@
 #include <WiFiManager.h>
 #include <WiFiClientSecure.h>
 #include <Preferences.h>
+#include <SPI.h>
 int wifiManagerTimeout = 120; // in seconds
 
 WiFiManager wm;
@@ -77,16 +78,19 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 void setup()
 {
 
+  //setPins(clk, cmd, d0);
+  //setPins(int clk, int cmd, int d0, int d1, int d2, int d3));
+
   // For SD card Experimental: these pins havent actually been configured in the header yet
 
   // This function is a bool so I dont know if I have to put true as a parameter or instead of SD_MMC
-  SD_MMC.setPins(
-      SD_MMC_CLK_PIN,
-      SD_MMC_CMD_PIN,
-      SD_MMC_DAT0_PIN,
-      SD_MMC_DAT1_PIN,
-      SD_MMC_DAT2_PIN,
-      SD_MMC_DAT3_PIN);
+  // SD_MMC.setPins(
+  //     SD_MMC_CLK_PIN,
+  //     SD_MMC_CMD_PIN,
+  //     SD_MMC_DAT0_PIN,
+  //     SD_MMC_DAT1_PIN,
+  //     SD_MMC_DAT2_PIN,
+  //     SD_MMC_DAT3_PIN);
 
   config.begin("config");
   // strcpy(UNIT_NUMBER, config.getString("UNIT_NUMBER", "0").c_str());
