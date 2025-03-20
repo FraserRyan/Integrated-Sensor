@@ -304,7 +304,9 @@ void loop()
   display.print("pH: ");
   display.setTextSize(2);
   display.setCursor(0, 45);
-  display.print(String(pH.read_ph()));
+  // Here is where I want to test the voltage from the GPIO10 pH pin with a function like this:
+  // float(analogRead(pH_Pin)
+  display.print(String(float(analogRead(pH_Pin))));
   display.println(" ");
 
   Serial.print(" RSSI: ");
