@@ -72,12 +72,14 @@ void testFileIO(fs::FS &fs, const char *path);
 void printLocalTime();
 void IRAM_ATTR startOnDemandWiFiManager();
 void saveWMConfig();
+float getAverageReading(int pin, int numSamples);
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void setup()
 {
-
+  analogSetPinAttenuation(temp_Pin, ADC_0db);
+  analogReadResolution(12); // To make sure the ADC has 12 bit resolution
   //setPins(clk, cmd, d0);
   //setPins(int clk, int cmd, int d0, int d1, int d2, int d3));
 
@@ -270,16 +272,22 @@ void loop()
   digitalWrite(LED17, LOW);
   delay(300); // wait for a moment
 
-  double reading = analogRead(temp_Pin);
-  float voltage = reading * (3.3 / 4096.0);
+  //double reading = analogRead(temp_Pin);
+
+  //For normal ADC
+  //float voltage = reading * (3.3 / 4095.0);
+  float reading = getAverageReading(temp_Pin,20);
+  // For ADC_0db
+  float voltage = reading * (1.1 / 4095.0); 
   float temperatureC = (voltage - 0.5) * 100;
+
   // Serial.println("Voltage operated: " + String(reading));
   // Serial.println("New Raw Temperature Custom: " + String(analogRead(Custom_Temp_Analogpin)));
-  Serial.print(temperatureC);
+  Serial.print(temperatureC, 2);
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.print("C  |  ");
   float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
-  Serial.print(temperatureF);
+  Serial.print(temperatureF,2);
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.println("F");
   // Serial.println("pH: "          + String(pH.read_ph()));
@@ -400,6 +408,16 @@ void loop()
   }
 #endif
 }
+
+float getAverageReading(int pin, int numSamples) {
+  float sum = 0;
+  for (int i = 0; i < numSamples; i++) {
+      sum += analogRead(pin);
+      delayMicroseconds(500); // Small delay for stability
+  }
+  return sum / numSamples;
+}
+
 
 void IRAM_ATTR startOnDemandWiFiManager()
 {
