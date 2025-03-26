@@ -1,12 +1,17 @@
+#include <Arduino.h>
 #include <WiFi.h>
-#include <Wire.h>
+#include "rtd_surveyor.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <Arduino.h>
 #include <WiFiManager.h>
 #include <WiFiClientSecure.h>
 #include <Preferences.h>
-#include <SPI.h>
+#include <HTTPClient.h>
+#include <Arduino_JSON.h>
+#include "headers.h"
+#include "time.h"
+#include "ph_surveyor.h"
+
 int wifiManagerTimeout = 120; // in seconds
 
 WiFiManager wm;
@@ -19,99 +24,35 @@ char apiId[40], apiKey[40];
 WiFiManagerParameter api_id_param("api_id", "API ID", apiId, 40);
 WiFiManagerParameter api_key_param("api_key", "API Key", apiKey, 40);
 
-#include <HTTPClient.h>
-#include <Arduino_JSON.h>
-#include <SPI.h>
-#include <SD.h>
-#include "FS.h"
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-#include "SD_MMC.h" // Include SD_MMC for SDIO this is going to be the first approach with the SD card the function
 
-#include "headers.h"
 
-#include "time.h"
-// new #include <DS1307RTC.h>
-
-File myFile;
-
-#ifdef USE_PULSE_OUT
-#include "ph_iso_surveyor.h"
-Surveyor_pH_Isolated pH = Surveyor_pH_Isolated(A0);
-#else
-#include "ph_surveyor.h"
-
-#define SD_CS_PIN 5          // Example: Using GPIO5 for CS
-#define SD_CARD_DETECT_PIN 3 // Example: Using GPIO3 for card detect
-
+Surveyor_RTD RTD = Surveyor_RTD(A1_temp_Pin);
 Surveyor_pH pH = Surveyor_pH(pH_Pin);
-#endif
 
 uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
-// Moved to headers.h, but to support older versions before this was moved.
-#ifndef SCREEN_WIDTH
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#endif
-
-// void useWiFiManager();
-void listDir(fs::FS &fs, const char *dirname, uint8_t levels);
-void createDir(fs::FS &fs, const char *path);
-void removeDir(fs::FS &fs, const char *path);
-void readFile(fs::FS &fs, const char *path);
-void writeFile(fs::FS &fs, const char *path, const char *message);
-void appendFile(fs::FS &fs, const char *path, const char *message);
-void LogData(String requestBody);
-double pHData;
-double tempData;
-void renameFile(fs::FS &fs, const char *path1, const char *path2);
-void deleteFile(fs::FS &fs, const char *path);
-void testFileIO(fs::FS &fs, const char *path);
+void parse_cmd(char* string);
 void printLocalTime();
-void IRAM_ATTR startOnDemandWiFiManager();
+void startOnDemandWiFiManager();
 void saveWMConfig();
-float getAverageReading(int pin, int numSamples);
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
-void setup()
-{
-  analogSetPinAttenuation(temp_Pin, ADC_0db);
-  analogReadResolution(12); // To make sure the ADC has 12 bit resolution
-  //setPins(clk, cmd, d0);
-  //setPins(int clk, int cmd, int d0, int d1, int d2, int d3));
-
-  // For SD card Experimental: these pins havent actually been configured in the header yet
-
-  // This function is a bool so I dont know if I have to put true as a parameter or instead of SD_MMC
-  // SD_MMC.setPins(
-  //     SD_MMC_CLK_PIN,
-  //     SD_MMC_CMD_PIN,
-  //     SD_MMC_DAT0_PIN,
-  //     SD_MMC_DAT1_PIN,
-  //     SD_MMC_DAT2_PIN,
-  //     SD_MMC_DAT3_PIN);
-
+void setup() {
   config.begin("config");
-  // strcpy(UNIT_NUMBER, config.getString("UNIT_NUMBER", "0").c_str());
   UNIT_NUMBER = config.getInt("unit_number", 0);
   strcpy(apiKey, config.getString("api_key", "").c_str());
   strcpy(apiId, config.getString("api_id", "").c_str());
-  // UNIT_NUMBER = config.getString("UNIT_NUMBER", "0");
   config.end();
-
   Wire.begin(SDA_PIN, SCL_PIN);
 
-  pinMode(LED12, OUTPUT);
-  pinMode(LED13, OUTPUT);
-  pinMode(LED14, OUTPUT);
-  pinMode(LED15, OUTPUT);
-  pinMode(LED16, OUTPUT);
-  pinMode(LED17, OUTPUT);
-
   Serial.begin(115200);
+  Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
+  if(RTD.begin()){
+    Serial.println("Loaded EEPROM");
+  }
 
   Serial.println(WiFi.macAddress());
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
@@ -122,28 +63,17 @@ void setup()
   }
 
   WiFi.mode(WIFI_STA);
-  // Serial.println("1");
-  // WiFi.begin(ssid, password);
-  // Serial.println("2");
   display.setTextColor(WHITE);
-  // Serial.println("3");
   display.clearDisplay();
-  // Serial.println("4");
   display.display();
-  // Serial.println("5");
   display.setCursor(0, 0);
   display.println(WiFi.macAddress());
   if (wm.getWiFiIsSaved())
   {
-
-    // {
-
     display.println("Connecting to previously saved WiFi network:");
     display.println(wm.getWiFiSSID());
     display.display();
     WiFi.begin(wm.getWiFiSSID(), wm.getWiFiPass());
-    // WiFi.begin(ssid, password);
-
     Serial.print("Connecting to Saved WiFi ..");
     int wait_time = 0;
     while ((WiFi.status() != WL_CONNECTED) && (wait_time < 10))
@@ -172,7 +102,6 @@ void setup()
     display.println("Press the BOOT button for 3 seconds to start the config.");
     display.display();
   }
-  // This will get and print the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   printLocalTime();
@@ -180,23 +109,13 @@ void setup()
   delay(3000);
   display.clearDisplay();
 
-  SD.begin();
-  // File file = SD.open("/Environmental_Data.txt");
-  // if (!file) {
-  //   writeFile(SD, "Environmental_Data.txt","DATA:");
-  //   // Serial.println("Failed to open file for reading");
-  //   // return;
-  // }
-  // file.close();
   pinMode(WIFIMANAGER_TRIGGER_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(WIFIMANAGER_TRIGGER_PIN), startOnDemandWiFiManager, RISING);
   wm.addParameter(&unit_number_param);
   wm.addParameter(&api_id_param);
   wm.addParameter(&api_key_param);
 }
-
 unsigned int lastTime = 0;
-// int delayTime = 45 * 1000;
 
 int counter = 0;
 
@@ -205,8 +124,23 @@ int lastButtonPress = 0;
 int didLastManager = 0;
 int button_held_wifi_manager = 0;
 
-void loop()
-{
+void loop() {
+
+  if (Serial.available() > 0) {
+    user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
+  }
+
+  if (user_bytes_received) {
+    parse_cmd(user_data);
+    user_bytes_received = 0;
+    memset(user_data, 0, sizeof(user_data));
+  }
+  
+  //Serial.println(RTD.read_RTD_temp_C());
+  
+  //uncomment for readings in F
+  //Serial.println(RTD.read_RTD_temp_F()); 
+  delay(500);
   if (onDemandManagerTrigger == true)
   {
     if (millis() < didLastManager)
@@ -238,23 +172,14 @@ void loop()
     display.println("fa9s8dS7d92J");
     display.println("And go to 192.168.4.1");
     display.display();
-    // wm.setConfigPortalBlocking(false);
     wm.setConfigPortalTimeout(wifiManagerTimeout);
     wm.setBreakAfterConfig(true);
     wm.setSaveConfigCallback(saveWMConfig);
 
-    // char unit_number_test[3] = "2";
-
-    // config.end();
     if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
     {
-      // Serial.println("failed to connect or hit timeout");
-      // display.clearDisplay();
-      // display.setCursor(0, 0);
-      // display.println("Failed to get configuration.");
     }
-    // UNIT_NUMBER = atoi(unit_number_param.getValue());
-    // config.end();
+
   }
   digitalWrite(LED12, HIGH); // turn the LED on (HIGH is the voltage level)
   digitalWrite(LED13, HIGH); // turn the LED on (HIGH is the voltage level)
@@ -271,26 +196,7 @@ void loop()
   digitalWrite(LED16, LOW);
   digitalWrite(LED17, LOW);
   delay(300); // wait for a moment
-
-  //double reading = analogRead(temp_Pin);
-
-  //For normal ADC
-  //float voltage = reading * (3.3 / 4095.0);
-  float reading = getAverageReading(temp_Pin,20);
-  // For ADC_0db
-  float voltage = reading * (1.1 / 4095.0); 
-  float temperatureC = (voltage - 0.5) * 100;
-
-  // Serial.println("Voltage operated: " + String(reading));
-  // Serial.println("New Raw Temperature Custom: " + String(analogRead(Custom_Temp_Analogpin)));
-  Serial.print(temperatureC, 2);
-  Serial.print("\xC2\xB0"); // shows degree symbol
-  Serial.print("C  |  ");
-  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
-  Serial.print(temperatureF,2);
-  Serial.print("\xC2\xB0"); // shows degree symbol
-  Serial.println("F");
-  // Serial.println("pH: "          + String(pH.read_ph()));
+  float temperatureF = RTD.read_RTD_temp_F();
   display.clearDisplay();
   // temperature Display on OLED
   display.setTextSize(1);
@@ -316,7 +222,14 @@ void loop()
   display.println(" ");
 
   Serial.print(" RSSI: ");
-  Serial.println(WiFi.RSSI());
+  Serial.print(WiFi.RSSI());
+  Serial.println("dBm");
+  Serial.print(temperatureF);
+  Serial.print("\xC2\xB0"); // shows degree symbol
+  Serial.println("F");
+  Serial.print("pH: ");
+  Serial.println(pH.read_ph());
+
   display.setCursor(100, 44);
   display.setTextSize(1);
   display.println("RSSI");
@@ -403,21 +316,66 @@ void loop()
     }
     else
     {
-      LogData(requestBody);
+      //LogData(requestBody);
     }
   }
 #endif
+
 }
 
-float getAverageReading(int pin, int numSamples) {
-  float sum = 0;
-  for (int i = 0; i < numSamples; i++) {
-      sum += analogRead(pin);
-      delayMicroseconds(500); // Small delay for stability
+void parse_cmd(char* string) {
+  strupr(string);
+  String cmd = String(string);
+  if(cmd.startsWith("CAL")){
+    int index = cmd.indexOf(',');
+    if(index != -1){
+      String param = cmd.substring(index+1, cmd.length());
+      if(param.equals("CLEAR")){
+        RTD.cal_clear();
+        Serial.println("CALIBRATION CLEARED");
+      }else {
+        RTD.cal(param.toFloat());
+        Serial.println("RTD CALIBRATED");
+      }
+    }
   }
-  return sum / numSamples;
 }
 
+void printLocalTime()
+{
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo))
+  {
+    Serial.println("Failed to obtain time");
+    return;
+  }
+  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+  Serial.print("Day of week: ");
+  Serial.println();
+  Serial.print("Month: ");
+  Serial.println(&timeinfo, "%B");
+  Serial.print("Day of Month: ");
+  Serial.println(&timeinfo, "%d");
+  Serial.print("Year: ");
+  Serial.println(&timeinfo, "%Y");
+  Serial.print("Hour: ");
+  Serial.println(&timeinfo, "%H");
+  Serial.print("Hour (12 hour format): ");
+  Serial.println(&timeinfo, "%I");
+  Serial.print("Minute: ");
+  Serial.println(&timeinfo, "%M");
+  Serial.print("Second: ");
+  Serial.println(&timeinfo, "%S");
+
+  Serial.println("Time variables");
+  char timeHour[3];
+  strftime(timeHour, 3, "%H", &timeinfo);
+  Serial.println(timeHour);
+  char timeWeekDay[10];
+  strftime(timeWeekDay, 10, "%A", &timeinfo);
+  Serial.println(timeWeekDay);
+  Serial.println();
+}
 
 void IRAM_ATTR startOnDemandWiFiManager()
 {
@@ -425,13 +383,6 @@ void IRAM_ATTR startOnDemandWiFiManager()
   onDemandManagerTrigger = true;
   lastButtonPress = millis();
   return;
-  // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
-  // { // button pressed
-  // nneds to be held for 3 seconds
-
-  // delay(3000);
-  // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
-  // {
   display.setTextSize(1);
   Serial.println("Button held for WM, starting config portal");
   display.clearDisplay();
@@ -475,255 +426,4 @@ void saveWMConfig()
 
   config.end();
   Serial.println("config saved");
-}
-
-void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
-{
-  Serial.printf("Listing directory: %s\n", dirname);
-
-  File root = fs.open(dirname);
-  if (!root)
-  {
-    Serial.println("Failed to open directory");
-    return;
-  }
-  if (!root.isDirectory())
-  {
-    Serial.println("Not a directory");
-    return;
-  }
-
-  File file = root.openNextFile();
-  while (file)
-  {
-    if (file.isDirectory())
-    {
-      Serial.print("  DIR : ");
-      Serial.println(file.name());
-      if (levels)
-      {
-        listDir(fs, file.path(), levels - 1);
-      }
-    }
-    else
-    {
-      Serial.print("  FILE: ");
-      Serial.print(file.name());
-      Serial.print("  SIZE: ");
-      Serial.println(file.size());
-    }
-    file = root.openNextFile();
-  }
-}
-
-void createDir(fs::FS &fs, const char *path)
-{
-  Serial.printf("Creating Dir: %s\n", path);
-  if (fs.mkdir(path))
-  {
-    Serial.println("Dir created");
-  }
-  else
-  {
-    Serial.println("mkdir failed");
-  }
-}
-
-void removeDir(fs::FS &fs, const char *path)
-{
-  Serial.printf("Removing Dir: %s\n", path);
-  if (fs.rmdir(path))
-  {
-    Serial.println("Dir removed");
-  }
-  else
-  {
-    Serial.println("rmdir failed");
-  }
-}
-
-void readFile(fs::FS &fs, const char *path)
-{
-  Serial.printf("Reading file: %s\n", path);
-
-  File file = fs.open(path);
-  if (!file)
-  {
-    Serial.println("Failed to open file for reading");
-    return;
-  }
-
-  Serial.print("Read from file: ");
-  while (file.available())
-  {
-    Serial.write(file.read());
-  }
-  file.close();
-}
-
-void writeFile(fs::FS &fs, const char *path, const char *message)
-{
-  Serial.printf("Writing file: %s\n", path);
-
-  File file = fs.open(path, FILE_WRITE);
-  if (!file)
-  {
-    Serial.println("Failed to open file for writing");
-    return;
-  }
-  if (file.print("Environmental Data:\n"))
-  {
-    Serial.println("File written");
-  }
-  else
-  {
-    Serial.println("Write failed");
-  }
-  file.close();
-}
-
-void appendFile(fs::FS &fs, const char *path, const char *message)
-{
-  Serial.printf("Appending to file: %s\n", path);
-
-  File file = fs.open(path, FILE_APPEND);
-  if (!file)
-  {
-    Serial.println("Failed to open file for appending");
-    return;
-  }
-  if (file.print(message))
-  {
-    Serial.println("Message appended");
-  }
-  else
-  {
-    Serial.println("Append failed");
-  }
-  file.close();
-}
-
-void LogData(String requestBody)
-{
-  pHData = pH.read_ph(); // I think this pH data isnt even required because the pH sensor data gets passed through the requestBody
-  //  readFile(SD, "/Environmental_Data.txt");
-
-  myFile = SD.open("/Environmental_Data.txt", FILE_APPEND);
-  if (myFile)
-  {
-    Serial.println("File opened with sucess");
-    myFile.println(requestBody);
-  }
-  myFile.close();
-}
-
-void renameFile(fs::FS &fs, const char *path1, const char *path2)
-{
-  Serial.printf("Renaming file %s to %s\n", path1, path2);
-  if (fs.rename(path1, path2))
-  {
-    Serial.println("File renamed");
-  }
-  else
-  {
-    Serial.println("Rename failed");
-  }
-}
-
-void deleteFile(fs::FS &fs, const char *path)
-{
-  Serial.printf("Deleting file: %s\n", path);
-  if (fs.remove(path))
-  {
-    Serial.println("File deleted");
-  }
-  else
-  {
-    Serial.println("Delete failed");
-  }
-}
-
-void testFileIO(fs::FS &fs, const char *path)
-{
-  File file = fs.open(path);
-  static uint8_t buf[512];
-  size_t len = 0;
-  uint32_t start = millis();
-  uint32_t end = start;
-  if (file)
-  {
-    len = file.size();
-    size_t flen = len;
-    start = millis();
-    while (len)
-    {
-      size_t toRead = len;
-      if (toRead > 512)
-      {
-        toRead = 512;
-      }
-      file.read(buf, toRead);
-      len -= toRead;
-    }
-    end = millis() - start;
-    Serial.printf("%u bytes read for %lu ms\n", flen, end);
-    file.close();
-  }
-  else
-  {
-    Serial.println("Failed to open file for reading");
-  }
-
-  file = fs.open(path, FILE_WRITE);
-  if (!file)
-  {
-    Serial.println("Failed to open file for writing");
-    return;
-  }
-
-  size_t i;
-  start = millis();
-  for (i = 0; i < 2048; i++)
-  {
-    file.write(buf, 512);
-  }
-  end = millis() - start;
-  Serial.printf("%u bytes written for %lu ms\n", 2048 * 512, end);
-  file.close();
-}
-
-void printLocalTime()
-{
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo))
-  {
-    Serial.println("Failed to obtain time");
-    return;
-  }
-  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-  Serial.print("Day of week: ");
-  Serial.println();
-  Serial.print("Month: ");
-  Serial.println(&timeinfo, "%B");
-  Serial.print("Day of Month: ");
-  Serial.println(&timeinfo, "%d");
-  Serial.print("Year: ");
-  Serial.println(&timeinfo, "%Y");
-  Serial.print("Hour: ");
-  Serial.println(&timeinfo, "%H");
-  Serial.print("Hour (12 hour format): ");
-  Serial.println(&timeinfo, "%I");
-  Serial.print("Minute: ");
-  Serial.println(&timeinfo, "%M");
-  Serial.print("Second: ");
-  Serial.println(&timeinfo, "%S");
-
-  Serial.println("Time variables");
-  char timeHour[3];
-  strftime(timeHour, 3, "%H", &timeinfo);
-  Serial.println(timeHour);
-  char timeWeekDay[10];
-  strftime(timeWeekDay, 10, "%A", &timeinfo);
-  Serial.println(timeWeekDay);
-  Serial.println();
 }
