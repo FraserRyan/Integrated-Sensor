@@ -15,10 +15,7 @@
 #include <Ezo_i2c.h>
 
 void step1();  //forward declarations of functions to use them in the sequencer before defining them
-
 Ezo_board EC = Ezo_board(100, "EC");      //create an EC circuit object who's address is 100 and name is "EC"
-
-
 Sequencer1 Seq(&step1, 1000);  
 
 
