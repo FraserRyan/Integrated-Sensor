@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include "rtd_surveyor.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <WiFiManager.h>
@@ -11,6 +10,7 @@
 #include "headers.h"
 #include "time.h"
 #include "ph_surveyor.h"
+#include "rtd_surveyor.h"
 
 int wifiManagerTimeout = 120; // in seconds
 
@@ -181,21 +181,7 @@ void loop() {
     }
 
   }
-  digitalWrite(LED12, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED13, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED14, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED15, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED16, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED17, HIGH); // turn the LED on (HIGH is the voltage level)
 
-  delay(300); // wait for a moment
-  digitalWrite(LED12, LOW);
-  digitalWrite(LED13, LOW);
-  digitalWrite(LED14, LOW);
-  digitalWrite(LED15, LOW);
-  digitalWrite(LED16, LOW);
-  digitalWrite(LED17, LOW);
-  delay(300); // wait for a moment
   float temperatureF = RTD.read_RTD_temp_F();
   display.clearDisplay();
   // temperature Display on OLED
@@ -408,8 +394,6 @@ void IRAM_ATTR startOnDemandWiFiManager()
     display.setCursor(0, 0);
     display.println("Failed to get configuration.");
   }
-  // }
-  // }
 }
 
 void saveWMConfig()
