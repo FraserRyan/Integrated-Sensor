@@ -7,6 +7,7 @@
 #include <WiFiClientSecure.h>
 #include <Preferences.h>
 #include <SPI.h>
+#include <headers.h>
 int wifiManagerTimeout = 120; // in seconds
 
 WiFiManager wm;
@@ -76,10 +77,11 @@ float getAverageReading(int pin, int numSamples);
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
+
+
 void setup()
 {
-  analogSetPinAttenuation(temp_Pin, ADC_0db);
-  analogReadResolution(12); // To make sure the ADC has 12 bit resolution
+ // To make sure the ADC has 12 bit resolution
   //setPins(clk, cmd, d0);
   //setPins(int clk, int cmd, int d0, int d1, int d2, int d3));
 
