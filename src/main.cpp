@@ -213,7 +213,10 @@ void loop() {
     }
 
   }
+  #ifndef DISABLE_EC
   Seq.run();                    //run the sequncer to do the polling
+  #endif 
+
   float temperatureF = RTD.read_RTD_temp_F();
   display.clearDisplay();
   // temperature Display on OLED
@@ -222,7 +225,7 @@ void loop() {
   display.print("Temperature: ");
   display.setTextSize(2);
   display.setCursor(0, 10);
-  display.print(String(temperatureF));
+  display.print(temperatureF,1);
 
   display.print(" ");
   display.setTextSize(1);
@@ -236,7 +239,7 @@ void loop() {
   display.print("pH: ");
   display.setTextSize(2);
   display.setCursor(0, 45);
-  display.print(String(pH.read_ph()));
+  display.print(pH.read_ph(),1);
   display.println(" ");
 
   Serial.print(" RSSI: ");
@@ -246,14 +249,22 @@ void loop() {
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.println("F");
   Serial.print("pH: ");
-  Serial.println(pH.read_ph());
+  Serial.println(pH.read_ph(),1);
 
-  display.setCursor(100, 44);
+  // display.setCursor(100, 44);
+  // display.setTextSize(1);
+  // display.println("RSSI");
+  // display.setCursor(82, 54);
+  // display.print(WiFi.RSSI());
+  // display.print("dBm");
+
+  display.setCursor(90, 34);
   display.setTextSize(1);
-  display.println("RSSI");
-  display.setCursor(82, 54);
-  display.print(WiFi.RSSI());
-  display.print("dBm");
+  display.println("EC:");
+  display.setCursor(72, 44);
+  display.setTextSize(2);
+  display.print(EC_float/1000,1);
+  //display.print("mS/cm");
 
   display.display();
 
@@ -317,6 +328,7 @@ void loop() {
     requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"ec\":"+String(EC_float/1000);
+    //requestBody += ",\"rssi\":"+String(WiFi.RSSI());
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
 
