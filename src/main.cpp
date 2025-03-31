@@ -86,14 +86,14 @@ void setup() {
     Serial.println("Loaded EEPROM");
   }
 
-  Serial.println(WiFi.macAddress());
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
       ;
   }
-
+  #ifndef DISABLE_WIFI
+  Serial.println(WiFi.macAddress());
   WiFi.mode(WIFI_STA);
   display.setTextColor(WHITE);
   display.clearDisplay();
@@ -137,8 +137,8 @@ void setup() {
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   printLocalTime();
-
   delay(3000);
+  
   display.clearDisplay();
 
   pinMode(WIFIMANAGER_TRIGGER_PIN, INPUT_PULLUP);
@@ -146,6 +146,9 @@ void setup() {
   wm.addParameter(&unit_number_param);
   wm.addParameter(&api_id_param);
   wm.addParameter(&api_key_param);
+  #endif
+  display.setTextColor(WHITE);
+  display.clearDisplay();
 }
 unsigned int lastTime = 0;
 
@@ -172,6 +175,7 @@ void loop() {
   
   //uncomment for readings in F
   //Serial.println(RTD.read_RTD_temp_F()); 
+  #ifndef DISABLE_WIFI
   delay(500);
   if (onDemandManagerTrigger == true)
   {
@@ -213,57 +217,96 @@ void loop() {
     }
 
   }
-  #ifndef DISABLE_EC
+  #endif
+
+  #ifndef DISABLE_ATLAS_EC
   Seq.run();                    //run the sequncer to do the polling
   #endif 
 
-  float temperatureF = RTD.read_RTD_temp_F();
   display.clearDisplay();
   // temperature Display on OLED
   display.setTextSize(1);
   display.setCursor(0, 0);
-  display.print("Temperature: ");
+  display.print("TEMP: ");
   display.setTextSize(2);
   display.setCursor(0, 10);
-  display.print(temperatureF,1);
 
-  display.print(" ");
-  display.setTextSize(1);
-  display.cp437(true);
-  display.write(167);
+  #ifndef DISABLE_ATLAS_TEMP
+  float temperatureF = RTD.read_RTD_temp_F(); 
+  Serial.print(temperatureF);
+  display.print(temperatureF,1);
+  display.setTextSize(2);
+  display.print("F");  
+  #endif 
+  #ifndef DISABLE_MCP9701_TEMP
+  float sensorValue = analogRead(MCP9701_temp_Pin);
+  float voltage = sensorValue * (3.3 / 4095.0);
+  float temperatureC = (voltage - 0.5)/0.01;
+  float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
+  display.print(fahrenheit,1);
   display.setTextSize(2);
   display.print("F");
+  Serial.print(fahrenheit);
+  #endif 
+  #if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
+  display.print("-");
+  #endif
+
+  //Serial.print(temperatureF);
+  //display.print(" ");
+  //display.setTextSize(1);
+ // display.cp437(true);
+ // display.write(167);
+  //display.print(fahrenheit);
+
   // pH Display on OLED
   display.setTextSize(1);
   display.setCursor(0, 35);
   display.print("pH: ");
   display.setTextSize(2);
   display.setCursor(0, 45);
+  #ifndef DISABLE_ATLAS_pH
   display.print(pH.read_ph(),1);
+  #else 
+  display.print("-");
+  #endif
   display.println(" ");
 
   Serial.print(" RSSI: ");
   Serial.print(WiFi.RSSI());
   Serial.println("dBm");
-  Serial.print(temperatureF);
+
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.println("F");
+  #ifndef DISABLE_ATLAS_pH
   Serial.print("pH: ");
   Serial.println(pH.read_ph(),1);
+  #endif
 
-  // display.setCursor(100, 44);
-  // display.setTextSize(1);
-  // display.println("RSSI");
-  // display.setCursor(82, 54);
-  // display.print(WiFi.RSSI());
-  // display.print("dBm");
 
-  display.setCursor(90, 34);
+  // 
+  display.setTextSize(1);
+  display.setCursor(60, 0);
+  display.println("RSSI:");
+  display.setCursor(90, 0);
+  #ifndef DISABLE_WIFI
+  display.print(WiFi.RSSI());
+  display.print("dBm");
+  #else 
+  display.print("-");
+  #endif
+  
+
+  display.setCursor(72, 34);
   display.setTextSize(1);
   display.println("EC:");
   display.setCursor(72, 44);
   display.setTextSize(2);
+  #ifndef DISABLE_ATLAS_EC
   display.print(EC_float/1000,1);
+  #else
+  display.print("-");
+  #endif
   //display.print("mS/cm");
 
   display.display();
@@ -328,7 +371,7 @@ void loop() {
     requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"ec\":"+String(EC_float/1000);
-    //requestBody += ",\"rssi\":"+String(WiFi.RSSI());
+    requestBody += ",\"rssi\":"+String(WiFi.RSSI());
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
 
