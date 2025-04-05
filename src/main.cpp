@@ -16,6 +16,7 @@
 #include <Ezo_i2c.h> //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #include <Wire.h>    //include arduinos i2c library
 #include <Ezo_i2c_util.h> //brings in common print statements
+//#include <FreeMono9pt7b.h>
 
 char EC_data[32];          //we make a 32-byte character array to hold incoming data from the EC sensor.
 char *EC_str;                     //char pointer used in string parsing.
@@ -64,7 +65,23 @@ void printLocalTime();
 void startOnDemandWiFiManager();
 void saveWMConfig();
 
+#include "FreeSerifBoldItalic9pt7b.h"
+
+void updateDisplay() {
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    display.setTextSize(1);
+    display.setFont(&FreeSerifBoldItalic9pt7b);
+    display.setCursor(35, 20);
+    display.println("Ryan Fraser Josh Thaw");
+    display.display();
+    display.setFont();
+}
+
+
+
 void setup() {
+
   config.begin("config");
   UNIT_NUMBER = config.getInt("unit_number", 0);
   strcpy(apiKey, config.getString("api_key", "").c_str());
@@ -92,6 +109,10 @@ void setup() {
     for (;;)
       ;
   }
+  updateDisplay();
+  delay(2500);
+  
+
   #ifndef DISABLE_WIFI
   Serial.println(WiFi.macAddress());
   WiFi.mode(WIFI_STA);
@@ -147,6 +168,11 @@ void setup() {
   wm.addParameter(&api_id_param);
   wm.addParameter(&api_key_param);
   #endif
+  #ifdef DISABLE_WIFI
+  WiFi.mode(WIFI_MODE_NULL);
+
+  #endif
+  
   display.setTextColor(WHITE);
   display.clearDisplay();
 }
