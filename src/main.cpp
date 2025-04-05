@@ -16,6 +16,12 @@
 #include <Ezo_i2c.h> //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #include <Wire.h>    //include arduinos i2c library
 #include <Ezo_i2c_util.h> //brings in common print statements
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#define DHTPIN 15
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
 //#include <FreeMono9pt7b.h>
 
 char EC_data[32];          //we make a 32-byte character array to hold incoming data from the EC sensor.
