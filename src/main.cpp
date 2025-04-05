@@ -273,6 +273,7 @@ void loop() {
   display.setTextSize(2);
   display.print("F");
   Serial.print(fahrenheit);
+  float temperatureF = fahrenheit;
   #endif 
   #if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
   display.print("-");
@@ -350,7 +351,7 @@ void loop() {
     Serial.print("Loop counter: ");
     Serial.println(++counter);
 
-    float average = temperatureF;
+
 
     http.begin(client, envDataRequestURL.c_str());
 
