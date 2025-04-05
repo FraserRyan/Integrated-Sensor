@@ -1,12 +1,42 @@
+#include <Arduino.h>
 #include <WiFi.h>
-#include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <Arduino.h>
 #include <WiFiManager.h>
 #include <WiFiClientSecure.h>
 #include <Preferences.h>
-#include <SPI.h>
+#include <HTTPClient.h>
+#include <Arduino_JSON.h>
+#include "headers.h"
+#include "time.h"
+#include "ph_surveyor.h"
+#include "rtd_surveyor.h"
+#include <sequencer1.h>
+#include <sequencer2.h> //imports a 2 function sequencer 
+#include <Ezo_i2c.h> //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
+#include <Wire.h>    //include arduinos i2c library
+#include <Ezo_i2c_util.h> //brings in common print statements
+//#include <FreeMono9pt7b.h>
+
+char EC_data[32];          //we make a 32-byte character array to hold incoming data from the EC sensor.
+char *EC_str;                     //char pointer used in string parsing.
+char *TDS;                       //char pointer used in string parsing.
+char *SAL;                       //char pointer used in string parsing (the sensor outputs some text that we don't need).
+char *SG;                       //char pointer used in string parsing.
+
+float EC_float;               //float var used to hold the float value of the conductivity.
+float TDS_float;                 //float var used to hold the float value of the total dissolved solids.
+float SAL_float;                 //float var used to hold the float value of the salinity.
+float SG_float;                 //float var used to hold the float value of the specific gravity.
+
+
+void step1();  //forward declarations of functions to use them in the sequencer before defining them
+void step2();
+
+
+Ezo_board EC = Ezo_board(100, "EC");      //create an EC circuit object who's address is 100 and name is "EC"
+Sequencer2 Seq(&step1, 1000, &step2, 300);
+
 int wifiManagerTimeout = 120; // in seconds
 
 WiFiManager wm;
@@ -19,129 +49,84 @@ char apiId[40], apiKey[40];
 WiFiManagerParameter api_id_param("api_id", "API ID", apiId, 40);
 WiFiManagerParameter api_key_param("api_key", "API Key", apiKey, 40);
 
-#include <HTTPClient.h>
-#include <Arduino_JSON.h>
-#include <SPI.h>
-#include <SD.h>
-#include "FS.h"
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-#include "SD_MMC.h" // Include SD_MMC for SDIO this is going to be the first approach with the SD card the function
 
-#include "headers.h"
 
-#include "time.h"
-// new #include <DS1307RTC.h>
-
-File myFile;
-
-#ifdef USE_PULSE_OUT
-#include "ph_iso_surveyor.h"
-Surveyor_pH_Isolated pH = Surveyor_pH_Isolated(A0);
-#else
-#include "ph_surveyor.h"
-
-#define SD_CS_PIN 5          // Example: Using GPIO5 for CS
-#define SD_CARD_DETECT_PIN 3 // Example: Using GPIO3 for card detect
-
+Surveyor_RTD RTD = Surveyor_RTD(A1_temp_Pin);
 Surveyor_pH pH = Surveyor_pH(pH_Pin);
-#endif
 
 uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
-// Moved to headers.h, but to support older versions before this was moved.
-#ifndef SCREEN_WIDTH
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#endif
-
-// void useWiFiManager();
-void listDir(fs::FS &fs, const char *dirname, uint8_t levels);
-void createDir(fs::FS &fs, const char *path);
-void removeDir(fs::FS &fs, const char *path);
-void readFile(fs::FS &fs, const char *path);
-void writeFile(fs::FS &fs, const char *path, const char *message);
-void appendFile(fs::FS &fs, const char *path, const char *message);
-void LogData(String requestBody);
-double pHData;
-double tempData;
-void renameFile(fs::FS &fs, const char *path1, const char *path2);
-void deleteFile(fs::FS &fs, const char *path);
-void testFileIO(fs::FS &fs, const char *path);
+void parse_cmd(char* string);
 void printLocalTime();
-void IRAM_ATTR startOnDemandWiFiManager();
+void startOnDemandWiFiManager();
 void saveWMConfig();
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+#include "FreeSerifBoldItalic9pt7b.h"
 
-void setup()
-{
+void updateDisplay() {
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    display.setTextSize(1);
+    display.setFont(&FreeSerifBoldItalic9pt7b);
+    display.setCursor(35, 20);
+    display.println("Ryan Fraser Josh Thaw");
+    display.display();
+    display.setFont();
+}
 
-  //setPins(clk, cmd, d0);
-  //setPins(int clk, int cmd, int d0, int d1, int d2, int d3));
 
-  // For SD card Experimental: these pins havent actually been configured in the header yet
 
-  // This function is a bool so I dont know if I have to put true as a parameter or instead of SD_MMC
-  // SD_MMC.setPins(
-  //     SD_MMC_CLK_PIN,
-  //     SD_MMC_CMD_PIN,
-  //     SD_MMC_DAT0_PIN,
-  //     SD_MMC_DAT1_PIN,
-  //     SD_MMC_DAT2_PIN,
-  //     SD_MMC_DAT3_PIN);
+void setup() {
 
   config.begin("config");
-  // strcpy(UNIT_NUMBER, config.getString("UNIT_NUMBER", "0").c_str());
   UNIT_NUMBER = config.getInt("unit_number", 0);
   strcpy(apiKey, config.getString("api_key", "").c_str());
   strcpy(apiId, config.getString("api_id", "").c_str());
-  // UNIT_NUMBER = config.getString("UNIT_NUMBER", "0");
   config.end();
-
   Wire.begin(SDA_PIN, SCL_PIN);
-
-  pinMode(LED12, OUTPUT);
-  pinMode(LED13, OUTPUT);
-  pinMode(LED14, OUTPUT);
-  pinMode(LED15, OUTPUT);
-  pinMode(LED16, OUTPUT);
-  pinMode(LED17, OUTPUT);
+  Seq.reset();                  //initialize the sequencer
+  delay(3000);
+  EC.send_cmd("o,tds,1");        //send command to enable TDS output
+  delay(300);
+  EC.send_cmd("o,s,1");        //send command to enable salinity output
+  delay(300);
+  EC.send_cmd("o,sg,1");      //send command to enable specific gravity output
+  delay(300);
 
   Serial.begin(115200);
+  Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
+  if(RTD.begin()){
+    Serial.println("Loaded EEPROM");
+  }
 
-  Serial.println(WiFi.macAddress());
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
       ;
   }
+  updateDisplay();
+  delay(2500);
+  
 
+  #ifndef DISABLE_WIFI
+  Serial.println(WiFi.macAddress());
   WiFi.mode(WIFI_STA);
-  // Serial.println("1");
-  // WiFi.begin(ssid, password);
-  // Serial.println("2");
   display.setTextColor(WHITE);
-  // Serial.println("3");
   display.clearDisplay();
-  // Serial.println("4");
   display.display();
-  // Serial.println("5");
   display.setCursor(0, 0);
   display.println(WiFi.macAddress());
   if (wm.getWiFiIsSaved())
   {
-
-    // {
-
     display.println("Connecting to previously saved WiFi network:");
     display.println(wm.getWiFiSSID());
     display.display();
     WiFi.begin(wm.getWiFiSSID(), wm.getWiFiPass());
-    // WiFi.begin(ssid, password);
-
     Serial.print("Connecting to Saved WiFi ..");
     int wait_time = 0;
     while ((WiFi.status() != WL_CONNECTED) && (wait_time < 10))
@@ -170,31 +155,28 @@ void setup()
     display.println("Press the BOOT button for 3 seconds to start the config.");
     display.display();
   }
-  // This will get and print the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   printLocalTime();
-
   delay(3000);
+  
   display.clearDisplay();
 
-  SD.begin();
-  // File file = SD.open("/Environmental_Data.txt");
-  // if (!file) {
-  //   writeFile(SD, "Environmental_Data.txt","DATA:");
-  //   // Serial.println("Failed to open file for reading");
-  //   // return;
-  // }
-  // file.close();
   pinMode(WIFIMANAGER_TRIGGER_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(WIFIMANAGER_TRIGGER_PIN), startOnDemandWiFiManager, RISING);
   wm.addParameter(&unit_number_param);
   wm.addParameter(&api_id_param);
   wm.addParameter(&api_key_param);
-}
+  #endif
+  #ifdef DISABLE_WIFI
+  WiFi.mode(WIFI_MODE_NULL);
 
+  #endif
+  
+  display.setTextColor(WHITE);
+  display.clearDisplay();
+}
 unsigned int lastTime = 0;
-// int delayTime = 45 * 1000;
 
 int counter = 0;
 
@@ -203,8 +185,24 @@ int lastButtonPress = 0;
 int didLastManager = 0;
 int button_held_wifi_manager = 0;
 
-void loop()
-{
+void loop() {
+
+  if (Serial.available() > 0) {
+    user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
+  }
+
+  if (user_bytes_received) {
+    parse_cmd(user_data);
+    user_bytes_received = 0;
+    memset(user_data, 0, sizeof(user_data));
+  }
+  
+  //Serial.println(RTD.read_RTD_temp_C());
+  
+  //uncomment for readings in F
+  //Serial.println(RTD.read_RTD_temp_F()); 
+  #ifndef DISABLE_WIFI
+  delay(500);
   if (onDemandManagerTrigger == true)
   {
     if (millis() < didLastManager)
@@ -236,87 +234,107 @@ void loop()
     display.println("fa9s8dS7d92J");
     display.println("And go to 192.168.4.1");
     display.display();
-    // wm.setConfigPortalBlocking(false);
     wm.setConfigPortalTimeout(wifiManagerTimeout);
     wm.setBreakAfterConfig(true);
     wm.setSaveConfigCallback(saveWMConfig);
 
-    // char unit_number_test[3] = "2";
-
-    // config.end();
     if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
     {
-      // Serial.println("failed to connect or hit timeout");
-      // display.clearDisplay();
-      // display.setCursor(0, 0);
-      // display.println("Failed to get configuration.");
     }
-    // UNIT_NUMBER = atoi(unit_number_param.getValue());
-    // config.end();
+
   }
-  digitalWrite(LED12, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED13, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED14, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED15, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED16, HIGH); // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED17, HIGH); // turn the LED on (HIGH is the voltage level)
+  #endif
 
-  delay(300); // wait for a moment
-  digitalWrite(LED12, LOW);
-  digitalWrite(LED13, LOW);
-  digitalWrite(LED14, LOW);
-  digitalWrite(LED15, LOW);
-  digitalWrite(LED16, LOW);
-  digitalWrite(LED17, LOW);
-  delay(300); // wait for a moment
+  #ifndef DISABLE_ATLAS_EC
+  Seq.run();                    //run the sequncer to do the polling
+  #endif 
 
-  double reading = analogRead(temp_Pin);
-  float voltage = reading * (3.3 / 4096.0);
-  float temperatureC = (voltage - 0.5) * 100;
-  // Serial.println("Voltage operated: " + String(reading));
-  // Serial.println("New Raw Temperature Custom: " + String(analogRead(Custom_Temp_Analogpin)));
-  Serial.print(temperatureC);
-  Serial.print("\xC2\xB0"); // shows degree symbol
-  Serial.print("C  |  ");
-  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
-  Serial.print(temperatureF);
-  Serial.print("\xC2\xB0"); // shows degree symbol
-  Serial.println("F");
-  // Serial.println("pH: "          + String(pH.read_ph()));
   display.clearDisplay();
   // temperature Display on OLED
   display.setTextSize(1);
   display.setCursor(0, 0);
-  display.print("Temperature: ");
+  display.print("TEMP: ");
   display.setTextSize(2);
   display.setCursor(0, 10);
-  display.print(String(temperatureF));
 
-  display.print(" ");
-  display.setTextSize(1);
-  display.cp437(true);
-  display.write(167);
+  #ifndef DISABLE_ATLAS_TEMP
+  float temperatureF = RTD.read_RTD_temp_F(); 
+  Serial.print(temperatureF);
+  display.print(temperatureF,1);
+  display.setTextSize(2);
+  display.print("F");  
+  #endif 
+  #ifndef DISABLE_MCP9701_TEMP
+  float sensorValue = analogRead(MCP9701_temp_Pin);
+  float voltage = sensorValue * (3.3 / 4095.0);
+  float temperatureC = (voltage - 0.5)/0.01;
+  float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
+  display.print(fahrenheit,1);
   display.setTextSize(2);
   display.print("F");
+  Serial.print(fahrenheit);
+  float temperatureF = fahrenheit;
+  #endif 
+  #if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
+  display.print("-");
+  #endif
+
+  //Serial.print(temperatureF);
+  //display.print(" ");
+  //display.setTextSize(1);
+ // display.cp437(true);
+ // display.write(167);
+  //display.print(fahrenheit);
+
   // pH Display on OLED
   display.setTextSize(1);
   display.setCursor(0, 35);
   display.print("pH: ");
   display.setTextSize(2);
   display.setCursor(0, 45);
-  // Here is where I want to test the voltage from the GPIO10 pH pin with a function like this:
-  // float(analogRead(pH_Pin)
-  display.print(String(float(analogRead(pH_Pin))));
+  #ifndef DISABLE_ATLAS_pH
+  display.print(pH.read_ph(),1);
+  #else 
+  display.print("-");
+  #endif
   display.println(" ");
 
   Serial.print(" RSSI: ");
-  Serial.println(WiFi.RSSI());
-  display.setCursor(100, 44);
+  Serial.print(WiFi.RSSI());
+  Serial.println("dBm");
+
+  Serial.print("\xC2\xB0"); // shows degree symbol
+  Serial.println("F");
+  #ifndef DISABLE_ATLAS_pH
+  Serial.print("pH: ");
+  Serial.println(pH.read_ph(),1);
+  #endif
+
+
+  // 
   display.setTextSize(1);
-  display.println("RSSI");
-  display.setCursor(82, 54);
+  display.setCursor(60, 0);
+  display.println("RSSI:");
+  display.setCursor(90, 0);
+  #ifndef DISABLE_WIFI
   display.print(WiFi.RSSI());
   display.print("dBm");
+  #else 
+  display.print("-");
+  #endif
+  
+
+  display.setCursor(72, 34);
+  display.setTextSize(1);
+  display.println("EC:");
+  display.setCursor(72, 44);
+  display.setTextSize(2);
+  #ifndef DISABLE_ATLAS_EC
+  display.print(EC_float/1000,1);
+  #else
+  display.print("-");
+  #endif
+  //display.print("mS/cm");
 
   display.display();
 
@@ -333,7 +351,7 @@ void loop()
     Serial.print("Loop counter: ");
     Serial.println(++counter);
 
-    float average = temperatureF;
+
 
     http.begin(client, envDataRequestURL.c_str());
 
@@ -379,6 +397,8 @@ void loop()
 
     requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
+    requestBody += ",\"ec\":"+String(EC_float/1000);
+    requestBody += ",\"rssi\":"+String(WiFi.RSSI());
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
 
@@ -397,283 +417,29 @@ void loop()
     }
     else
     {
-      LogData(requestBody);
+      //LogData(requestBody);
     }
   }
 #endif
+
 }
 
-void IRAM_ATTR startOnDemandWiFiManager()
-{
-  Serial.println("Interrupt started");
-  onDemandManagerTrigger = true;
-  lastButtonPress = millis();
-  return;
-  // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
-  // { // button pressed
-  // nneds to be held for 3 seconds
-
-  // delay(3000);
-  // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
-  // {
-  display.setTextSize(1);
-  Serial.println("Button held for WM, starting config portal");
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.setTextSize(1);
-  String AP_Name = "ESP_UNIT_";
-  AP_Name += String(UNIT_NUMBER);
-  display.println("Starting Configuration. Join WiFi:");
-  display.println(AP_Name);
-  display.println("fa9s8dS7d92J");
-  display.println("And go to 192.168.4.1");
-  display.display();
-  wm.setConfigPortalBlocking(false);
-  wm.setConfigPortalTimeout(wifiManagerTimeout);
-  api_id_param.setValue(apiId, 40);
-  api_key_param.setValue(apiKey, 40);
-  unit_number_param.setValue(String(UNIT_NUMBER).c_str(), 4);
-
-  if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
-  {
-    Serial.println("failed to connect or hit timeout");
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.println("Failed to get configuration.");
-  }
-  // }
-  // }
-}
-
-void saveWMConfig()
-{
-  config.begin("config");
-
-  UNIT_NUMBER = atoi(unit_number_param.getValue());
-  config.putInt("unit_number", UNIT_NUMBER);
-
-  strcpy(apiId, api_id_param.getValue());
-  config.putString("api_id", apiId);
-  strcpy(apiKey, api_key_param.getValue());
-  config.putString("api_key", apiKey);
-
-  config.end();
-  Serial.println("config saved");
-}
-
-void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
-{
-  Serial.printf("Listing directory: %s\n", dirname);
-
-  File root = fs.open(dirname);
-  if (!root)
-  {
-    Serial.println("Failed to open directory");
-    return;
-  }
-  if (!root.isDirectory())
-  {
-    Serial.println("Not a directory");
-    return;
-  }
-
-  File file = root.openNextFile();
-  while (file)
-  {
-    if (file.isDirectory())
-    {
-      Serial.print("  DIR : ");
-      Serial.println(file.name());
-      if (levels)
-      {
-        listDir(fs, file.path(), levels - 1);
+void parse_cmd(char* string) {
+  strupr(string);
+  String cmd = String(string);
+  if(cmd.startsWith("CAL")){
+    int index = cmd.indexOf(',');
+    if(index != -1){
+      String param = cmd.substring(index+1, cmd.length());
+      if(param.equals("CLEAR")){
+        RTD.cal_clear();
+        Serial.println("CALIBRATION CLEARED");
+      }else {
+        RTD.cal(param.toFloat());
+        Serial.println("RTD CALIBRATED");
       }
     }
-    else
-    {
-      Serial.print("  FILE: ");
-      Serial.print(file.name());
-      Serial.print("  SIZE: ");
-      Serial.println(file.size());
-    }
-    file = root.openNextFile();
   }
-}
-
-void createDir(fs::FS &fs, const char *path)
-{
-  Serial.printf("Creating Dir: %s\n", path);
-  if (fs.mkdir(path))
-  {
-    Serial.println("Dir created");
-  }
-  else
-  {
-    Serial.println("mkdir failed");
-  }
-}
-
-void removeDir(fs::FS &fs, const char *path)
-{
-  Serial.printf("Removing Dir: %s\n", path);
-  if (fs.rmdir(path))
-  {
-    Serial.println("Dir removed");
-  }
-  else
-  {
-    Serial.println("rmdir failed");
-  }
-}
-
-void readFile(fs::FS &fs, const char *path)
-{
-  Serial.printf("Reading file: %s\n", path);
-
-  File file = fs.open(path);
-  if (!file)
-  {
-    Serial.println("Failed to open file for reading");
-    return;
-  }
-
-  Serial.print("Read from file: ");
-  while (file.available())
-  {
-    Serial.write(file.read());
-  }
-  file.close();
-}
-
-void writeFile(fs::FS &fs, const char *path, const char *message)
-{
-  Serial.printf("Writing file: %s\n", path);
-
-  File file = fs.open(path, FILE_WRITE);
-  if (!file)
-  {
-    Serial.println("Failed to open file for writing");
-    return;
-  }
-  if (file.print("Environmental Data:\n"))
-  {
-    Serial.println("File written");
-  }
-  else
-  {
-    Serial.println("Write failed");
-  }
-  file.close();
-}
-
-void appendFile(fs::FS &fs, const char *path, const char *message)
-{
-  Serial.printf("Appending to file: %s\n", path);
-
-  File file = fs.open(path, FILE_APPEND);
-  if (!file)
-  {
-    Serial.println("Failed to open file for appending");
-    return;
-  }
-  if (file.print(message))
-  {
-    Serial.println("Message appended");
-  }
-  else
-  {
-    Serial.println("Append failed");
-  }
-  file.close();
-}
-
-void LogData(String requestBody)
-{
-  pHData = pH.read_ph(); // I think this pH data isnt even required because the pH sensor data gets passed through the requestBody
-  //  readFile(SD, "/Environmental_Data.txt");
-
-  myFile = SD.open("/Environmental_Data.txt", FILE_APPEND);
-  if (myFile)
-  {
-    Serial.println("File opened with sucess");
-    myFile.println(requestBody);
-  }
-  myFile.close();
-}
-
-void renameFile(fs::FS &fs, const char *path1, const char *path2)
-{
-  Serial.printf("Renaming file %s to %s\n", path1, path2);
-  if (fs.rename(path1, path2))
-  {
-    Serial.println("File renamed");
-  }
-  else
-  {
-    Serial.println("Rename failed");
-  }
-}
-
-void deleteFile(fs::FS &fs, const char *path)
-{
-  Serial.printf("Deleting file: %s\n", path);
-  if (fs.remove(path))
-  {
-    Serial.println("File deleted");
-  }
-  else
-  {
-    Serial.println("Delete failed");
-  }
-}
-
-void testFileIO(fs::FS &fs, const char *path)
-{
-  File file = fs.open(path);
-  static uint8_t buf[512];
-  size_t len = 0;
-  uint32_t start = millis();
-  uint32_t end = start;
-  if (file)
-  {
-    len = file.size();
-    size_t flen = len;
-    start = millis();
-    while (len)
-    {
-      size_t toRead = len;
-      if (toRead > 512)
-      {
-        toRead = 512;
-      }
-      file.read(buf, toRead);
-      len -= toRead;
-    }
-    end = millis() - start;
-    Serial.printf("%u bytes read for %lu ms\n", flen, end);
-    file.close();
-  }
-  else
-  {
-    Serial.println("Failed to open file for reading");
-  }
-
-  file = fs.open(path, FILE_WRITE);
-  if (!file)
-  {
-    Serial.println("Failed to open file for writing");
-    return;
-  }
-
-  size_t i;
-  start = millis();
-  for (i = 0; i < 2048; i++)
-  {
-    file.write(buf, 512);
-  }
-  end = millis() - start;
-  Serial.printf("%u bytes written for %lu ms\n", 2048 * 512, end);
-  file.close();
 }
 
 void printLocalTime()
@@ -710,4 +476,96 @@ void printLocalTime()
   strftime(timeWeekDay, 10, "%A", &timeinfo);
   Serial.println(timeWeekDay);
   Serial.println();
+}
+
+void IRAM_ATTR startOnDemandWiFiManager()
+{
+  Serial.println("Interrupt started");
+  onDemandManagerTrigger = true;
+  lastButtonPress = millis();
+  return;
+  display.setTextSize(1);
+  Serial.println("Button held for WM, starting config portal");
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.setTextSize(1);
+  String AP_Name = "ESP_UNIT_";
+  AP_Name += String(UNIT_NUMBER);
+  display.println("Starting Configuration. Join WiFi:");
+  display.println(AP_Name);
+  display.println("fa9s8dS7d92J");
+  display.println("And go to 192.168.4.1");
+  display.display();
+  wm.setConfigPortalBlocking(false);
+  wm.setConfigPortalTimeout(wifiManagerTimeout);
+  api_id_param.setValue(apiId, 40);
+  api_key_param.setValue(apiKey, 40);
+  unit_number_param.setValue(String(UNIT_NUMBER).c_str(), 4);
+
+  if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
+  {
+    Serial.println("failed to connect or hit timeout");
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("Failed to get configuration.");
+  }
+}
+
+void saveWMConfig()
+{
+  config.begin("config");
+
+  UNIT_NUMBER = atoi(unit_number_param.getValue());
+  config.putInt("unit_number", UNIT_NUMBER);
+
+  strcpy(apiId, api_id_param.getValue());
+  config.putString("api_id", apiId);
+  strcpy(apiKey, api_key_param.getValue());
+  config.putString("api_key", apiKey);
+
+  config.end();
+  Serial.println("config saved");
+}
+
+void step1() {
+  //send a read command using send_cmd because we're parsing it ourselves
+  EC.send_cmd("r");
+  //for DO we use the send_read_cmd function so the library can parse it
+  //DO.send_read_cmd();
+}
+
+void step2() {
+
+  EC.receive_cmd(EC_data, 32);       //put the response into the buffer
+
+  EC_str = strtok(EC_data, ",");       //let's parse the string at each comma.
+  TDS = strtok(NULL, ",");                  //let's parse the string at each comma.
+  SAL = strtok(NULL, ",");                  //let's parse the string at each comma 
+  SG = strtok(NULL, ",");                  //let's parse the string at each comma.
+
+  Serial.print("EC: ");                      //we now print each value we parsed separately.
+  Serial.print(EC_str);                     //this is the EC value.
+
+  Serial.print(" TDS: ");                  //we now print each value we parsed separately.
+  Serial.print(TDS);                       //this is the TDS value.
+  
+  Serial.print(" SAL: ");                      //we now print each value we parsed separately.
+  Serial.print(SAL);                       //this is the salinity point.
+  
+  Serial.print(" SG: ");                      //we now print each value we parsed separately.
+  Serial.println(SG);                       //this is the specific gravity point.
+  
+  //receive_and_print_reading(DO);             //get the reading from the DO circuit
+  Serial.println();
+
+  EC_float=atof(EC_str);
+  //DO.send_cmd_with_num("s,", EC_float);
+
+  //uncomment this section if you want to take the values and convert them into floating point number.
+  /*
+     EC_float=atof(EC_str);
+     TDS_float=atof(TDS);
+     SAL_float=atof(SAL);
+     SG_float=atof(SG);
+  */
 }
