@@ -12,29 +12,26 @@
 #include "ph_surveyor.h"
 #include "rtd_surveyor.h"
 #include <sequencer1.h>
-#include <sequencer2.h>        //imports a 2 function sequencer 
-#include <Ezo_i2c.h>           //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
-#include <Wire.h>              //include arduinos i2c library
-#include <Ezo_i2c_util.h>      //brings in common print statements
+#include <sequencer2.h>               //imports a 2 function sequencer
+#include <Ezo_i2c.h>                  //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
+#include <Wire.h>                     //include arduinos i2c library
+#include <Ezo_i2c_util.h>             //brings in common print statements
 #include <Adafruit_Sensor.h>          //Library for Adafruit sensors
 #include <DHT.h>                      // Sensor for Humidity and temperature.
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
 
+char EC_data[32]; // we make a 32-byte character array to hold incoming data from the EC sensor.
+char *EC_str;     // char pointer used in string parsing.
+char *TDS;        // char pointer used in string parsing.
+char *SAL;        // char pointer used in string parsing (the sensor outputs some text that we don't need).
+char *SG;         // char pointer used in string parsing.
 
+float EC_float;  // float var used to hold the float value of the conductivity.
+float TDS_float; // float var used to hold the float value of the total dissolved solids.
+float SAL_float; // float var used to hold the float value of the salinity.
+float SG_float;  // float var used to hold the float value of the specific gravity.
 
-char EC_data[32];                //we make a 32-byte character array to hold incoming data from the EC sensor.
-char *EC_str;                    //char pointer used in string parsing.
-char *TDS;                       //char pointer used in string parsing.
-char *SAL;                       //char pointer used in string parsing (the sensor outputs some text that we don't need).
-char *SG;                        //char pointer used in string parsing.
-
-float EC_float;                  //float var used to hold the float value of the conductivity.
-float TDS_float;                 //float var used to hold the float value of the total dissolved solids.
-float SAL_float;                 //float var used to hold the float value of the salinity.
-float SG_float;                  //float var used to hold the float value of the specific gravity.
-
-
-Ezo_board EC = Ezo_board(100, "EC");      //create an EC circuit object who's address is 100 and name is "EC"
+Ezo_board EC = Ezo_board(100, "EC"); // create an EC circuit object who's address is 100 and name is "EC"
 Sequencer2 Seq(&step1, 1000, &step2, 300);
 Surveyor_RTD RTD = Surveyor_RTD(A1_temp_Pin);
 Surveyor_pH pH = Surveyor_pH(pH_Pin);
@@ -54,34 +51,34 @@ uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
-void step1();  //forward declarations of functions to use them in the sequencer before defining them
+void step1(); // forward declarations of functions to use them in the sequencer before defining them
 void step2();
-void parse_cmd(char* string);
+void parse_cmd(char *string);
 void printLocalTime();
 void startOnDemandWiFiManager();
 void saveWMConfig();
 
-#ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
+// #ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
+#if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
 DHT dht(DHT11PIN, DHTTYPE);
 float readDHT11Temp();
 float readDHThumidity();
 #endif
 
-
-void updateDisplay() {
-    display.clearDisplay();
-    display.setTextColor(WHITE);
-    display.setTextSize(1);
-    display.setFont(&FreeSerifBoldItalic9pt7b);
-    display.setCursor(35, 20);
-    display.println("Ryan Fraser Josh Thaw");
-    display.display();
-    display.setFont();
+void updateDisplay()
+{
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setFont(&FreeSerifBoldItalic9pt7b);
+  display.setCursor(35, 20);
+  display.println("Ryan Fraser Josh Thaw");
+  display.display();
+  display.setFont();
 }
 
-
-
-void setup() {
+void setup()
+{
   pinMode(LED15, OUTPUT);
 
   config.begin("config");
@@ -90,22 +87,23 @@ void setup() {
   strcpy(apiId, config.getString("api_id", "").c_str());
   config.end();
   Wire.begin(SDA_PIN, SCL_PIN);
-  Seq.reset();                  //initialize the sequencer
+  Seq.reset(); // initialize the sequencer
   delay(3000);
-  EC.send_cmd("o,tds,1");        //send command to enable TDS output
+  EC.send_cmd("o,tds,1"); // send command to enable TDS output
   delay(300);
-  EC.send_cmd("o,s,1");        //send command to enable salinity output
+  EC.send_cmd("o,s,1"); // send command to enable salinity output
   delay(300);
-  EC.send_cmd("o,sg,1");      //send command to enable specific gravity output
+  EC.send_cmd("o,sg,1"); // send command to enable specific gravity output
   delay(300);
 
   Serial.begin(115200);
-  #ifndef CALIBRATION_MODE
+#ifndef CALIBRATION_MODE
   Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
-  if(RTD.begin()){
+  if (RTD.begin())
+  {
     Serial.println("Loaded EEPROM");
   }
-  #endif
+#endif
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
@@ -115,12 +113,12 @@ void setup() {
   }
   updateDisplay();
   delay(2500);
-  
-  #ifndef DISABLE_DHT
-  dht.begin();
-  #endif
 
-  #ifndef DISABLE_WIFI
+#if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
+  dht.begin();
+#endif
+
+#ifndef DISABLE_WIFI
   Serial.println(WiFi.macAddress());
   WiFi.mode(WIFI_STA);
   display.setTextColor(WHITE);
@@ -146,7 +144,7 @@ void setup() {
       digitalWrite(LED15, LOW);
       delay(500);
       wait_time++;
-  
+
       if (wait_time > 18)
       {
         Serial.print("WiFi Failed to connect.");
@@ -170,7 +168,7 @@ void setup() {
 
   printLocalTime();
   delay(3000);
-  
+
   display.clearDisplay();
 
   pinMode(WIFIMANAGER_TRIGGER_PIN, INPUT_PULLUP);
@@ -178,12 +176,12 @@ void setup() {
   wm.addParameter(&unit_number_param);
   wm.addParameter(&api_id_param);
   wm.addParameter(&api_key_param);
-  #endif
-  #ifdef DISABLE_WIFI
+#endif
+#ifdef DISABLE_WIFI
   WiFi.mode(WIFI_MODE_NULL);
 
-  #endif
-  
+#endif
+
   display.setTextColor(WHITE);
   display.clearDisplay();
 }
@@ -196,23 +194,26 @@ int lastButtonPress = 0;
 int didLastManager = 0;
 int button_held_wifi_manager = 0;
 
-void loop() {
+void loop()
+{
 
-  if (Serial.available() > 0) {
+  if (Serial.available() > 0)
+  {
     user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
   }
 
-  if (user_bytes_received) {
+  if (user_bytes_received)
+  {
     parse_cmd(user_data);
     user_bytes_received = 0;
     memset(user_data, 0, sizeof(user_data));
   }
-  
-  //Serial.println(RTD.read_RTD_temp_C());
-  
-  //uncomment for readings in F
-  //Serial.println(RTD.read_RTD_temp_F()); 
-  #ifndef DISABLE_WIFI
+
+// Serial.println(RTD.read_RTD_temp_C());
+
+// uncomment for readings in F
+// Serial.println(RTD.read_RTD_temp_F());
+#ifndef DISABLE_WIFI
   delay(500);
   if (onDemandManagerTrigger == true)
   {
@@ -252,13 +253,12 @@ void loop() {
     if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
     {
     }
-
   }
-  #endif
+#endif
 
-  #ifndef DISABLE_ATLAS_EC
-  Seq.run();                    //run the sequncer to do the polling
-  #endif 
+#ifndef DISABLE_ATLAS_EC
+  Seq.run(); // run the sequncer to do the polling
+#endif
 
   display.clearDisplay();
   // temperature Display on OLED
@@ -268,19 +268,19 @@ void loop() {
   display.setTextSize(2);
   display.setCursor(0, 10);
 
-  #ifndef DISABLE_ATLAS_TEMP
-  float temperatureF = RTD.read_RTD_temp_F(); 
+#ifndef DISABLE_ATLAS_TEMP
+  float temperatureF = RTD.read_RTD_temp_F();
   Serial.print(temperatureF);
-  display.print(temperatureF,1);
+  display.print(temperatureF, 1);
   display.setTextSize(2);
-  display.print("F");  
-  #endif 
-  #ifndef DISABLE_MCP9701_TEMP
+  display.print("F");
+#endif
+#ifndef DISABLE_MCP9701_TEMP
   float sensorValue = analogRead(MCP9701_temp_Pin);
   float voltage = sensorValue * (3.3 / 4095.0);
-  float temperatureC = (voltage - 0.5)/0.01;
+  float temperatureC = (voltage - 0.5) / 0.01;
   float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
-  display.print(fahrenheit,1);
+  display.print(fahrenheit, 1);
   display.setTextSize(2);
   display.print("F");
   Serial.print("MCP9701 Temperature:\t\t\t");
@@ -288,17 +288,17 @@ void loop() {
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.println("F");
   float temperatureF = fahrenheit;
-  #endif 
-  #if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
+#endif
+#if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
   display.print("-");
-  #endif
+#endif
 
-  //Serial.print(temperatureF);
-  //display.print(" ");
-  //display.setTextSize(1);
- // display.cp437(true);
- // display.write(167);
-  //display.print(fahrenheit);
+  // Serial.print(temperatureF);
+  // display.print(" ");
+  // display.setTextSize(1);
+  // display.cp437(true);
+  // display.write(167);
+  // display.print(fahrenheit);
 
   // pH Display on OLED
   display.setTextSize(1);
@@ -306,66 +306,63 @@ void loop() {
   display.print("pH: ");
   display.setTextSize(2);
   display.setCursor(0, 45);
-  #ifndef DISABLE_ATLAS_pH
-  display.print(pH.read_ph(),1);
-  #else 
+#ifndef DISABLE_ATLAS_pH
+  display.print(pH.read_ph(), 1);
+#else
   display.print("-");
-  #endif
+#endif
   display.println(" ");
 
-  //Serial.print("RSSI: \t");
+  // Serial.print("RSSI: \t");
   Serial.print("Received Signal Strength Indicator:\t");
   Serial.print(WiFi.RSSI());
   Serial.println("dBm");
 
-
-  #ifndef DISABLE_ATLAS_pH
+#ifndef DISABLE_ATLAS_pH
   Serial.print("pH: ");
-  Serial.println(pH.read_ph(),1);
-  #endif
+  Serial.println(pH.read_ph(), 1);
+#endif
 
-
-  // 
+  //
   display.setTextSize(1);
   display.setCursor(60, 0);
   display.println("RSSI:");
   display.setCursor(90, 0);
-  #ifndef DISABLE_WIFI
+#ifndef DISABLE_WIFI
   display.print(WiFi.RSSI());
   display.print("dBm");
-  #else 
+#else
   display.print("-");
-  #endif
-  
+#endif
 
   display.setCursor(72, 34);
   display.setTextSize(1);
   display.println("EC:");
   display.setCursor(72, 44);
   display.setTextSize(2);
-  #ifndef DISABLE_ATLAS_EC
-  display.print(EC_float/1000,1);
-  #else
+#ifndef DISABLE_ATLAS_EC
+  display.print(EC_float / 1000, 1);
+#else
   display.print("-");
-  #endif
-  //display.print("mS/cm");
+#endif
+  // display.print("mS/cm");
 
-  #ifndef DISABLE_DHT_TEMP
-  //float DHT_tempF = readDHTTemp();
+#ifndef DISABLE_DHT11_TEMP
+  // float DHT_tempF = readDHTTemp();
   Serial.print("DHT Temperature: \t\t\t");
   Serial.print(readDHT11Temp());
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.print("F\t");
-  //display.print(/1000,1);
-  #endif
-  
-  #ifndef DISABLE_DHT11_HUMIDITY
-  //readDHT11humidity();
+// display.print(/1000,1);
+#endif
+
+#ifndef DISABLE_DHT11_HUMIDITY
+  // readDHT11humidity();
   Serial.print("\nHumidity: \t\t\t\t");
   Serial.print(readDHT11humidity());
   Serial.println(" %");
-  //display.print(/1000,1);
-  #endif
+// display.print(/1000,1);
+#endif
   Serial.println("-----------------------------------------------");
   display.display();
 
@@ -389,7 +386,7 @@ void loop() {
     {
       Serial.println("Failed to obtain time");
       return;
-    }   
+    }
     Serial.println("Time variables");
     char timeHour[3];
     char timeMinute[3];
@@ -406,9 +403,11 @@ void loop() {
 
     requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
-    requestBody += ",\"ec\":"+String(EC_float/1000);
-    requestBody += ",\"rssi\":"+String(WiFi.RSSI());           // @joshthaw please add a column/displayto the website for RSSI
-    requestBody += ",\"Humidity\":"+String(readDHT11humidity()); // @joshthaw please add a column/display to the website for Humidity
+    requestBody += ",\"ec\":" + String(EC_float / 1000);
+    requestBody += ",\"rssi\":" + String(WiFi.RSSI()); // @joshthaw please add a column/displayto the website for RSSI
+#if !defined(DISABLE_DHT11_HUMIDITY)
+    requestBody += ",\"Humidity\":" + String(readDHT11humidity()); // @joshthaw please add a column/display to the website for Humidity
+#endif
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
 
@@ -419,7 +418,6 @@ void loop() {
     Serial.print("httpResponseCode: ");
     Serial.println(httpResponseCode);
 
-
     lastTime = millis();
     if (httpResponseCode == 200)
     {
@@ -428,24 +426,29 @@ void loop() {
     }
     else
     {
-      //LogData(requestBody);
+      // LogData(requestBody);
     }
   }
 #endif
-
 }
 
-void parse_cmd(char* string) {
+void parse_cmd(char *string)
+{
   strupr(string);
   String cmd = String(string);
-  if(cmd.startsWith("CAL")){
+  if (cmd.startsWith("CAL"))
+  {
     int index = cmd.indexOf(',');
-    if(index != -1){
-      String param = cmd.substring(index+1, cmd.length());
-      if(param.equals("CLEAR")){
+    if (index != -1)
+    {
+      String param = cmd.substring(index + 1, cmd.length());
+      if (param.equals("CLEAR"))
+      {
         RTD.cal_clear();
         Serial.println("CALIBRATION CLEARED");
-      }else {
+      }
+      else
+      {
         RTD.cal(param.toFloat());
         Serial.println("RTD CALIBRATED");
       }
@@ -538,41 +541,43 @@ void saveWMConfig()
   Serial.println("config saved");
 }
 
-void step1() {
-  //send a read command using send_cmd because we're parsing it ourselves
+void step1()
+{
+  // send a read command using send_cmd because we're parsing it ourselves
   EC.send_cmd("r");
-  //for DO we use the send_read_cmd function so the library can parse it
-  //DO.send_read_cmd();
+  // for DO we use the send_read_cmd function so the library can parse it
+  // DO.send_read_cmd();
 }
 
-void step2() {
+void step2()
+{
 
-  EC.receive_cmd(EC_data, 32);       //put the response into the buffer
+  EC.receive_cmd(EC_data, 32); // put the response into the buffer
 
-  EC_str = strtok(EC_data, ",");       //let's parse the string at each comma.
-  TDS = strtok(NULL, ",");                  //let's parse the string at each comma.
-  SAL = strtok(NULL, ",");                  //let's parse the string at each comma 
-  SG = strtok(NULL, ",");                  //let's parse the string at each comma.
+  EC_str = strtok(EC_data, ","); // let's parse the string at each comma.
+  TDS = strtok(NULL, ",");       // let's parse the string at each comma.
+  SAL = strtok(NULL, ",");       // let's parse the string at each comma
+  SG = strtok(NULL, ",");        // let's parse the string at each comma.
 
-  Serial.print("EC: ");                      //we now print each value we parsed separately.
-  Serial.print(EC_str);                     //this is the EC value.
+  Serial.print("EC: "); // we now print each value we parsed separately.
+  Serial.print(EC_str); // this is the EC value.
 
-  Serial.print(" TDS: ");                  //we now print each value we parsed separately.
-  Serial.print(TDS);                       //this is the TDS value.
-  
-  Serial.print(" SAL: ");                      //we now print each value we parsed separately.
-  Serial.print(SAL);                       //this is the salinity point.
-  
-  Serial.print(" SG: ");                      //we now print each value we parsed separately.
-  Serial.println(SG);                       //this is the specific gravity point.
-  
-  //receive_and_print_reading(DO);             //get the reading from the DO circuit
+  Serial.print(" TDS: "); // we now print each value we parsed separately.
+  Serial.print(TDS);      // this is the TDS value.
+
+  Serial.print(" SAL: "); // we now print each value we parsed separately.
+  Serial.print(SAL);      // this is the salinity point.
+
+  Serial.print(" SG: "); // we now print each value we parsed separately.
+  Serial.println(SG);    // this is the specific gravity point.
+
+  // receive_and_print_reading(DO);             //get the reading from the DO circuit
   Serial.println();
 
-  EC_float=atof(EC_str);
-  //DO.send_cmd_with_num("s,", EC_float);
+  EC_float = atof(EC_str);
+  // DO.send_cmd_with_num("s,", EC_float);
 
-  //uncomment this section if you want to take the values and convert them into floating point number.
+  // uncomment this section if you want to take the values and convert them into floating point number.
   /*
      EC_float=atof(EC_str);
      TDS_float=atof(TDS);
@@ -580,37 +585,40 @@ void step2() {
      SG_float=atof(SG);
   */
 }
-
-float readDHT11Temp(){
+#if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
+float readDHT11Temp()
+{
   float DHT11_tempC = dht.readTemperature();
   float DHT11_tempF = (DHT11_tempC * 9.0) / 5.0 + 32;
 
 #ifndef DISABLE_FAHRENEIT
-// Serial.print("DHT11 Temperature: ");
-// Serial.print(DHT11_tempF);
-// Serial.print(" *F\tDHT11");
-return DHT11_tempF;
+  // Serial.print("DHT11 Temperature: ");
+  // Serial.print(DHT11_tempF);
+  // Serial.print(" *F\tDHT11");
+  return DHT11_tempF;
 #endif
 
 #ifndef DISABLE_CELSIUS
 
   // print the result to Serial Monitor
- Serial.print("DHT11 Temperature: ");
- Serial.print(DHT11_tempC);
- Serial.print(" *C\tDHT11");
- return DHT11_tempC;
- #endif
- }
-
- 
-float readDHT11humidity(){
-float humidity = dht.readHumidity();
-#ifndef DISABLE_DHT11_HUMIDITY
-return humidity;
+  Serial.print("DHT11 Temperature: ");
+  Serial.print(DHT11_tempC);
+  Serial.print(" *C\tDHT11");
+  return DHT11_tempC;
+#endif
+}
 #endif
 
-// Serial.print("Humidity: ");
-// Serial.print(h);
-// Serial.println(" %");
+#if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
+float readDHT11humidity()
+{
+  float humidity = dht.readHumidity();
+#ifndef DISABLE_DHT11_HUMIDITY
+  return humidity;
+#endif
 
- }
+  // Serial.print("Humidity: ");
+  // Serial.print(h);
+  // Serial.println(" %");
+}
+#endif
