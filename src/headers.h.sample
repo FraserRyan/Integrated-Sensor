@@ -1,38 +1,37 @@
-//#include "Arduino.h"
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define SDA_PIN 38
-#define SCL_PIN 39
+const int SCREEN_WIDTH            = 128;  // OLED display width, in pixels
+const int SCREEN_HEIGHT           = 64;   // OLED display height, in pixels
+const int SDA_PIN                 = 38;   // Serial Data
+const int SCL_PIN                 = 39;   // Serial Clock
+const int DHT11PIN                = 46;   // DHT11 Digital input
+const int WIFIMANAGER_TRIGGER_PIN = 0;    // On Board button input To use the WifiManager
+const int MCP9701_temp_Pin        = 18;   // Analog input for temperature sensor
+const int pH_Pin                  = 5;    // Analog input for pH sensor
+const int A1_temp_Pin             = 6;    // Temperature sensor when using the first analog channel of the ESP this is because pin 18 may not work as intended because of wifi.
+const int Legacy_temp_Pin         = 35;   // Temperature analog input of ESP32-dev kit
+const int Legacy_pH_Pin           = 32;   // pH analog input of ESP32-dev kit
+const int LED12                   = 12;   // On board LED Digital output 12
+const int LED13                   = 13;   // On board LED Digital output 13
+const int LED14                   = 14;   // On board LED Digital output 14
+const int LED15                   = 15;   // On board LED Digital output 15
+const int LED16                   = 16;   // On board LED Digital output 16
+const int LED17                   = 17;   // On board LED Digital output 17
+int delayTime                     = 10 * 1000;  // 30 seconds in milliseconds
+//int delayTime                   = 10 * 60 * 1000; // 10 minutes in milliseconds
+const char* ntpServer             = "pool.ntp.org";
+const long  gmtOffset_sec         = -60*60*5;
+const int   daylightOffset_sec    = 3600;
 #define DISABLE_ATLAS_EC
 #define DISABLE_ATLAS_TEMP
 #define DISABLE_ATLAS_pH
 #define DISABLE_CELSIUS
+#define DHTTYPE DHT11
+#define CALIBRATION_MODE
 //#define DISABLE_FAHRENHEIT
-//#define DISABLE_DHT_TEMP
-//#define DISABLE_DHT_HUMIDITY
+//#define DISABLE_DHT11_TEMP
+//#define DISABLE_DHT11_HUMIDITY
 //#define DISABLE_MCP9701_TEMP
 //#define DISABLE_WIFI
 //#define DISABLE_API_REQUEST
-//int delayTime = 10 * 60 * 1000; // 10 minutes in milliseconds
-int delayTime = 10 * 1000;  // 30 seconds in milliseconds
-const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = -60*60*5;
-const int   daylightOffset_sec = 3600;
-#define WIFIMANAGER_TRIGGER_PIN 0
-const int MCP9701_temp_Pin  = 18;
-const int pH_Pin      = 5;
-const int A1_temp_Pin = 6;
-const int Legacy_temp_Pin  = 35;
-const int Legacy_pH_Pin    = 32;
-const int LED12     = 12;
-const int LED13     = 13;
-const int LED14     = 14;
-const int LED15     = 15;
-const int LED16     = 16;
-const int LED17     = 17;
-#define DHTPIN 46
-#define DHTTYPE DHT11
-#define CALIBRATION_MODE
 
 /*
     Server Information

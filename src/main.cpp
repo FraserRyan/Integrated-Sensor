@@ -20,9 +20,9 @@
 #include <DHT.h>
 
 #ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
-DHT dht(DHTPIN, DHTTYPE);
+DHT dht(DHT11PIN, DHTTYPE);
 float readDHT11Temp();
-float readDHT11humidity();
+float readDHThumidity();
 #endif
 
 
