@@ -19,9 +19,12 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 
+#ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
 DHT dht(DHTPIN, DHTTYPE);
+float readDHT11Temp();
+float readDHT11humidity();
+#endif
 
-//#include <FreeMono9pt7b.h>
 
 char EC_data[32];          //we make a 32-byte character array to hold incoming data from the EC sensor.
 char *EC_str;                     //char pointer used in string parsing.
@@ -33,11 +36,8 @@ float EC_float;               //float var used to hold the float value of the co
 float TDS_float;                 //float var used to hold the float value of the total dissolved solids.
 float SAL_float;                 //float var used to hold the float value of the salinity.
 float SG_float;                 //float var used to hold the float value of the specific gravity.
-//float tDHT; // variable for temperature
-//float h; // variable for humidity
 
-float readDHTTemp();
-float readDHThumidity();
+
 void step1();  //forward declarations of functions to use them in the sequencer before defining them
 void step2();
 
@@ -360,16 +360,16 @@ void loop() {
   #ifndef DISABLE_DHT_TEMP
   //float DHT_tempF = readDHTTemp();
   Serial.print("DHT Temperature: \t\t\t");
-  Serial.print(readDHTTemp());
+  Serial.print(readDHT11Temp());
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.print("F\t");
   //display.print(/1000,1);
   #endif
   
-  #ifndef DISABLE_DHT_HUMIDITY
-  //readDHThumidity();
+  #ifndef DISABLE_DHT11_HUMIDITY
+  //readDHT11humidity();
   Serial.print("\nHumidity: \t\t\t\t");
-  Serial.print(readDHThumidity());
+  Serial.print(readDHT11humidity());
   Serial.println(" %");
   //display.print(/1000,1);
   #endif
@@ -415,7 +415,7 @@ void loop() {
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"ec\":"+String(EC_float/1000);
     requestBody += ",\"rssi\":"+String(WiFi.RSSI());           // @joshthaw please add a column/displayto the website for RSSI
-    requestBody += ",\"Humidity\":"+String(readDHThumidity()); // @joshthaw please add a column/display to the website for Humidity
+    requestBody += ",\"Humidity\":"+String(readDHT11humidity()); // @joshthaw please add a column/display to the website for Humidity
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
 
@@ -588,31 +588,31 @@ void step2() {
   */
 }
 
-float readDHTTemp(){
-  float DHT_tempC = dht.readTemperature();
-  float DHT_tempF = (DHT_tempC * 9.0) / 5.0 + 32;
+float readDHT11Temp(){
+  float DHT11_tempC = dht.readTemperature();
+  float DHT11_tempF = (DHT11_tempC * 9.0) / 5.0 + 32;
 
 #ifndef DISABLE_FAHRENEIT
-// Serial.print("DHT Temperature: ");
-// Serial.print(DHT_tempF);
-// Serial.print(" *F\tDHT");
-return DHT_tempF;
+// Serial.print("DHT11 Temperature: ");
+// Serial.print(DHT11_tempF);
+// Serial.print(" *F\tDHT11");
+return DHT11_tempF;
 #endif
 
 #ifndef DISABLE_CELSIUS
 
   // print the result to Serial Monitor
- Serial.print("DHT Temperature: ");
- Serial.print(DHT_tempC);
- Serial.print(" *C\tDHT");
- return DHT_tempC;
+ Serial.print("DHT11 Temperature: ");
+ Serial.print(DHT11_tempC);
+ Serial.print(" *C\tDHT11");
+ return DHT11_tempC;
  #endif
  }
 
  
-float readDHThumidity(){
+float readDHT11humidity(){
 float humidity = dht.readHumidity();
-#ifndef DISABLE_DHT_HUMIDITY
+#ifndef DISABLE_DHT11_HUMIDITY
 return humidity;
 #endif
 
