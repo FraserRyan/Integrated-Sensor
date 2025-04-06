@@ -12,43 +12,35 @@
 #include "ph_surveyor.h"
 #include "rtd_surveyor.h"
 #include <sequencer1.h>
-#include <sequencer2.h> //imports a 2 function sequencer 
-#include <Ezo_i2c.h> //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
-#include <Wire.h>    //include arduinos i2c library
-#include <Ezo_i2c_util.h> //brings in common print statements
-#include <Adafruit_Sensor.h>
-#include <DHT.h>
-
-#ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
-DHT dht(DHT11PIN, DHTTYPE);
-float readDHT11Temp();
-float readDHThumidity();
-#endif
+#include <sequencer2.h>        //imports a 2 function sequencer 
+#include <Ezo_i2c.h>           //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
+#include <Wire.h>              //include arduinos i2c library
+#include <Ezo_i2c_util.h>      //brings in common print statements
+#include <Adafruit_Sensor.h>          //Library for Adafruit sensors
+#include <DHT.h>                      // Sensor for Humidity and temperature.
+#include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
 
 
-char EC_data[32];          //we make a 32-byte character array to hold incoming data from the EC sensor.
-char *EC_str;                     //char pointer used in string parsing.
+
+char EC_data[32];                //we make a 32-byte character array to hold incoming data from the EC sensor.
+char *EC_str;                    //char pointer used in string parsing.
 char *TDS;                       //char pointer used in string parsing.
 char *SAL;                       //char pointer used in string parsing (the sensor outputs some text that we don't need).
-char *SG;                       //char pointer used in string parsing.
+char *SG;                        //char pointer used in string parsing.
 
-float EC_float;               //float var used to hold the float value of the conductivity.
+float EC_float;                  //float var used to hold the float value of the conductivity.
 float TDS_float;                 //float var used to hold the float value of the total dissolved solids.
 float SAL_float;                 //float var used to hold the float value of the salinity.
-float SG_float;                 //float var used to hold the float value of the specific gravity.
-
-
-void step1();  //forward declarations of functions to use them in the sequencer before defining them
-void step2();
+float SG_float;                  //float var used to hold the float value of the specific gravity.
 
 
 Ezo_board EC = Ezo_board(100, "EC");      //create an EC circuit object who's address is 100 and name is "EC"
 Sequencer2 Seq(&step1, 1000, &step2, 300);
-
+Surveyor_RTD RTD = Surveyor_RTD(A1_temp_Pin);
+Surveyor_pH pH = Surveyor_pH(pH_Pin);
 int wifiManagerTimeout = 120; // in seconds
 
 WiFiManager wm;
-
 Preferences config;
 int UNIT_NUMBER;
 WiFiManagerParameter unit_number_param("unit_number", "Unit Number", String(UNIT_NUMBER).c_str(), 4);
@@ -56,24 +48,25 @@ WiFiManagerParameter unit_number_param("unit_number", "Unit Number", String(UNIT
 char apiId[40], apiKey[40];
 WiFiManagerParameter api_id_param("api_id", "API ID", apiId, 40);
 WiFiManagerParameter api_key_param("api_key", "API Key", apiKey, 40);
-
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
-
-
-Surveyor_RTD RTD = Surveyor_RTD(A1_temp_Pin);
-Surveyor_pH pH = Surveyor_pH(pH_Pin);
 
 uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
+void step1();  //forward declarations of functions to use them in the sequencer before defining them
+void step2();
 void parse_cmd(char* string);
 void printLocalTime();
 void startOnDemandWiFiManager();
 void saveWMConfig();
 
-#include "FreeSerifBoldItalic9pt7b.h"
+#ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
+DHT dht(DHT11PIN, DHTTYPE);
+float readDHT11Temp();
+float readDHThumidity();
+#endif
+
 
 void updateDisplay() {
     display.clearDisplay();
