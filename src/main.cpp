@@ -11,7 +11,7 @@
 #include "time.h"
 #include "ph_surveyor.h"
 #include "rtd_surveyor.h"
-#include <sequencer1.h>
+#include <sequencer1.h>        //imports a 1 function sequencer 
 #include <sequencer2.h>        //imports a 2 function sequencer 
 #include <Ezo_i2c.h>           //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #include <Wire.h>              //include arduinos i2c library
@@ -116,7 +116,7 @@ void setup() {
   updateDisplay();
   delay(2500);
   
-  #ifndef DISABLE_DHT
+  #ifndef (DISABLE_DHT11_HUMIDITY && DISABLE_DHT_TEMP)
   dht.begin();
   #endif
 
