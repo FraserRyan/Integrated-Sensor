@@ -18,8 +18,7 @@
 #include <Ezo_i2c_util.h> //brings in common print statements
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
-#define DHTPIN 15
-#define DHTTYPE DHT11
+
 DHT dht(DHTPIN, DHTTYPE);
 
 //#include <FreeMono9pt7b.h>
@@ -34,8 +33,11 @@ float EC_float;               //float var used to hold the float value of the co
 float TDS_float;                 //float var used to hold the float value of the total dissolved solids.
 float SAL_float;                 //float var used to hold the float value of the salinity.
 float SG_float;                 //float var used to hold the float value of the specific gravity.
+//float tDHT; // variable for temperature
+//float h; // variable for humidity
 
-
+float readDHTTemp();
+float readDHThumidity();
 void step1();  //forward declarations of functions to use them in the sequencer before defining them
 void step2();
 
@@ -87,6 +89,7 @@ void updateDisplay() {
 
 
 void setup() {
+  pinMode(LED15, OUTPUT);
 
   config.begin("config");
   UNIT_NUMBER = config.getInt("unit_number", 0);
@@ -104,10 +107,12 @@ void setup() {
   delay(300);
 
   Serial.begin(115200);
+  #ifndef CALIBRATION_MODE
   Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
   if(RTD.begin()){
     Serial.println("Loaded EEPROM");
   }
+  #endif
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
@@ -118,6 +123,9 @@ void setup() {
   updateDisplay();
   delay(2500);
   
+  #ifndef DISABLE_DHT
+  dht.begin();
+  #endif
 
   #ifndef DISABLE_WIFI
   Serial.println(WiFi.macAddress());
@@ -139,9 +147,13 @@ void setup() {
     {
       Serial.print('.');
       display.print(".");
+      digitalWrite(LED15, HIGH);
       display.display();
       delay(500);
+      digitalWrite(LED15, LOW);
+      delay(500);
       wait_time++;
+  
       if (wait_time > 18)
       {
         Serial.print("WiFi Failed to connect.");
@@ -278,7 +290,10 @@ void loop() {
   display.print(fahrenheit,1);
   display.setTextSize(2);
   display.print("F");
+  Serial.print("MCP9701 Temperature:\t\t\t");
   Serial.print(fahrenheit);
+  Serial.print("\xC2\xB0"); // shows degree symbol
+  Serial.println("F");
   float temperatureF = fahrenheit;
   #endif 
   #if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
@@ -305,12 +320,12 @@ void loop() {
   #endif
   display.println(" ");
 
-  Serial.print(" RSSI: ");
+  //Serial.print("RSSI: \t");
+  Serial.print("Received Signal Strength Indicator:\t");
   Serial.print(WiFi.RSSI());
   Serial.println("dBm");
 
-  Serial.print("\xC2\xB0"); // shows degree symbol
-  Serial.println("F");
+
   #ifndef DISABLE_ATLAS_pH
   Serial.print("pH: ");
   Serial.println(pH.read_ph(),1);
@@ -342,6 +357,23 @@ void loop() {
   #endif
   //display.print("mS/cm");
 
+  #ifndef DISABLE_DHT_TEMP
+  //float DHT_tempF = readDHTTemp();
+  Serial.print("DHT Temperature: \t\t\t");
+  Serial.print(readDHTTemp());
+  Serial.print("\xC2\xB0"); // shows degree symbol
+  Serial.print("F\t");
+  //display.print(/1000,1);
+  #endif
+  
+  #ifndef DISABLE_DHT_HUMIDITY
+  //readDHThumidity();
+  Serial.print("\nHumidity: \t\t\t\t");
+  Serial.print(readDHThumidity());
+  Serial.println(" %");
+  //display.print(/1000,1);
+  #endif
+  Serial.println("-----------------------------------------------");
   display.display();
 
 #ifndef DISABLE_API_REQUEST
@@ -356,37 +388,15 @@ void loop() {
 
     Serial.print("Loop counter: ");
     Serial.println(++counter);
-
-
-
     http.begin(client, envDataRequestURL.c_str());
-
     http.addHeader("Content-Type", "application/json");
-
+    printLocalTime();
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo))
     {
       Serial.println("Failed to obtain time");
       return;
-    }
-    Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-    Serial.print("Day of week: ");
-    Serial.println();
-    Serial.print("Month: ");
-    Serial.println(&timeinfo, "%B");
-    Serial.print("Day of Month: ");
-    Serial.println(&timeinfo, "%d");
-    Serial.print("Year: ");
-    Serial.println(&timeinfo, "%Y");
-    Serial.print("Hour: ");
-    Serial.println(&timeinfo, "%H");
-    Serial.print("Hour (12 hour format): ");
-    Serial.println(&timeinfo, "%I");
-    Serial.print("Minute: ");
-    Serial.println(&timeinfo, "%M");
-    Serial.print("Second: ");
-    Serial.println(&timeinfo, "%S");
-
+    }   
     Serial.println("Time variables");
     char timeHour[3];
     char timeMinute[3];
@@ -404,7 +414,8 @@ void loop() {
     requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"ec\":"+String(EC_float/1000);
-    requestBody += ",\"rssi\":"+String(WiFi.RSSI());
+    requestBody += ",\"rssi\":"+String(WiFi.RSSI());           // @joshthaw please add a column/displayto the website for RSSI
+    requestBody += ",\"Humidity\":"+String(readDHThumidity()); // @joshthaw please add a column/display to the website for Humidity
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
 
@@ -414,6 +425,7 @@ void loop() {
 
     Serial.print("httpResponseCode: ");
     Serial.println(httpResponseCode);
+
 
     lastTime = millis();
     if (httpResponseCode == 200)
@@ -575,3 +587,37 @@ void step2() {
      SG_float=atof(SG);
   */
 }
+
+float readDHTTemp(){
+  float DHT_tempC = dht.readTemperature();
+  float DHT_tempF = (DHT_tempC * 9.0) / 5.0 + 32;
+
+#ifndef DISABLE_FAHRENEIT
+// Serial.print("DHT Temperature: ");
+// Serial.print(DHT_tempF);
+// Serial.print(" *F\tDHT");
+return DHT_tempF;
+#endif
+
+#ifndef DISABLE_CELSIUS
+
+  // print the result to Serial Monitor
+ Serial.print("DHT Temperature: ");
+ Serial.print(DHT_tempC);
+ Serial.print(" *C\tDHT");
+ return DHT_tempC;
+ #endif
+ }
+
+ 
+float readDHThumidity(){
+float humidity = dht.readHumidity();
+#ifndef DISABLE_DHT_HUMIDITY
+return humidity;
+#endif
+
+// Serial.print("Humidity: ");
+// Serial.print(h);
+// Serial.println(" %");
+
+ }
