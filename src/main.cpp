@@ -35,6 +35,8 @@ float SG_float;                  //float var used to hold the float value of the
 
 
 Ezo_board EC = Ezo_board(100, "EC");      //create an EC circuit object who's address is 100 and name is "EC"
+void step1();  //forward declarations of functions to use them in the sequencer before defining them
+void step2();
 Sequencer2 Seq(&step1, 1000, &step2, 300);
 Surveyor_RTD RTD = Surveyor_RTD(A1_temp_Pin);
 Surveyor_pH pH = Surveyor_pH(pH_Pin);
@@ -54,8 +56,7 @@ uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
-void step1();  //forward declarations of functions to use them in the sequencer before defining them
-void step2();
+
 void parse_cmd(char* string);
 void printLocalTime();
 void startOnDemandWiFiManager();
@@ -64,7 +65,7 @@ void saveWMConfig();
 #ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
 DHT dht(DHT11PIN, DHTTYPE);
 float readDHT11Temp();
-float readDHThumidity();
+float readDHT11humidity();
 #endif
 
 
@@ -116,7 +117,7 @@ void setup() {
   updateDisplay();
   delay(2500);
   
-  #ifndef (DISABLE_DHT11_HUMIDITY && DISABLE_DHT_TEMP)
+  #ifndef DISABLE_DHT11_HUMIDITY
   dht.begin();
   #endif
 
