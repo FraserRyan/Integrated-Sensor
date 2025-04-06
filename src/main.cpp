@@ -11,7 +11,7 @@
 #include "time.h"
 #include "ph_surveyor.h"
 #include "rtd_surveyor.h"
-#include <sequencer1.h>
+#include <sequencer1.h>               //imports a 1 function sequencer
 #include <sequencer2.h>               //imports a 2 function sequencer
 #include <Ezo_i2c.h>                  //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #include <Wire.h>                     //include arduinos i2c library
@@ -32,6 +32,8 @@ float SAL_float; // float var used to hold the float value of the salinity.
 float SG_float;  // float var used to hold the float value of the specific gravity.
 
 Ezo_board EC = Ezo_board(100, "EC"); // create an EC circuit object who's address is 100 and name is "EC"
+void step1();                        // forward declarations of functions to use them in the sequencer before defining them
+void step2();
 Sequencer2 Seq(&step1, 1000, &step2, 300);
 Surveyor_RTD RTD = Surveyor_RTD(A1_temp_Pin);
 Surveyor_pH pH = Surveyor_pH(pH_Pin);
@@ -62,7 +64,7 @@ void saveWMConfig();
 #if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
 DHT dht(DHT11PIN, DHTTYPE);
 float readDHT11Temp();
-float readDHThumidity();
+float readDHT11humidity();
 #endif
 
 void updateDisplay()
