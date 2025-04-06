@@ -1,35 +1,38 @@
-
-#include "Arduino.h"
-
-//#define UNIT_NUMBER 1
-
-/*
-    How often to send an API request
-*/
-int delayTime = 5 * 1000;
-
-#define SD_MMC_DAT1_PIN 1 // Placeholder - Replace with correct definition
-#define SD_MMC_DAT0_PIN 2 // Placeholder - Replace with correct definition
-#define SD_MMC_CMD_PIN 7  // Placeholder - Replace with correct definition
-#define SD_MMC_DAT2_PIN 9 // Placeholder - Replace with correct definition
-#define SD_MMC_DAT3_PIN 8 // Placeholder - Replace with correct definition
-#define SD_MMC_CLK_PIN 5  // Placeholder - Replace with correct definition
-
-/*
-    Calibration for temperature sensor
-*/
-int calibration_ = -2;
-
-// WiFi SSID and password
-//const char *ssid = "";
-//const char *password = "";
-
-/*
-    NTP settings
-*/
-const char *ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = -60 * 60 * 5; // this is your timezone offset in seconds
-const int daylightOffset_sec = 3600;
+//#include "Arduino.h"
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define SDA_PIN 38
+#define SCL_PIN 39
+#define DISABLE_ATLAS_EC
+#define DISABLE_ATLAS_TEMP
+#define DISABLE_ATLAS_pH
+#define DISABLE_CELSIUS
+//#define DISABLE_FAHRENHEIT
+//#define DISABLE_DHT_TEMP
+//#define DISABLE_DHT_HUMIDITY
+//#define DISABLE_MCP9701_TEMP
+//#define DISABLE_WIFI
+//#define DISABLE_API_REQUEST
+//int delayTime = 10 * 60 * 1000; // 10 minutes in milliseconds
+int delayTime = 10 * 1000;  // 30 seconds in milliseconds
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = -60*60*5;
+const int   daylightOffset_sec = 3600;
+#define WIFIMANAGER_TRIGGER_PIN 0
+const int MCP9701_temp_Pin  = 18;
+const int pH_Pin      = 5;
+const int A1_temp_Pin = 6;
+const int Legacy_temp_Pin  = 35;
+const int Legacy_pH_Pin    = 32;
+const int LED12     = 12;
+const int LED13     = 13;
+const int LED14     = 14;
+const int LED15     = 15;
+const int LED16     = 16;
+const int LED17     = 17;
+#define DHTPIN 46
+#define DHTTYPE DHT11
+#define CALIBRATION_MODE
 
 /*
     Server Information
@@ -40,32 +43,5 @@ String hostname = "IPADDRESS:PORT"; // IP ADDRESS and port (if needed) of your s
 String envDataRequestURL = "https://" + hostname + String("/api/addEnvRecord");
 // Change to https if needed.  adjust api endpoint path as needed
 
-// API Key and ID for server above
-//String apiId = "";
-//String apiKey = "";
-
-const int pH_Pin = 10;
-const int temp_Pin = 18;
-
-const int LED12 = 12;
-const int LED13 = 13;
-const int LED14 = 14;
-const int LED15 = 15;
-const int LED16 = 16;
-const int LED17 = 17;
-
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-
-#define SDA_PIN 38
-#define SCL_PIN 39
-
-#define WIFIMANAGER_TRIGGER_PIN 0
-
 static const char *root_ca PROGMEM = R"EOF(-----BEGIN CERTIFICATE-----
 -----END CERTIFICATE-----)EOF";
-
-#define SD_CS     3 // Chip Select trying to connect to CMD pin on sd card
-#define SD_MOSI   4   // Data In  THESE ARE PROBABLY WRONG
-#define SD_MISO   6   // Data Out THESE ARE PROBABLY WRONG
-#define SD_SCK    5   // Clock
