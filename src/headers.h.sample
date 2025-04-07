@@ -26,12 +26,14 @@ const int   daylightOffset_sec    = 3600;
 #define DISABLE_CELSIUS
 #define DHTTYPE DHT11
 #define DISABLE_CALIBRATION_MODE
+#define DISABLE_PERISTALTIC_PUMPS
 //#define DISABLE_FAHRENHEIT
 //#define DISABLE_DHT11_TEMP
 //#define DISABLE_DHT11_HUMIDITY
 //#define DISABLE_MCP9701_TEMP
 //#define DISABLE_WIFI
 //#define DISABLE_API_REQUEST
+
 
 /*
     Server Information

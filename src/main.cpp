@@ -1,4 +1,5 @@
 //fka tri_pmp_sample_code.ino
+
 #include <iot_cmd.h>
 #include <sequencer2.h>                                          //imports a 4 function sequencer 
 #include <Ezo_i2c_util.h>                                        //brings in common print statements
@@ -6,6 +7,8 @@
 #include <Wire.h>    //include arduinos i2c library
 #include "headers.h"
 
+
+#ifndef DISABLE_PERISTALTIC_PUMPS
 Ezo_board PMP1 = Ezo_board(101, "PMP1");    //create an PMP circuit object who's address is 56 and name is "PMP1"
 Ezo_board PMP2 = Ezo_board(102, "PMP2");    //create an PMP circuit object who's address is 57 and name is "PMP2"
 Ezo_board PMP3 = Ezo_board(103, "PMP3");    //create an PMP circuit object who's address is 58 and name is "PMP3"
@@ -15,8 +18,6 @@ Ezo_board device_list[] = {               //an array of boards used for sending 
   PMP2,
   PMP3
 };
-
-
 
 Ezo_board* default_board = &device_list[0]; //used to store the board were talking to
 
@@ -28,43 +29,37 @@ unsigned int poll_delay = 2000 - reading_delay;
 
 void step1();      //forward declarations of functions to use them in the sequencer before defining them
 void step2();
-bool process_coms(const String &string_buffer);
-void print_help();
 Sequencer2 Seq(&step1, reading_delay,   //calls the steps in sequence with time in between them
                &step2, poll_delay);
 
 bool polling = false;                                     //variable to determine whether or not were polling the circuits
+#endif
 
 void setup() {
   Wire.begin(SDA_PIN, SCL_PIN);                          //start the I2C
   Serial.begin(115200);                     //start the serial communication to the computer
+  #ifndef DISABLE_PERISTALTIC_PUMPS
   Seq.reset();
+  #endif
 }
 
 void loop() {
-  String cmd;                             //variable to hold commands we send to the kit
 
-  if (receive_command(cmd)) {            //if we sent the kit a command it gets put into the cmd variable
-    polling = false;                     //we stop polling
-    if (!process_coms(cmd)) {            //then we evaluate the cmd for kit specific commands
-      process_command(cmd, device_list, device_list_len, default_board);    //then if its not kit specific, pass the cmd to the IOT command processing function
-    }
-  }
-
-  if (polling == true) {                 //if polling is turned on, run the sequencer
-    Seq.run();
-  }
-  
+  #ifndef DISABLE_PERISTALTIC_PUMPS
+  getSetPoint();
+  // if(AveragepH){
+  //   Seq.run();
+  // }
   Seq.run();
-  delay(50);
+  //delay(50);
+  #endif
+
 }
 
+#ifndef DISABLE_PERISTALTIC_PUMPS
 void step1() {
-  //send a read command. we use this command instead of PMP1.send_cmd("R");
-  //to let the library know to parse the reading
-  // PMP1.send_read_cmd();
-  // PMP2.send_read_cmd();
-  // PMP3.send_read_cmd();
+  //getSetpoint():
+
   PMP1.send_cmd("d,1");
   PMP2.send_cmd("d,1");
   PMP3.send_cmd("d,1");
@@ -79,44 +74,8 @@ void step2() {
   receive_and_print_reading(PMP3);
   Serial.println();
 }
+#endif
 
-bool process_coms(const String &string_buffer) {      //function to process commands that manipulate global variables and are specifc to certain kits
-  if (string_buffer == "HELP") {
-    print_help();
-    return true;
-  }
-  else if (string_buffer.startsWith("POLL")) {
-    polling = true;
-    Seq.reset();
+void getSetPoint(){
 
-    int16_t index = string_buffer.indexOf(',');                    //check if were passing a polling delay parameter
-    if (index != -1) {                                              //if there is a polling delay
-      float new_delay = string_buffer.substring(index + 1).toFloat(); //turn it into a float
-
-      float mintime = reading_delay;
-      if (new_delay >= (mintime / 1000.0)) {                                     //make sure its greater than our minimum time
-        Seq.set_step2_time((new_delay * 1000.0) - reading_delay);          //convert to milliseconds and remove the reading delay from our wait
-      } else {
-        Serial.println("delay too short");                          //print an error if the polling time isnt valid
-      }
-    }
-    return true;
-  }
-  return false;                         //return false if the command is not in the list, so we can scan the other list or pass it to the circuit
-}
-
-void print_help() {
-  Serial.println(F("Atlas Scientific Tri PMP sample code                                       "));
-  Serial.println(F("Commands:                                                                  "));
-  Serial.println(F("poll         Takes readings continuously of all sensors                    "));
-  Serial.println(F("                                                                           "));
-  Serial.println(F("PMP[N]:[query]       issue a query to a pump named PMP[N]                  "));
-  Serial.println(F("  ex: PMP2:status    sends the status command to pump named PMP2           "));
-  Serial.println(F("      PMP1:d,100     requests that PMP1 dispenses 100ml                    "));
-  Serial.println();
-  Serial.println(F("      The list of all pump commands is available in the Tri PMP datasheet  "));
-  Serial.println();
-  iot_cmd_print_listcmd_help();
-  Serial.println();
-  iot_cmd_print_allcmd_help();
 }
