@@ -19,6 +19,7 @@
 #include <Adafruit_Sensor.h>          //Library for Adafruit sensors
 #include <DHT.h>                      // Sensor for Humidity and temperature.
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
+//#include "hal/gpio_types.h"           // TO use esp
 
 char EC_data[32]; // we make a 32-byte character array to hold incoming data from the EC sensor.
 char *EC_str;     // char pointer used in string parsing.
@@ -60,6 +61,7 @@ void printLocalTime();
 void startOnDemandWiFiManager();
 void saveWMConfig();
 
+
 // #ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
 #if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
 DHT dht(DHT11PIN, DHTTYPE);
@@ -78,9 +80,51 @@ void updateDisplay()
   display.display();
   display.setFont();
 }
+/*
+Peristaltic Pumps
+*/
+//#define address 103              //default I2C ID number for EZO-PMP Embedded Dosing Pump.   
+#define address 100              //default I2C ID number for EZO-PMP Embedded Dosing Pump.   Ryan is changed this to 100
+char computerdata[20];           //we make a 20 byte character array to hold incoming data from a pc/mac/other.
+byte received_from_computer = 0; //we need to know how many characters have been received.
+byte code = 0;                   //used to hold the I2C response code.
+char pmp_data[20];               //we make a 20 byte character array to hold incoming data from the EZO-PMP.
+byte in_char = 0;                //used as a 1 byte buffer to store in bound bytes from the EZO-PMP.
+byte i = 0;                      //counter used for pmp_data array.
+int time_ = 250;                 //used to change the delay needed depending on the command sent to the EZO-PMP.
+float pmp_float;                 //float var used to hold the float value of the EZO-PMP.
+Ezo_board PMP1 = Ezo_board(56, "PMP1");    //create an PMP circuit object who's address is 56 and name is "PMP1"
+Ezo_board PMP2 = Ezo_board(57, "PMP2");    //create an PMP circuit object who's address is 57 and name is "PMP2"
+Ezo_board PMP3 = Ezo_board(58, "PMP3");    //create an PMP circuit object who's address is 58 and name is "PMP3"
+
+//gets the length of the array automatically so we dont have to change the number every time we add new boards
+const uint8_t device_list_len = sizeof(device_list) / sizeof(device_list[0]);
+
+const unsigned long reading_delay = 1000;                 //how long we wait to receive a response, in milliseconds
+unsigned int poll_delay = 2000 - reading_delay;
+
+Ezo_board device_list[] = {               //an array of boards used for sending commands to all or specific boards
+  PMP1,
+  PMP2,
+  PMP3
+};
+
+Ezo_board* default_board = &device_list[0]; //used to store the board were talking to
+
+Sequencer2 Seq(&step1, reading_delay,   //calls the steps in sequence with time in between them
+  &step2, poll_delay);
+  bool polling = true;                                     //variable to determine whether or not were polling the circuits
+
 
 void setup()
 {
+
+/*
+Peristaltic pumps
+*/
+
+
+  //gpio_dump_io_configuration(stdout, SOC_GPIO_VALID_GPIO_MASK);
   pinMode(LED15, OUTPUT);
 
   config.begin("config");
@@ -106,7 +150,7 @@ void setup()
     Serial.println("Loaded EEPROM");
   }
 #endif
-
+        // The address of the display is 0x3C = 60 in decimal
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
     Serial.println(F("SSD1306 allocation failed"));
@@ -188,9 +232,7 @@ void setup()
   display.clearDisplay();
 }
 unsigned int lastTime = 0;
-
 int counter = 0;
-
 int onDemandManagerTrigger = false;
 int lastButtonPress = 0;
 int didLastManager = 0;
@@ -198,6 +240,16 @@ int button_held_wifi_manager = 0;
 
 void loop()
 {
+  
+  #ifndef DISABLE_PERISTALTIC_PUMPS
+  getSetPoint();
+  // if(AveragepH<setpoint){
+  //   Seq.run();
+  // }
+  Seq.run();
+  //delay(50);
+  #endif
+
 
   if (Serial.available() > 0)
   {
@@ -292,23 +344,7 @@ void loop()
   float temperatureF = fahrenheit;
 #endif
 #if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
-  //display.print("-");
-#endif
-
-#ifndef DISABLE_DHT11_TEMP
-  // float sensorValue = analogRead(MCP9701_temp_Pin);
-  // float voltage = sensorValue * (3.3 / 4095.0);
-  // float temperatureC = (voltage - 0.5) / 0.01;
-  // float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
-  display.print(readDHT11Temp(), 1);
-  display.setTextSize(2);
-  display.print("F");
-  // Serial.print("MCP9701 Temperature:\t\t\t");
-  //Serial.print(fahrenheit);
-  //Serial.print("\xC2\xB0"); // shows degree symbol
-  //Serial.println("F");
-  float temperatureF = readDHT11Temp();
-  //float temperatureF = fahrenheit;
+  display.print("-");
 #endif
 
   // Serial.print(temperatureF);
@@ -317,33 +353,19 @@ void loop()
   // display.cp437(true);
   // display.write(167);
   // display.print(fahrenheit);
-  #ifndef DISABLE_ATLAS_pH
+
   // pH Display on OLED
   display.setTextSize(1);
   display.setCursor(0, 35);
   display.print("pH: ");
   display.setTextSize(2);
   display.setCursor(0, 45);
-
+#ifndef DISABLE_ATLAS_pH
   display.print(pH.read_ph(), 1);
-//#else
+#else
   display.print("-");
 #endif
-  //display.println(" ");
-
-  #ifndef DISABLE_DHT11_HUMIDITY
-    // Humidity Display on OLED
-    display.setTextSize(1);
-    display.setCursor(0, 35);
-    display.print("HUMIDITY:");
-    display.setTextSize(2);
-    display.setCursor(0, 45);
-    display.print(readDHT11humidity(), 1);
-    display.print("%");
-  #else
-    display.print("-");
-  #endif
-
+  display.println(" ");
 
   // Serial.print("RSSI: \t");
   Serial.print("Received Signal Strength Indicator:\t");
@@ -654,3 +676,29 @@ float readDHT11humidity()
   // Serial.println(" %");
 }
 #endif
+
+
+
+#ifndef DISABLE_PERISTALTIC_PUMPS
+void step1() {
+  //getSetpoint():
+
+  PMP1.send_cmd("d,1");
+  PMP2.send_cmd("d,1");
+  PMP3.send_cmd("d,1");
+  
+}
+
+void step2() {
+  receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
+  Serial.print("  ");
+  receive_and_print_reading(PMP2);
+  Serial.print("  ");
+  receive_and_print_reading(PMP3);
+  Serial.println();
+}
+#endif
+
+void getSetPoint(){
+
+}
