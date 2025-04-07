@@ -292,7 +292,23 @@ void loop()
   float temperatureF = fahrenheit;
 #endif
 #if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
-  display.print("-");
+  //display.print("-");
+#endif
+
+#ifndef DISABLE_DHT11_TEMP
+  // float sensorValue = analogRead(MCP9701_temp_Pin);
+  // float voltage = sensorValue * (3.3 / 4095.0);
+  // float temperatureC = (voltage - 0.5) / 0.01;
+  // float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
+  display.print(readDHT11Temp(), 1);
+  display.setTextSize(2);
+  display.print("F");
+  // Serial.print("MCP9701 Temperature:\t\t\t");
+  //Serial.print(fahrenheit);
+  //Serial.print("\xC2\xB0"); // shows degree symbol
+  //Serial.println("F");
+  float temperatureF = readDHT11Temp();
+  //float temperatureF = fahrenheit;
 #endif
 
   // Serial.print(temperatureF);
@@ -301,19 +317,33 @@ void loop()
   // display.cp437(true);
   // display.write(167);
   // display.print(fahrenheit);
-
+  #ifndef DISABLE_ATLAS_pH
   // pH Display on OLED
   display.setTextSize(1);
   display.setCursor(0, 35);
   display.print("pH: ");
   display.setTextSize(2);
   display.setCursor(0, 45);
-#ifndef DISABLE_ATLAS_pH
+
   display.print(pH.read_ph(), 1);
-#else
+//#else
   display.print("-");
 #endif
-  display.println(" ");
+  //display.println(" ");
+
+  #ifndef DISABLE_DHT11_HUMIDITY
+    // Humidity Display on OLED
+    display.setTextSize(1);
+    display.setCursor(0, 35);
+    display.print("HUMIDITY:");
+    display.setTextSize(2);
+    display.setCursor(0, 45);
+    display.print(readDHT11humidity(), 1);
+    display.print("%");
+  #else
+    display.print("-");
+  #endif
+
 
   // Serial.print("RSSI: \t");
   Serial.print("Received Signal Strength Indicator:\t");
