@@ -406,9 +406,9 @@ void loop()
     requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"ec\":" + String(EC_float / 1000);
-    requestBody += ",\"rssi\":" + String(WiFi.RSSI()); // @joshthaw please add a column/displayto the website for RSSI
+    requestBody += ",\"rssi\":" + String(WiFi.RSSI());
 #if !defined(DISABLE_DHT11_HUMIDITY)
-    requestBody += ",\"humidity\":" + String(readDHT11humidity()); // @joshthaw please add a column/display to the website for Humidity
+    requestBody += ",\"humidity\":" + String(readDHT11humidity());
 #endif
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
