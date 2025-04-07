@@ -241,6 +241,53 @@ int button_held_wifi_manager = 0;
 void loop()
 {
   
+  if (rssi >= -55) { 
+    u8g2.drawBox(102,7,4,1);
+    u8g2.drawBox(107,6,4,2);
+    u8g2.drawBox(112,4,4,4);
+    u8g2.drawBox(117,2,4,6);
+    u8g2.drawBox(122,0,4,8);
+    u8g2.sendBuffer();
+  } else if (rssi < -55 & rssi > -65) {
+    u8g2.drawBox(102,7,4,1);
+    u8g2.drawBox(107,6,4,2);
+    u8g2.drawBox(112,4,4,4);
+    u8g2.drawBox(117,2,4,6);
+    u8g2.drawFrame(122,0,4,8);
+    u8g2.sendBuffer();
+  } else if (rssi < -65 & rssi > -75) {
+    u8g2.drawBox(102,8,4,1);
+    u8g2.drawBox(107,6,4,2);
+    u8g2.drawBox(112,4,4,4);
+    u8g2.drawFrame(117,2,2,6);
+    u8g2.drawFrame(122,0,4,8);
+    u8g2.sendBuffer();
+  } else if (rssi < -75 & rssi > -85) {
+    u8g2.drawBox(102,8,4,1);
+    u8g2.drawBox(107,6,4,2);
+    u8g2.drawFrame(112,4,4,4);
+    u8g2.drawFrame(117,2,4,6);
+    u8g2.drawFrame(122,0,4,8);
+    u8g2.sendBuffer();
+  } else if (rssi < -85 & rssi > -96) {
+    u8g2.drawBox(102,8,4,1);
+    u8g2.drawFrame(107,6,4,2);
+    u8g2.drawFrame(112,4,4,4);
+    u8g2.drawFrame(117,2,4,6);
+    u8g2.drawFrame(122,0,4,8);
+    u8g2.sendBuffer();
+  } else {
+    u8g2.drawFrame(102,8,4,1);
+    u8g2.drawFrame(107,6,4,2);
+    u8g2.drawFrame(112,4,4,4);
+    u8g2.drawFrame(117,2,4,6);
+    u8g2.drawFrame(122,0,4,8);
+    u8g2.sendBuffer();
+  }
+
+
+
+
   #ifndef DISABLE_PERISTALTIC_PUMPS
   getSetPoint();
   // if(AveragepH<setpoint){
