@@ -407,6 +407,7 @@ void loop()
   Serial.print(readDHT11Temp());
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.print("F\t");
+  float temperatureF = readDHT11Temp();
 // display.print(/1000,1);
 #endif
 
