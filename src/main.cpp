@@ -408,7 +408,7 @@ void loop()
     requestBody += ",\"ec\":" + String(EC_float / 1000);
     requestBody += ",\"rssi\":" + String(WiFi.RSSI()); // @joshthaw please add a column/displayto the website for RSSI
 #if !defined(DISABLE_DHT11_HUMIDITY)
-    requestBody += ",\"Humidity\":" + String(readDHT11humidity()); // @joshthaw please add a column/display to the website for Humidity
+    requestBody += ",\"humidity\":" + String(readDHT11humidity()); // @joshthaw please add a column/display to the website for Humidity
 #endif
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
