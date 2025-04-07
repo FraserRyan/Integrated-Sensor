@@ -19,6 +19,8 @@
 #include <Adafruit_Sensor.h>          //Library for Adafruit sensors
 #include <DHT.h>                      // Sensor for Humidity and temperature.
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
+//#include <ESPWiFiAnalyzerUTF8.h>
+//#include <U8g2lib.h>
 //#include "hal/gpio_types.h"           // TO use esp
 
 char EC_data[32]; // we make a 32-byte character array to hold incoming data from the EC sensor.
@@ -83,6 +85,7 @@ void updateDisplay()
 /*
 Peristaltic Pumps
 */
+#ifndef DISABLE_PERISTALTIC_PUMPS
 //#define address 103              //default I2C ID number for EZO-PMP Embedded Dosing Pump.   
 #define address 100              //default I2C ID number for EZO-PMP Embedded Dosing Pump.   Ryan is changed this to 100
 char computerdata[20];           //we make a 20 byte character array to hold incoming data from a pc/mac/other.
@@ -93,12 +96,17 @@ byte in_char = 0;                //used as a 1 byte buffer to store in bound byt
 byte i = 0;                      //counter used for pmp_data array.
 int time_ = 250;                 //used to change the delay needed depending on the command sent to the EZO-PMP.
 float pmp_float;                 //float var used to hold the float value of the EZO-PMP.
+
 Ezo_board PMP1 = Ezo_board(56, "PMP1");    //create an PMP circuit object who's address is 56 and name is "PMP1"
 Ezo_board PMP2 = Ezo_board(57, "PMP2");    //create an PMP circuit object who's address is 57 and name is "PMP2"
 Ezo_board PMP3 = Ezo_board(58, "PMP3");    //create an PMP circuit object who's address is 58 and name is "PMP3"
 
 //gets the length of the array automatically so we dont have to change the number every time we add new boards
 const uint8_t device_list_len = sizeof(device_list) / sizeof(device_list[0]);
+Sequencer2 Seq(&step1, reading_delay,   //calls the steps in sequence with time in between them
+  &step2, poll_delay);
+  bool polling = true;                                     //variable to determine whether or not were polling the circuits
+
 
 const unsigned long reading_delay = 1000;                 //how long we wait to receive a response, in milliseconds
 unsigned int poll_delay = 2000 - reading_delay;
@@ -110,10 +118,7 @@ Ezo_board device_list[] = {               //an array of boards used for sending 
 };
 
 Ezo_board* default_board = &device_list[0]; //used to store the board were talking to
-
-Sequencer2 Seq(&step1, reading_delay,   //calls the steps in sequence with time in between them
-  &step2, poll_delay);
-  bool polling = true;                                     //variable to determine whether or not were polling the circuits
+#endif
 
 
 void setup()
@@ -240,50 +245,52 @@ int button_held_wifi_manager = 0;
 
 void loop()
 {
-  
-  if (rssi >= -55) { 
-    u8g2.drawBox(102,7,4,1);
-    u8g2.drawBox(107,6,4,2);
-    u8g2.drawBox(112,4,4,4);
-    u8g2.drawBox(117,2,4,6);
-    u8g2.drawBox(122,0,4,8);
-    u8g2.sendBuffer();
-  } else if (rssi < -55 & rssi > -65) {
-    u8g2.drawBox(102,7,4,1);
-    u8g2.drawBox(107,6,4,2);
-    u8g2.drawBox(112,4,4,4);
-    u8g2.drawBox(117,2,4,6);
-    u8g2.drawFrame(122,0,4,8);
-    u8g2.sendBuffer();
-  } else if (rssi < -65 & rssi > -75) {
-    u8g2.drawBox(102,8,4,1);
-    u8g2.drawBox(107,6,4,2);
-    u8g2.drawBox(112,4,4,4);
-    u8g2.drawFrame(117,2,2,6);
-    u8g2.drawFrame(122,0,4,8);
-    u8g2.sendBuffer();
-  } else if (rssi < -75 & rssi > -85) {
-    u8g2.drawBox(102,8,4,1);
-    u8g2.drawBox(107,6,4,2);
-    u8g2.drawFrame(112,4,4,4);
-    u8g2.drawFrame(117,2,4,6);
-    u8g2.drawFrame(122,0,4,8);
-    u8g2.sendBuffer();
-  } else if (rssi < -85 & rssi > -96) {
-    u8g2.drawBox(102,8,4,1);
-    u8g2.drawFrame(107,6,4,2);
-    u8g2.drawFrame(112,4,4,4);
-    u8g2.drawFrame(117,2,4,6);
-    u8g2.drawFrame(122,0,4,8);
-    u8g2.sendBuffer();
-  } else {
-    u8g2.drawFrame(102,8,4,1);
-    u8g2.drawFrame(107,6,4,2);
-    u8g2.drawFrame(112,4,4,4);
-    u8g2.drawFrame(117,2,4,6);
-    u8g2.drawFrame(122,0,4,8);
-    u8g2.sendBuffer();
-  }
+ 
+  // int rssi = WiFi.RSSI();
+
+  // if (rssi >= -55) { 
+  //   u8g2.drawBox(102,7,4,1);
+  //   u8g2.drawBox(107,6,4,2);
+  //   u8g2.drawBox(112,4,4,4);
+  //   u8g2.drawBox(117,2,4,6);
+  //   u8g2.drawBox(122,0,4,8);
+  //   u8g2.sendBuffer();
+  // } else if (rssi < -55 & rssi > -65) {
+  //   u8g2.drawBox(102,7,4,1);
+  //   u8g2.drawBox(107,6,4,2);
+  //   u8g2.drawBox(112,4,4,4);
+  //   u8g2.drawBox(117,2,4,6);
+  //   u8g2.drawFrame(122,0,4,8);
+  //   u8g2.sendBuffer();
+  // } else if (rssi < -65 & rssi > -75) {
+  //   u8g2.drawBox(102,8,4,1);
+  //   u8g2.drawBox(107,6,4,2);
+  //   u8g2.drawBox(112,4,4,4);
+  //   u8g2.drawFrame(117,2,2,6);
+  //   u8g2.drawFrame(122,0,4,8);
+  //   u8g2.sendBuffer();
+  // } else if (rssi < -75 & rssi > -85) {
+  //   u8g2.drawBox(102,8,4,1);
+  //   u8g2.drawBox(107,6,4,2);
+  //   u8g2.drawFrame(112,4,4,4);
+  //   u8g2.drawFrame(117,2,4,6);
+  //   u8g2.drawFrame(122,0,4,8);
+  //   u8g2.sendBuffer();
+  // } else if (rssi < -85 & rssi > -96) {
+  //   u8g2.drawBox(102,8,4,1);
+  //   u8g2.drawFrame(107,6,4,2);
+  //   u8g2.drawFrame(112,4,4,4);
+  //   u8g2.drawFrame(117,2,4,6);
+  //   u8g2.drawFrame(122,0,4,8);
+  //   u8g2.sendBuffer();
+  // } else {
+  //   u8g2.drawFrame(102,8,4,1);
+  //   u8g2.drawFrame(107,6,4,2);
+  //   u8g2.drawFrame(112,4,4,4);
+  //   u8g2.drawFrame(117,2,4,6);
+  //   u8g2.drawFrame(122,0,4,8);
+  //   u8g2.sendBuffer();
+  // }
 
 
 
@@ -434,6 +441,13 @@ void loop()
   display.print("dBm");
 #else
   display.print("-");
+#endif
+
+#ifndef DISABLE_UNIT_DISPLAY
+display.setCursor(72, 24);
+display.print("Unit#");
+display.print(UNIT_NUMBER);
+
 #endif
 
   display.setCursor(72, 34);
