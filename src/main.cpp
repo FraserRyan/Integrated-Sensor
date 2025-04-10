@@ -20,6 +20,12 @@
 #include <DHT.h>                      // Sensor for Humidity and temperature.
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
 
+#ifndef DISABLE_GPS
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
+
+#endif
+
 char EC_data[32]; // we make a 32-byte character array to hold incoming data from the EC sensor.
 char *EC_str;     // char pointer used in string parsing.
 char *TDS;        // char pointer used in string parsing.
@@ -65,6 +71,13 @@ void saveWMConfig();
 DHT dht(DHT11PIN, DHTTYPE);
 float readDHT11Temp();
 float readDHT11humidity();
+#endif
+
+#ifndef DISABLE_GPS
+SoftwareSerial GPSPort;
+TinyGPSPlus gps;
+float GPS_LAT = 0, GPS_LONG = 0, GPS_ELEV = 0;
+void updateGPS();
 #endif
 
 void updateDisplay()
@@ -130,6 +143,20 @@ void setup()
 
 #if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
   dht.begin();
+#endif
+
+#ifndef DISABLE_GPS
+  GPSPort.begin(9600, SWSERIAL_8N1, GPS_RX, GPS_TX, false);
+  if (!GPSPort)
+  { // If the object did not initialize, then its configuration is invalid
+    Serial.println("Invalid SoftwareSerial pin configuration, check config");
+    while (1)
+    { // Don't continue with invalid configuration
+      delay(1000);
+    }
+  }
+  Serial.println("GPS Sensor Setup Complete");
+  Serial.println("\n");
 #endif
 
 #ifndef DISABLE_WIFI
@@ -384,6 +411,11 @@ void loop()
   // Serial.println(apiId);
   if ((counter == 0 || ((millis() - lastTime) > delayTime)) && UNIT_NUMBER != 0 && strcmp(apiId, "") != 0 && strcmp(apiKey, "") != 0)
   {
+    updateGPS();
+    Serial.print("lat: ");
+    Serial.println(GPS_LAT);
+    Serial.print("long: ");
+    Serial.println(GPS_LONG);
     display.fillTriangle(106, 10, 121, 15, 106, 23, 1);
     display.display();
     HTTPClient http;
@@ -421,6 +453,14 @@ void loop()
     requestBody += ",\"rssi\":" + String(WiFi.RSSI());
 #if !defined(DISABLE_DHT11_HUMIDITY)
     requestBody += ",\"humidity\":" + String(readDHT11humidity());
+#endif
+#if !defined(DISABLE_GPS)
+    Serial.println(GPS_LAT);
+    if (GPS_LAT != 0.00)
+    {
+      requestBody += ",\"lat\":" + String(GPS_LAT);
+      requestBody += ",\"long\":" + String(GPS_LONG);
+    }
 #endif
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
@@ -634,5 +674,31 @@ float readDHT11humidity()
   // Serial.print("Humidity: ");
   // Serial.print(h);
   // Serial.println(" %");
+}
+#endif
+
+#ifndef DISABLE_GPS
+void updateGPS()
+{
+  Serial.println("update GPS function");
+  // while (GPSPort.available() > 0)
+  // {
+  //   Serial.println("GPS Avail");
+  //   gps.encode(GPSPort.read());
+
+  //   if (gps.location.isValid())
+  //   {
+  while (GPSPort.available())
+  {
+    gps.encode(GPSPort.read());
+    if (gps.location.isValid())
+    {
+      Serial.println("GPS Is Updated");
+      Serial.println(gps.location.lat());
+      GPS_LAT = gps.location.lat();
+      GPS_LONG = gps.location.lng();
+    }
+    // }
+  }
 }
 #endif

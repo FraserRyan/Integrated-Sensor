@@ -15,6 +15,8 @@ const int LED14                   = 14;   // On board LED Digital output 14
 const int LED15                   = 15;   // On board LED Digital output 15
 const int LED16                   = 16;   // On board LED Digital output 16
 const int LED17                   = 17;   // On board LED Digital output 17
+const int GPS_RX = 42;
+const int GPS_TX = 45;
 int delayTime                     = 10 * 1000;  // 30 seconds in milliseconds
 //int delayTime                   = 10 * 60 * 1000; // 10 minutes in milliseconds
 const char* ntpServer             = "pool.ntp.org";
@@ -32,6 +34,7 @@ const int   daylightOffset_sec    = 3600;
 //#define DISABLE_MCP9701_TEMP
 //#define DISABLE_WIFI
 //#define DISABLE_API_REQUEST
+#define DISABLE_GPS
 
 /*
     Server Information
