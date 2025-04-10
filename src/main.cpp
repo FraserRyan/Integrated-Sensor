@@ -245,7 +245,10 @@ void setup()
   lcd.begin();
   lcd.backlight();
   lcd.clear();
+  lcd.setCursor(0,1);
+  
   lcd.print("Starting Integrated Sensor");
+
   #endif
 
 
@@ -262,6 +265,47 @@ int button_held_wifi_manager = 0;
 void loop()
 {
 
+
+  #ifndef DISABLE_LCD
+    // For the LCD the first parameter is the Column 0-20 
+    int lcd_temp = 100;
+    lcd.clear();
+    #ifndef DHT11_TEMP
+      lcd.setCursor(0,0);
+      lcd.print("Temp:");
+      //char tempStr[3];
+      //dtostrf(lcd_temp,3,3,tempStr);
+      lcd.print(readDHT11Temp(),0);
+      lcd.print(char(223)); //print degree
+      lcd.print("F");
+    #endif
+    #ifndef DISABLE_ATLAS_pH
+      lcd.setCursor(0,1);
+      lcd.print("pH:");
+    #endif
+    #ifndef DISABLE_ATLAS_EC
+      lcd.setCursor(0,2);
+      lcd.print("EC:");
+    #endif
+    #ifndef DISABLE_WIFI
+      lcd.setCursor(0,3);
+      lcd.print("RSSI:");
+      lcd.print(WiFi.RSSI());
+    #endif
+    #ifndef DISABLE_DHT11_HUMIDITY
+      lcd.setCursor(10,0);
+      lcd.print("Humid:");
+      lcd.print(readDHT11humidity(),0);
+      lcd.print("%");
+    #endif
+    #ifndef DISABLE_UNIT_DISPLAY
+      lcd.setCursor(10,1);
+      lcd.print("Unit#");
+      lcd.print(UNIT_NUMBER);
+      //lcd.print("");
+    #endif
+
+  #endif
   if (Serial.available() > 0)
   {
     user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
@@ -418,6 +462,8 @@ void loop()
   Serial.print(readDHT11Temp());
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.print("F\t");
+ int temperatureF = readDHT11Temp();    //For now this will set DHT11 Temp as the temp to be logged to Roboticsensor 
+ //   if both sensors are enabled this will need to be changed 
 // display.print(/1000,1);
 #endif
 
