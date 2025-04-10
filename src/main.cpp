@@ -6,7 +6,7 @@
 #include <WiFiClientSecure.h>
 #include <Preferences.h>
 #include <HTTPClient.h>
-#include <Arduino_JSON.h>
+// #include <Arduino_JSON.h>
 #include "headers.h"
 #include "time.h"
 #include "ph_surveyor.h"
@@ -23,6 +23,14 @@
 #ifndef DISABLE_GPS
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
+#endif
+
+#ifdef ENABLE_SETPOINT_FETCH
+#include <ArduinoJson.h>
+
+JsonDocument doc;
+
+double EC_MIN, EC_MAX, PH_MIN, PH_MAX;
 
 #endif
 
@@ -421,7 +429,9 @@ void loop()
     HTTPClient http;
     WiFiClientSecure client;
     client.setCACert(root_ca);
-
+#ifdef ENABLE_SETPOINT_FETCH
+    http.useHTTP10(true);
+#endif
     Serial.print("Loop counter: ");
     Serial.println(++counter);
     http.begin(client, envDataRequestURL.c_str());
@@ -454,6 +464,7 @@ void loop()
 #if !defined(DISABLE_DHT11_HUMIDITY)
     requestBody += ",\"humidity\":" + String(readDHT11humidity());
 #endif
+
 #if !defined(DISABLE_GPS)
     Serial.println(GPS_LAT);
     if (GPS_LAT != 0.00)
@@ -461,6 +472,10 @@ void loop()
       requestBody += ",\"lat\":" + String(GPS_LAT);
       requestBody += ",\"long\":" + String(GPS_LONG);
     }
+#endif
+
+#ifdef ENABLE_SETPOINT_FETCH
+    requestBody += ",\"returnSetPoints\":true";
 #endif
     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
     requestBody += "}";
@@ -477,11 +492,40 @@ void loop()
     {
       display.fillTriangle(106, 10, 121, 15, 106, 23, 0);
       display.display();
+
+#ifdef ENABLE_SETPOINT_FETCH
+      DeserializationError error = deserializeJson(doc, http.getStream());
+
+      if (error)
+      {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
+        // return;
+      }
+
+      // Fetch the values
+      //
+      // Most of the time, you can rely on the implicit casts.
+      // In other case, you can do doc["time"].as<long>();
+      EC_MIN = doc["setPoints"]["ec"]["min"];
+      EC_MAX = doc["setPoints"]["ec"]["max"];
+      PH_MIN = doc["setPoints"]["pH"]["min"];
+      PH_MAX = doc["setPoints"]["pH"]["max"];
+      Serial.print("EC min: ");
+      Serial.println(EC_MIN);
+      Serial.print("EC max: ");
+      Serial.println(EC_MAX);
+      Serial.print("pH min: ");
+      Serial.println(PH_MIN);
+      Serial.print("pH max: ");
+      Serial.println(PH_MAX);
+#endif
     }
     else
     {
       // LogData(requestBody);
     }
+    http.end();
   }
 #endif
 }
