@@ -251,6 +251,13 @@ void setup()
 
   display.setTextColor(WHITE);
   display.clearDisplay();
+  #ifndef DISABLE_LCD
+  lcd.begin();
+  lcd.backlight();
+  lcd.print("Starting Integrated Sensor");
+  #endif
+
+
 }
 unsigned int lastTime = 0;
 
