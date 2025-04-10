@@ -81,6 +81,14 @@ void updateDisplay()
 
 void setup()
 {
+
+  Serial.begin(115200);
+
+  Serial.println("");
+  Serial.print("MAC Address: ");
+  Serial.println(WiFi.macAddress());
+  Serial.println("Starting Integrated Sensor");
+  Serial.println("");
   pinMode(LED15, OUTPUT);
 
   config.begin("config");
@@ -103,7 +111,6 @@ void setup()
   EC.send_cmd("o,sg,1"); // send command to enable specific gravity output
   delay(300);
 
-  Serial.begin(115200);
 #ifndef CALIBRATION_MODE
   Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
   if (RTD.begin())
