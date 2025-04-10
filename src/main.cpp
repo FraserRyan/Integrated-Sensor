@@ -419,11 +419,13 @@ void loop()
   // Serial.println(apiId);
   if ((counter == 0 || ((millis() - lastTime) > delayTime)) && UNIT_NUMBER != 0 && strcmp(apiId, "") != 0 && strcmp(apiKey, "") != 0)
   {
+#ifndef DISABLE_GPS
     updateGPS();
     Serial.print("lat: ");
     Serial.println(GPS_LAT);
     Serial.print("long: ");
     Serial.println(GPS_LONG);
+#endif
     display.fillTriangle(106, 10, 121, 15, 106, 23, 1);
     display.display();
     HTTPClient http;
