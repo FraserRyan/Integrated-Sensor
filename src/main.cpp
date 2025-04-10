@@ -36,19 +36,8 @@ double EC_MIN, EC_MAX, PH_MIN, PH_MAX;
 
 #ifndef DISABLE_LCD
 #include <LiquidCrystal_I2C.h>
-#define I2C_ADDR    0x27  // Define I2C Address where the PCF8574A is
-#define BACKLIGHT_PIN     3
-#define En_pin  2
-#define Rw_pin  1
-#define Rs_pin  0
-#define D4_pin  4
-#define D5_pin  5
-#define D6_pin  6
-#define D7_pin  7
-int n = 1;
-
-//LiquidCrystal_I2C	lcd(I2C_ADDR,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
-LiquidCrystal_I2C	lcd(0x27,20,4);
+#define LCD_ADDR    0x27  // Define I2C Address where the PCF8574A is
+LiquidCrystal_I2C	lcd(LCD_ADDR,20,4);
 #endif
 
 
@@ -251,9 +240,11 @@ void setup()
 
   display.setTextColor(WHITE);
   display.clearDisplay();
+
   #ifndef DISABLE_LCD
   lcd.begin();
   lcd.backlight();
+  lcd.clear();
   lcd.print("Starting Integrated Sensor");
   #endif
 
