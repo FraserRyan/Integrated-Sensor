@@ -40,6 +40,7 @@ double EC_MIN, EC_MAX, PH_MIN, PH_MAX;
 LiquidCrystal_I2C	lcd(LCD_ADDR,20,4);
 #endif
 
+TaskHandle_t Task1;
 
 char EC_data[32]; // we make a 32-byte character array to hold incoming data from the EC sensor.
 char *EC_str;     // char pointer used in string parsing.
@@ -111,6 +112,9 @@ void setup()
 {
 
   Serial.begin(115200);
+  
+  Serial.print("setup() running on core ");
+  Serial.println(xPortGetCoreID());
 
   Serial.println("");
   Serial.print("MAC Address: ");
@@ -265,6 +269,8 @@ int button_held_wifi_manager = 0;
 void loop()
 {
 
+  Serial.print("loop() running on core ");
+  Serial.println(xPortGetCoreID());
 
   #ifndef DISABLE_LCD
     // For the LCD the first parameter is the Column 0-20 
