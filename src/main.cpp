@@ -291,6 +291,7 @@ void loop()
       lcd.setCursor(0,3);
       lcd.print("RSSI:");
       lcd.print(WiFi.RSSI());
+      lcd.print("dBm");
     #endif
     #ifndef DISABLE_DHT11_HUMIDITY
       lcd.setCursor(10,0);
