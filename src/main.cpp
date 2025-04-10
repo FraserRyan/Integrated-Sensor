@@ -88,6 +88,11 @@ void setup()
   strcpy(apiKey, config.getString("api_key", "").c_str());
   strcpy(apiId, config.getString("api_id", "").c_str());
   config.end();
+
+  unit_number_param.setValue(String(UNIT_NUMBER).c_str(), 4);
+  api_id_param.setValue(String(apiId).c_str(), 40);
+  api_key_param.setValue(String(apiKey).c_str(), 40);
+
   Wire.begin(SDA_PIN, SCL_PIN);
   Seq.reset(); // initialize the sequencer
   delay(3000);
