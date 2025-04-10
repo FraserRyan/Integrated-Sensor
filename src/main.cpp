@@ -301,7 +301,7 @@ void loop()
     #endif
     #ifndef DISABLE_UNIT_DISPLAY
       lcd.setCursor(10,1);
-      lcd.print("Unit#");
+      lcd.print("Unit #");
       lcd.print(UNIT_NUMBER);
       //lcd.print("");
     #endif
