@@ -332,10 +332,12 @@ void loop()
   display.print(fahrenheit, 1);
   display.setTextSize(2);
   display.print("F");
+#ifndef LESS_SERIAL_OUTPUT
   Serial.print("MCP9701 Temperature:\t\t\t");
   Serial.print(fahrenheit);
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.println("F");
+#endif
   float temperatureF = fahrenheit;
 #endif
 #if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
@@ -362,10 +364,12 @@ void loop()
 #endif
   display.println(" ");
 
+#ifndef LESS_SERIAL_OUTPUT
   // Serial.print("RSSI: \t");
   Serial.print("Received Signal Strength Indicator:\t");
   Serial.print(WiFi.RSSI());
   Serial.println("dBm");
+#endif
 
 #ifndef DISABLE_ATLAS_pH
   Serial.print("pH: ");
@@ -412,8 +416,10 @@ void loop()
   Serial.println(" %");
 // display.print(/1000,1);
 #endif
+#ifndef LESS_SERIAL_OUTPUT
   Serial.println("-----------------------------------------------");
   display.display();
+#endif
 
 #ifndef DISABLE_API_REQUEST
   // Serial.println(apiId);
@@ -513,6 +519,7 @@ void loop()
       EC_MAX = doc["setPoints"]["ec"]["max"];
       PH_MIN = doc["setPoints"]["pH"]["min"];
       PH_MAX = doc["setPoints"]["pH"]["max"];
+#ifndef LESS_SERIAL_OUTPUT
       Serial.print("EC min: ");
       Serial.println(EC_MIN);
       Serial.print("EC max: ");
@@ -521,6 +528,7 @@ void loop()
       Serial.println(PH_MIN);
       Serial.print("pH max: ");
       Serial.println(PH_MAX);
+#endif
 #endif
     }
     else
