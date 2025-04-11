@@ -36,6 +36,8 @@ const int   daylightOffset_sec    = 3600;
 //#define DISABLE_API_REQUEST
 #define DISABLE_GPS
 #define ENABLE_SETPOINT_FETCH
+// #define LESS_SERIAL_OUTPUT
+
 
 /*
     Server Information
