@@ -46,41 +46,6 @@ TaskHandle_t Task2;
 
 void Task1code( void * parameter);
 
-//Task1code: blinks an LED every 1000 ms
-void Task1code( void * pvParameters ){
-  Serial.print("Task1 running on core ");
-  Serial.println(xPortGetCoreID());
-
-  for(;;){
-    #ifndef DISABLE_LCD
-    lcd.begin();
-    lcd.backlight();
-    lcd.clear();
-    lcd.setCursor(0,1);
-    //lcd.print("Starting Integrated Sensor");
-    lcd.print("Task1 running on core");
-    lcd.print(xPortGetCoreID());
-    delay(3000);
-    #endif
-    digitalWrite(LED16, HIGH);
-    delay(1000);
-    digitalWrite(LED16, LOW);
-    delay(1000);
-  } 
-}
-
-//Task2code: blinks an LED every 700 ms
-void Task2code( void * pvParameters ){
-  Serial.print("Task2 running on core ");
-  Serial.println(xPortGetCoreID());
-
-  for(;;){
-    digitalWrite(LED17, HIGH);
-    delay(700);
-    digitalWrite(LED17, LOW);
-    delay(700);
-  }
-}
 
 char EC_data[32]; // we make a 32-byte character array to hold incoming data from the EC sensor.
 char *EC_str;     // char pointer used in string parsing.
@@ -148,33 +113,92 @@ void updateDisplay()
   display.setFont();
 }
 
+//Task1code: blinks an LED every 1000 ms
+void Task1code( void * pvParameters ){
+  Serial.print("Task1 running on core ");
+  Serial.println(xPortGetCoreID());
+
+  for(;;){
+    #ifndef DISABLE_LCD
+    lcd.begin();
+    lcd.backlight();
+    lcd.clear();
+    lcd.setCursor(0,0);
+    //lcd.print("Starting Integrated Sensor");
+    lcd.print("Task1 running on core");
+    lcd.print(xPortGetCoreID());
+    delay(3000);
+    #endif
+    #ifndef DISABLE_LCD
+    // For the LCD the first parameter is the Column 0-20 
+    int lcd_temp = 100;
+    lcd.clear();
+    #ifndef DHT11_TEMP
+      lcd.setCursor(0,0);
+      lcd.print("Temp:");
+      //char tempStr[3];
+      //dtostrf(lcd_temp,3,3,tempStr);
+      lcd.print(readDHT11Temp(),0);
+      lcd.print(char(223)); //print degree
+      lcd.print("F");
+    #endif
+    #ifndef DISABLE_ATLAS_pH
+      lcd.setCursor(0,1);
+      lcd.print("pH:");
+    #endif
+    #ifndef DISABLE_ATLAS_EC
+      lcd.setCursor(0,2);
+      lcd.print("EC:");
+    #endif
+    #ifndef DISABLE_WIFI
+      lcd.setCursor(0,3);
+      lcd.print("RSSI:");
+      lcd.print(WiFi.RSSI());
+      lcd.print("dBm");
+    #endif
+    #ifndef DISABLE_DHT11_HUMIDITY
+      lcd.setCursor(10,0);
+      lcd.print("Humid:");
+      lcd.print(readDHT11humidity(),0);
+      lcd.print("%");
+    #endif
+    #ifndef DISABLE_UNIT_DISPLAY
+      lcd.setCursor(10,1);
+      lcd.print("Unit #");
+      lcd.print(UNIT_NUMBER);
+      //lcd.print("");
+    #endif
+
+  #endif
+    
+    digitalWrite(LED16, HIGH);
+    delay(1000);
+    digitalWrite(LED16, LOW);
+    delay(1000);
+  } 
+}
+
+//Task2code: blinks an LED every 700 ms
+void Task2code( void * pvParameters ){
+  Serial.print("Task2 running on core ");
+  Serial.println(xPortGetCoreID());
+
+  for(;;){
+    digitalWrite(LED17, HIGH);
+    delay(700);
+    digitalWrite(LED17, LOW);
+    delay(700);
+  }
+}
+
+
 void setup()
 {
   
   Serial.begin(115200);
   pinMode(LED16, OUTPUT);
   pinMode(LED17, OUTPUT);
-  //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
-  xTaskCreatePinnedToCore(
-    Task1code,   /* Task function. */
-    "Task1",     /* name of task. */
-    10000,       /* Stack size of task */
-    NULL,        /* parameter of the task */
-    1,           /* priority of the task */
-    &Task1,      /* Task handle to keep track of created task */
-    0);          /* pin task to core 0 */                  
-delay(500); 
 
-//create a task that will be executed in the Task2code() function, with priority 1 and executed on core 1
-xTaskCreatePinnedToCore(
-    Task2code,   /* Task function. */
-    "Task2",     /* name of task. */
-    10000,       /* Stack size of task */
-    NULL,        /* parameter of the task */
-    1,           /* priority of the task */
-    &Task2,      /* Task handle to keep track of created task */
-    1);          /* pin task to core 1 */
-delay(500); 
 
   
   Serial.print("setup() running on core ");
@@ -320,7 +344,27 @@ delay(500);
   // delay(3000);
   // #endif
 
+  //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
+  xTaskCreatePinnedToCore(
+    Task1code,   /* Task function. */
+    "Task1",     /* name of task. */
+    10000,       /* Stack size of task */
+    NULL,        /* parameter of the task */
+    1,           /* priority of the task */
+    &Task1,      /* Task handle to keep track of created task */
+    0);          /* pin task to core 0 */                  
+delay(500); 
 
+//create a task that will be executed in the Task2code() function, with priority 1 and executed on core 1
+xTaskCreatePinnedToCore(
+    Task2code,   /* Task function. */
+    "Task2",     /* name of task. */
+    10000,       /* Stack size of task */
+    NULL,        /* parameter of the task */
+    1,           /* priority of the task */
+    &Task2,      /* Task handle to keep track of created task */
+    1);          /* pin task to core 1 */
+delay(500); 
 }
 unsigned int lastTime = 0;
 
@@ -337,47 +381,47 @@ void loop()
   Serial.print("loop() running on core ");
   Serial.println(xPortGetCoreID());
 
-  #ifndef DISABLE_LCD
-    // For the LCD the first parameter is the Column 0-20 
-    int lcd_temp = 100;
-    lcd.clear();
-    #ifndef DHT11_TEMP
-      lcd.setCursor(0,0);
-      lcd.print("Temp:");
-      //char tempStr[3];
-      //dtostrf(lcd_temp,3,3,tempStr);
-      lcd.print(readDHT11Temp(),0);
-      lcd.print(char(223)); //print degree
-      lcd.print("F");
-    #endif
-    #ifndef DISABLE_ATLAS_pH
-      lcd.setCursor(0,1);
-      lcd.print("pH:");
-    #endif
-    #ifndef DISABLE_ATLAS_EC
-      lcd.setCursor(0,2);
-      lcd.print("EC:");
-    #endif
-    #ifndef DISABLE_WIFI
-      lcd.setCursor(0,3);
-      lcd.print("RSSI:");
-      lcd.print(WiFi.RSSI());
-      lcd.print("dBm");
-    #endif
-    #ifndef DISABLE_DHT11_HUMIDITY
-      lcd.setCursor(10,0);
-      lcd.print("Humid:");
-      lcd.print(readDHT11humidity(),0);
-      lcd.print("%");
-    #endif
-    #ifndef DISABLE_UNIT_DISPLAY
-      lcd.setCursor(10,1);
-      lcd.print("Unit #");
-      lcd.print(UNIT_NUMBER);
-      //lcd.print("");
-    #endif
+  // #ifndef DISABLE_LCD
+  //   // For the LCD the first parameter is the Column 0-20 
+  //   int lcd_temp = 100;
+  //   lcd.clear();
+  //   #ifndef DHT11_TEMP
+  //     lcd.setCursor(0,0);
+  //     lcd.print("Temp:");
+  //     //char tempStr[3];
+  //     //dtostrf(lcd_temp,3,3,tempStr);
+  //     lcd.print(readDHT11Temp(),0);
+  //     lcd.print(char(223)); //print degree
+  //     lcd.print("F");
+  //   #endif
+  //   #ifndef DISABLE_ATLAS_pH
+  //     lcd.setCursor(0,1);
+  //     lcd.print("pH:");
+  //   #endif
+  //   #ifndef DISABLE_ATLAS_EC
+  //     lcd.setCursor(0,2);
+  //     lcd.print("EC:");
+  //   #endif
+  //   #ifndef DISABLE_WIFI
+  //     lcd.setCursor(0,3);
+  //     lcd.print("RSSI:");
+  //     lcd.print(WiFi.RSSI());
+  //     lcd.print("dBm");
+  //   #endif
+  //   #ifndef DISABLE_DHT11_HUMIDITY
+  //     lcd.setCursor(10,0);
+  //     lcd.print("Humid:");
+  //     lcd.print(readDHT11humidity(),0);
+  //     lcd.print("%");
+  //   #endif
+  //   #ifndef DISABLE_UNIT_DISPLAY
+  //     lcd.setCursor(10,1);
+  //     lcd.print("Unit #");
+  //     lcd.print(UNIT_NUMBER);
+  //     //lcd.print("");
+  //   #endif
 
-  #endif
+  // #endif
   if (Serial.available() > 0)
   {
     user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
