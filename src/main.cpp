@@ -46,7 +46,7 @@ void setup() {
 void loop() {
 
   #ifndef DISABLE_PERISTALTIC_PUMPS
-  getSetPoint();
+  //getSetPoint();
   // if(AveragepH){
   //   Seq.run();
   // }
