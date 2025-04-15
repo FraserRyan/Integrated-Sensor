@@ -61,7 +61,9 @@ void step1() {
   //getSetpoint():
 
   PMP1.send_cmd("d,1");
+  delay(750);
   PMP2.send_cmd("d,1");
+  delay(750);
   PMP3.send_cmd("d,1");
   
 }
