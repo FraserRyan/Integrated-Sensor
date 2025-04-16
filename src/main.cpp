@@ -110,6 +110,17 @@ void updateDisplay()
 void setup()
 {
 
+  Wire.begin(SDA_PIN, SCL_PIN);
+  
+  #ifndef DISABLE_LCD
+  lcd.begin();
+  lcd.backlight();
+  lcd.clear();
+  lcd.setCursor(0,0);
+  //lcd.print("Starting Integrated Sensor");
+  delay(3000);
+  #endif
+
   Serial.begin(115200);
 
   Serial.println("");
@@ -129,7 +140,6 @@ void setup()
   api_id_param.setValue(String(apiId).c_str(), 40);
   api_key_param.setValue(String(apiKey).c_str(), 40);
 
-  Wire.begin(SDA_PIN, SCL_PIN);
   Seq.reset(); // initialize the sequencer
   delay(3000);
   EC.send_cmd("o,tds,1"); // send command to enable TDS output
