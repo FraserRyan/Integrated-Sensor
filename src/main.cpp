@@ -63,19 +63,20 @@ void loop() {
 void step1() {
   //send a read command. we use this command instead of PMP1.send_cmd("R");
   //to let the library know to parse the reading
-  PMP1.send_read_cmd();
-  PMP2.send_read_cmd();
-  PMP3.send_read_cmd();
+  // PMP1.send_read_cmd();
+  // PMP2.send_read_cmd();
+  // PMP3.send_read_cmd();
+
 }
 
 void step2() {
-  receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
-  PMP1.send_cmd_with_num("d,", 0.5);
-  Serial.print("  ");
-  receive_and_print_reading(PMP2);
-  Serial.print("  ");
-  receive_and_print_reading(PMP3);
-  Serial.println();
+  
+  // receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
+  // Serial.print("  ");
+  // receive_and_print_reading(PMP2);
+  // Serial.print("  ");
+  // receive_and_print_reading(PMP3);
+  // Serial.println();
 }
 
 bool process_coms(const String &string_buffer) {      //function to process commands that manipulate global variables and are specifc to certain kits
