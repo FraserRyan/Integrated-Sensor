@@ -74,6 +74,13 @@ void printLocalTime();
 void startOnDemandWiFiManager();
 void saveWMConfig();
 
+#ifndef DISABLE_LCD
+#include <LiquidCrystal_I2C.h>
+#define LCD_ADDR 0x27  // Define I2C Address where the PCF8574A is This is for the LCD with color Ryan has
+//#define LCD_ADDR 0x3F //This is for the LCD without color
+LiquidCrystal_I2C lcd(LCD_ADDR,20,4);
+#endif
+
 // #ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
 #if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
 DHT dht(DHT11PIN, DHTTYPE);
