@@ -13,6 +13,9 @@
 #include "rtd_surveyor.h"
 #include <sequencer1.h> //imports a 1 function sequencer
 #include <sequencer2.h> //imports a 2 function sequencer
+#include <Ezo_i2c.h>    //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
+#include <sequencer1.h> //imports a 1 function sequencer
+#include <sequencer2.h> //imports a 2 function sequencer
 #ifndef DISABLE_ATLAS_EC
 #include <Ezo_i2c.h> //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #endif
