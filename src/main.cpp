@@ -59,6 +59,8 @@ void setup() {
       Serial.println(PH_MIN);
       Serial.print("pH max: ");
       Serial.println(PH_MAX);
+      double PH_AVG = ((PH_MIN + PH_MAX)/2);
+
 #endif
 
 }
@@ -86,12 +88,17 @@ void step1() {
   // PMP2.send_read_cmd();
   // PMP3.send_read_cmd();
   
-  if(){
-
+  //  if(pH.read_ph()<PH_AVG){
+  if(1) 
+  {    
+    PMP1.send_cmd_with_num("d,", 1);
+  }
+    //  if(EC.read_ph()<PH_AVG){
+  if(1) 
+  {    
     PMP1.send_cmd_with_num("d,", 1);
   
   }
-
 
 }
 
