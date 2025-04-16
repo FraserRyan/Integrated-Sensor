@@ -75,10 +75,13 @@ void startOnDemandWiFiManager();
 void saveWMConfig();
 
 #ifndef DISABLE_LCD
-#include <LiquidCrystal_I2C.h>
-#define LCD_ADDR 0x27  // Define I2C Address where the PCF8574A is This is for the LCD with color Ryan has
-//#define LCD_ADDR 0x3F //This is for the LCD without color
-LiquidCrystal_I2C lcd(LCD_ADDR,20,4);
+// #include <LiquidCrystal_I2C.h>
+#include <LCD_I2C.h>
+
+#define LCD_ADDR 0x3F // Define I2C Address where the PCF8574A is This is for the LCD with color Ryan has
+LCD_I2C lcd(LCD_ADDR, 20, 4);
+// #define LCD_ADDR 0x3F //This is for the LCD without color
+//  LiquidCrystal_I2C lcd(LCD_ADDR,20,4);
 #endif
 
 // #ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
@@ -111,15 +114,15 @@ void setup()
 {
 
   Wire.begin(SDA_PIN, SCL_PIN);
-  
-  #ifndef DISABLE_LCD
+
+#ifndef DISABLE_LCD
   lcd.begin();
   lcd.backlight();
   lcd.clear();
-  lcd.setCursor(0,0);
-  //lcd.print("Starting Integrated Sensor");
+  lcd.setCursor(0, 0);
+  // lcd.print("Starting Integrated Sensor");
   delay(3000);
-  #endif
+#endif
 
   Serial.begin(115200);
 
