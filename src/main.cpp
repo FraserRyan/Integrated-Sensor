@@ -36,7 +36,8 @@ double EC_MIN, EC_MAX, PH_MIN, PH_MAX;
 
 #ifndef DISABLE_LCD
 #include <LiquidCrystal_I2C.h>
-#define LCD_ADDR    0x27  // Define I2C Address where the PCF8574A is
+#define LCD_ADDR 0x27  // Define I2C Address where the PCF8574A is This is for the LCD with color Ryan has
+//#define LCD_ADDR 0x3F //This is for the LCD without color
 LiquidCrystal_I2C	lcd(LCD_ADDR,20,4);
 #endif
 
