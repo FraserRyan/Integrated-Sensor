@@ -7,6 +7,14 @@
 #include <Wire.h>    //include arduinos i2c library
 #include "headers.h"
 
+//From https://igworks.com/blogs/growing-guides/growing-hydroponic-basil?srsltid=AfmBOopmKI_tYzWym9cXzg1yw8kOpCnP3Y8C9Gzip485MdNSOET7N0rR
+// Basil grows well in a slightly acidic nutrient solution, having a pH between 5.6 to 6.4
+// EC Range: 1.0 - 1.6
+// pH Range: 5.5 -6.8
+double EC_MIN = 1.0;
+double EC_MAX = 1.6;
+double PH_MIN = 5.5;
+double PH_MAX = 6.8;
 
 #ifndef DISABLE_PERISTALTIC_PUMPS
 Ezo_board PMP1 = Ezo_board(101, "PMP1");    //create an PMP circuit object who's address is 56 and name is "PMP1"
@@ -42,6 +50,17 @@ void setup() {
   #ifndef DISABLE_PERISTALTIC_PUMPS
   Seq.reset();
   #endif
+  #ifndef LESS_SERIAL_OUTPUT
+      Serial.print("EC min: ");
+      Serial.println(EC_MIN);
+      Serial.print("EC max: ");
+      Serial.println(EC_MAX);
+      Serial.print("pH min: ");
+      Serial.println(PH_MIN);
+      Serial.print("pH max: ");
+      Serial.println(PH_MAX);
+#endif
+
 }
 
 void loop() {
@@ -66,8 +85,18 @@ void step1() {
   // PMP1.send_read_cmd();
   // PMP2.send_read_cmd();
   // PMP3.send_read_cmd();
+  
+  if(){
+
+    PMP1.send_cmd_with_num("d,", 1);
+  
+  }
+
 
 }
+
+
+
 
 void step2() {
   
