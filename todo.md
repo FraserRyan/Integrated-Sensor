@@ -1,0 +1,1 @@
+- [ ] add screen flashing to prevent burning
