@@ -70,6 +70,7 @@ void step1() {
 
 void step2() {
   receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
+  PMP1.send_cmd_with_num("d,", 0.5);
   Serial.print("  ");
   receive_and_print_reading(PMP2);
   Serial.print("  ");
