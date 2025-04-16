@@ -37,6 +37,8 @@ const int   daylightOffset_sec    = 3600;
 #define DISABLE_GPS
 #define ENABLE_SETPOINT_FETCH
 // #define LESS_SERIAL_OUTPUT
+#define LCD_ADDR 0x27  // Define I2C Address where the PCF8574A is This is for the LCD with color Ryan has
+//#define LCD_ADDR 0x3F //This is for the LCD without color
 
 
 /*
