@@ -85,8 +85,6 @@ void saveWMConfig();
 
 
 LCD_I2C lcd(LCD_ADDR, 20, 4);
-// #define LCD_ADDR 0x3F //This is for the LCD without color
-//  LiquidCrystal_I2C lcd(LCD_ADDR,20,4);
 #endif
 
 // #ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
