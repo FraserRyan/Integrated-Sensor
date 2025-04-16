@@ -11,9 +11,11 @@
 #include "time.h"
 #include "ph_surveyor.h"
 #include "rtd_surveyor.h"
-#include <sequencer1.h>               //imports a 1 function sequencer
-#include <sequencer2.h>               //imports a 2 function sequencer
-#include <Ezo_i2c.h>                  //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
+#include <sequencer1.h> //imports a 1 function sequencer
+#include <sequencer2.h> //imports a 2 function sequencer
+#ifndef DISABLE_ATLAS_EC
+#include <Ezo_i2c.h> //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
+#endif
 #include <Wire.h>                     //include arduinos i2c library
 #include <Ezo_i2c_util.h>             //brings in common print statements
 #include <Adafruit_Sensor.h>          //Library for Adafruit sensors
@@ -120,8 +122,8 @@ void setup()
   lcd.backlight();
   lcd.clear();
   lcd.setCursor(0, 0);
-  // lcd.print("Starting Integrated Sensor");
-  delay(3000);
+  lcd.print("Starting Sensor");
+// delay();
 #endif
 
   Serial.begin(115200);
@@ -143,6 +145,7 @@ void setup()
   api_id_param.setValue(String(apiId).c_str(), 40);
   api_key_param.setValue(String(apiKey).c_str(), 40);
 
+#ifndef DISABLE_ATLAS_EC
   Seq.reset(); // initialize the sequencer
   delay(3000);
   EC.send_cmd("o,tds,1"); // send command to enable TDS output
@@ -151,6 +154,7 @@ void setup()
   delay(300);
   EC.send_cmd("o,sg,1"); // send command to enable specific gravity output
   delay(300);
+#endif
 
 #ifndef CALIBRATION_MODE
   Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
