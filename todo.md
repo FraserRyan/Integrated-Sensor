@@ -1,1 +1,2 @@
 - [ ] add screen flashing to prevent burning
+- [ ] phase out OLED and move to lcd
