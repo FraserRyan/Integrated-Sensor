@@ -6,7 +6,6 @@
 #include <WiFiClientSecure.h>
 #include <Preferences.h>
 #include <HTTPClient.h>
-// #include <Arduino_JSON.h>
 #include "headers.h"
 #include "time.h"
 #include "ph_surveyor.h"
@@ -80,14 +79,10 @@ void startOnDemandWiFiManager();
 void saveWMConfig();
 
 #ifndef DISABLE_LCD
-// #include <LiquidCrystal_I2C.h>
 #include <LCD_I2C.h>
-
-
 LCD_I2C lcd(LCD_ADDR, 20, 4);
 #endif
 
-// #ifndef DISABLE_DHT11_TEMP // && DISABLE_DHT11_HUMIDITY
 #if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
 DHT dht(DHT11PIN, DHTTYPE);
 float readDHT11Temp();
@@ -271,46 +266,46 @@ int button_held_wifi_manager = 0;
 void loop()
 {
 
-  #ifndef DISABLE_LCD
-  // For the LCD the first parameter is the Column 0-20 
+#ifndef DISABLE_LCD
+  // For the LCD the first parameter is the Column 0-20
   int lcd_temp = 100;
   lcd.clear();
-  #ifndef DHT11_TEMP
-    lcd.setCursor(0,0);
-    lcd.print("Temp:");
-    //char tempStr[3];
-    //dtostrf(lcd_temp,3,3,tempStr);
-    lcd.print(readDHT11Temp(),0);
-    lcd.print(char(223)); //print degree
-    lcd.print("F");
-  #endif
-  #ifndef DISABLE_ATLAS_pH
-    lcd.setCursor(0,1);
-    lcd.print("pH:");
-  #endif
-  #ifndef DISABLE_ATLAS_EC
-    lcd.setCursor(0,2);
-    lcd.print("EC:");
-  #endif
-  #ifndef DISABLE_WIFI
-    lcd.setCursor(0,3);
-    lcd.print("RSSI:");
-    lcd.print(WiFi.RSSI());
-    lcd.print("dBm");
-  #endif
-  #ifndef DISABLE_DHT11_HUMIDITY
-    lcd.setCursor(10,0);
-    lcd.print("Humid:");
-    lcd.print(readDHT11humidity(),0);
-    lcd.print("%");
-  #endif
-  #ifndef DISABLE_UNIT_DISPLAY
-    lcd.setCursor(10,1);
-    lcd.print("Unit #");
-    lcd.print(UNIT_NUMBER);
-    //lcd.print("");
-  #endif
-  #endif
+#ifndef DISABLE_DHT11_TEMP
+  lcd.setCursor(0, 0);
+  lcd.print("Temp:");
+  // char tempStr[3];
+  // dtostrf(lcd_temp,3,3,tempStr);
+  lcd.print(readDHT11Temp(), 0);
+  lcd.print(char(223)); // print degree
+  lcd.print("F");
+#endif
+#ifndef DISABLE_ATLAS_pH
+  lcd.setCursor(0, 1);
+  lcd.print("pH:");
+#endif
+#ifndef DISABLE_ATLAS_EC
+  lcd.setCursor(0, 2);
+  lcd.print("EC:");
+#endif
+#ifndef DISABLE_WIFI
+  lcd.setCursor(0, 3);
+  lcd.print("RSSI:");
+  lcd.print(WiFi.RSSI());
+  lcd.print("dBm");
+#endif
+#ifndef DISABLE_DHT11_HUMIDITY
+  lcd.setCursor(10, 0);
+  lcd.print("Humid:");
+  lcd.print(readDHT11humidity(), 0);
+  lcd.print("%");
+#endif
+#ifndef DISABLE_UNIT_DISPLAY
+  lcd.setCursor(10, 1);
+  lcd.print("Unit #");
+  lcd.print(UNIT_NUMBER);
+  // lcd.print("");
+#endif
+#endif
 
   if (Serial.available() > 0)
   {
