@@ -117,8 +117,8 @@ void setup()
   lcd.backlight();
   lcd.clear();
   lcd.setCursor(0,0);
-  //lcd.print("Starting Integrated Sensor");
-  delay(3000);
+  lcd.print("Starting Sensor");
+  //delay();
   #endif
 
   Serial.begin(115200);
@@ -140,6 +140,7 @@ void setup()
   api_id_param.setValue(String(apiId).c_str(), 40);
   api_key_param.setValue(String(apiKey).c_str(), 40);
 
+  #ifndef DISABLE_ATLAS_EC
   Seq.reset(); // initialize the sequencer
   delay(3000);
   EC.send_cmd("o,tds,1"); // send command to enable TDS output
@@ -148,6 +149,7 @@ void setup()
   delay(300);
   EC.send_cmd("o,sg,1"); // send command to enable specific gravity output
   delay(300);
+  #endif
 
 #ifndef CALIBRATION_MODE
   Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
