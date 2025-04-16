@@ -83,7 +83,7 @@ void saveWMConfig();
 // #include <LiquidCrystal_I2C.h>
 #include <LCD_I2C.h>
 
-#define LCD_ADDR 0x3F // Define I2C Address where the PCF8574A is This is for the LCD with color Ryan has
+
 LCD_I2C lcd(LCD_ADDR, 20, 4);
 // #define LCD_ADDR 0x3F //This is for the LCD without color
 //  LiquidCrystal_I2C lcd(LCD_ADDR,20,4);
