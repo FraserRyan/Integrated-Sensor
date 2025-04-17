@@ -422,6 +422,10 @@ void loop()
       lcd.print("Config Failed...");
       delay(2000);
     }
+    else
+    {
+      ESP.restart();
+    }
   }
 #endif
 
@@ -538,9 +542,9 @@ void loop()
 #endif
 #ifndef LESS_SERIAL_OUTPUT
   Serial.println("-----------------------------------------------");
-  
+
 #endif
-display.display();
+  display.display();
 
 #ifndef DISABLE_API_REQUEST
   // Serial.println(apiId);
@@ -727,31 +731,6 @@ void IRAM_ATTR startOnDemandWiFiManager()
   onDemandManagerTrigger = true;
   lastButtonPress = millis();
   return;
-  display.setTextSize(1);
-  Serial.println("Button held for WM, starting config portal");
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.setTextSize(1);
-  String AP_Name = "ESP_UNIT_";
-  AP_Name += String(UNIT_NUMBER);
-  display.println("Starting Configuration. Join WiFi:");
-  display.println(AP_Name);
-  display.println("fa9s8dS7d92J");
-  display.println("And go to 192.168.4.1");
-  display.display();
-  wm.setConfigPortalBlocking(false);
-  wm.setConfigPortalTimeout(wifiManagerTimeout);
-  api_id_param.setValue(apiId, 40);
-  api_key_param.setValue(apiKey, 40);
-  unit_number_param.setValue(String(UNIT_NUMBER).c_str(), 4);
-
-  if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
-  {
-    Serial.println("failed to connect or hit timeout");
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.println("Failed to get configuration.");
-  }
 }
 
 void saveWMConfig()

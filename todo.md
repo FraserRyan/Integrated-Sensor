@@ -1,6 +1,7 @@
 - [ ] add screen flashing to prevent burning
-- [ ] phase out OLED and move to lcd
+- [x] phase out OLED and move to lcd
 - [ ] decide on temp variable
 - [ ] disable oled option
 - [ ] add millis to peristaltic pump call
 - [ ] wifi multi
+- [x] reset after changing wifi
