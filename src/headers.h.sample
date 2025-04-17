@@ -47,10 +47,10 @@ const int   daylightOffset_sec    = 3600;
 */
 // Uncomment the following line if you do not want to make API requests to the server below
 // #define DISABLE_API_REQUEST
-String hostname = "IPADDRESS:PORT"; // IP ADDRESS and port (if needed) of your server.
+String hostname = "IPADDRESS:PORT"; // IP ADDRESS and port (if needed) of your server or hostname (and port).
 String serverURL = "https://" + hostname;
 String envDataRequestURL = serverURL + String("/api/addEnvRecord");
-String pumpReqestURL = serverURL + String("/api/pumpData")
+String pumpReqestURL = serverURL + String("/api/pumpData");
 // Change to https if needed.  adjust api endpoint path as needed
 
 static const char *root_ca PROGMEM = R"EOF(-----BEGIN CERTIFICATE-----
