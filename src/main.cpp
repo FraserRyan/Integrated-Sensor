@@ -80,7 +80,8 @@ void loop() {
   }
   delay(50);
 }
-
+int last_Dose = 0;
+int INTERVAL_TIME = 2*60*1000; 
 void step1() {
   //send a read command. we use this command instead of PMP1.send_cmd("R");
   //to let the library know to parse the reading
@@ -89,8 +90,11 @@ void step1() {
   // PMP3.send_read_cmd();
   
   //  if(pH.read_ph()<PH_AVG){
-  if(1) 
+
+
+  if(millis() > last_Dose + INTERVAL_TIME) 
   {    
+
     PMP1.send_cmd_with_num("d,", 1);
   }
     //  if(EC.read_ph()<PH_AVG){
