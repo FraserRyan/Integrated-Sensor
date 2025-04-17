@@ -81,6 +81,8 @@ void loop() {
   delay(50);
 }
 int last_Dose = 0;
+int FERTILIZER_DOSAGE = 10;
+int pH_DOSAGE = 10;
 int INTERVAL_TIME = 2*60*1000; 
 void step1() {
   //send a read command. we use this command instead of PMP1.send_cmd("R");
