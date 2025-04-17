@@ -1076,3 +1076,44 @@ void show_display_page(int pageNum)
     lcd.print(WiFi.macAddress());
   }
 }
+
+bool process_coms(const String &string_buffer) {      //function to process commands that manipulate global variables and are specifc to certain kits
+  if (string_buffer == "HELP") {
+    print_help();
+    return true;
+  }
+  else if (string_buffer.startsWith("POLL")) {
+    polling = true;
+    Seq.reset();
+
+    int16_t index = string_buffer.indexOf(',');                    //check if were passing a polling delay parameter
+    if (index != -1) {                                              //if there is a polling delay
+      float new_delay = string_buffer.substring(index + 1).toFloat(); //turn it into a float
+
+      float mintime = reading_delay;
+      if (new_delay >= (mintime / 1000.0)) {                                     //make sure its greater than our minimum time
+        Seq.set_step2_time((new_delay * 1000.0) - reading_delay);          //convert to milliseconds and remove the reading delay from our wait
+      } else {
+        Serial.println("delay too short");                          //print an error if the polling time isnt valid
+      }
+    }
+    return true;
+  }
+  return false;                         //return false if the command is not in the list, so we can scan the other list or pass it to the circuit
+}
+
+void print_help() {
+  Serial.println(F("Atlas Scientific Tri PMP sample code                                       "));
+  Serial.println(F("Commands:                                                                  "));
+  Serial.println(F("poll         Takes readings continuously of all sensors                    "));
+  Serial.println(F("                                                                           "));
+  Serial.println(F("PMP[N]:[query]       issue a query to a pump named PMP[N]                  "));
+  Serial.println(F("  ex: PMP2:status    sends the status command to pump named PMP2           "));
+  Serial.println(F("      PMP1:d,100     requests that PMP1 dispenses 100ml                    "));
+  Serial.println();
+  Serial.println(F("      The list of all pump commands is available in the Tri PMP datasheet  "));
+  Serial.println();
+  iot_cmd_print_listcmd_help();
+  Serial.println();
+  iot_cmd_print_allcmd_help();
+}
