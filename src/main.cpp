@@ -873,7 +873,6 @@ void step2()
 
   EC_float = atof(EC_str);
   // DO.send_cmd_with_num("s,", EC_float);
-
   // uncomment this section if you want to take the values and convert them into floating point number.
   /*
      EC_float=atof(EC_str);
@@ -887,26 +886,21 @@ int last_Dose = 0;
 int FERTILIZER_DOSAGE = 10;
 int pH_DOSAGE = 10;
 int INTERVAL_TIME = 2*60*1000; 
-void step3() {
-  //send a read command. we use this command instead of PMP1.send_cmd("R");
-  //to let the library know to parse the reading
-  // PMP1.send_read_cmd();
-  // PMP2.send_read_cmd();
-  // PMP3.send_read_cmd();
 
-  // Replace if with this
-  //  if(pH.read_ph()<PH_AVG){
+void step3() {
   if(millis() > last_Dose + INTERVAL_TIME) 
   {    
-    PMP3.send_cmd_with_num("d,", pH_DOSAGE);
+    //
+    //This will be for adjusting pH
+    if((EC_float/1000)<PH_AVG){  
+      {    
+        PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
+        PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
+        PMP3.send_cmd_with_num("d,", pH_DOSAGE); //For now just to run the pumps i will put this with these functions.
+      }
   }
-  // Replace if with this
-  //  if(EC.read_ph()<PH_AVG){ 
-  if(1) 
-  {    
-    PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
-    PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
-  }
+
+
 
 }
 
