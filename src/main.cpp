@@ -90,20 +90,19 @@ void step1() {
   // PMP1.send_read_cmd();
   // PMP2.send_read_cmd();
   // PMP3.send_read_cmd();
-  
+
+  // Replace if with this
   //  if(pH.read_ph()<PH_AVG){
-
-
   if(millis() > last_Dose + INTERVAL_TIME) 
   {    
-
-    PMP1.send_cmd_with_num("d,", 1);
+    PMP3.send_cmd_with_num("d,", pH_DOSAGE);
   }
-    //  if(EC.read_ph()<PH_AVG){
+  // Replace if with this
+  //  if(EC.read_ph()<PH_AVG){ 
   if(1) 
   {    
-    PMP1.send_cmd_with_num("d,", 1);
-  
+    PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
+    PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
   }
 
 }
