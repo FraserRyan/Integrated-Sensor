@@ -538,8 +538,9 @@ void loop()
 #endif
 #ifndef LESS_SERIAL_OUTPUT
   Serial.println("-----------------------------------------------");
-  display.display();
+  
 #endif
+display.display();
 
 #ifndef DISABLE_API_REQUEST
   // Serial.println(apiId);
