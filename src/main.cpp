@@ -882,6 +882,49 @@ void step2()
      SG_float=atof(SG);
   */
 }
+
+int last_Dose = 0;
+int FERTILIZER_DOSAGE = 10;
+int pH_DOSAGE = 10;
+int INTERVAL_TIME = 2*60*1000; 
+void step3() {
+  //send a read command. we use this command instead of PMP1.send_cmd("R");
+  //to let the library know to parse the reading
+  // PMP1.send_read_cmd();
+  // PMP2.send_read_cmd();
+  // PMP3.send_read_cmd();
+
+  // Replace if with this
+  //  if(pH.read_ph()<PH_AVG){
+  if(millis() > last_Dose + INTERVAL_TIME) 
+  {    
+    PMP3.send_cmd_with_num("d,", pH_DOSAGE);
+  }
+  // Replace if with this
+  //  if(EC.read_ph()<PH_AVG){ 
+  if(1) 
+  {    
+    PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
+    PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
+  }
+
+}
+
+
+
+
+void step4() {
+  
+  // receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
+  // Serial.print("  ");
+  // receive_and_print_reading(PMP2);
+  // Serial.print("  ");
+  // receive_and_print_reading(PMP3);
+  // Serial.println();
+}
+
+
+
 #if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
 float readDHT11Temp()
 {
