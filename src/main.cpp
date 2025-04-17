@@ -722,6 +722,7 @@ void loop()
       EC_MAX = doc["setPoints"]["ec"]["max"];
       PH_MIN = doc["setPoints"]["pH"]["min"];
       PH_MAX = doc["setPoints"]["pH"]["max"];
+      
 #ifndef LESS_SERIAL_OUTPUT
       Serial.print("EC min: ");
       Serial.println(EC_MIN);
@@ -741,6 +742,21 @@ void loop()
     http.end();
   }
 #endif
+
+String cmd;                             //variable to hold commands we send to the kit
+  if (receive_command(cmd)) {            //if we sent the kit a command it gets put into the cmd variable
+    polling = false;                     //we stop polling
+    if (!process_coms(cmd)) {            //then we evaluate the cmd for kit specific commands
+      process_command(cmd, device_list, device_list_len, default_board);    //then if its not kit specific, pass the cmd to the IOT command processing function
+    }
+  }
+  if (polling == true) {                 //if polling is turned on, run the sequencer
+    Seq.run();
+  }
+  delay(50);
+
+
+
 }
 
 void parse_cmd(char *string)
