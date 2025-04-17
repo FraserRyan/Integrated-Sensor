@@ -79,8 +79,14 @@ void startOnDemandWiFiManager();
 void saveWMConfig();
 
 #ifndef DISABLE_LCD
+
 #include <LCD_I2C.h>
 LCD_I2C lcd(LCD_ADDR, 20, 4);
+int display_current_page = 0;
+void show_display_page(int pageNum);
+int last_switch_time = 0;
+int cycle_time = 5000;
+int display_page_count = 2;
 #endif
 
 #if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
@@ -104,6 +110,11 @@ void updateDisplay()
   display.setFont(&FreeSerifBoldItalic9pt7b);
   display.setCursor(35, 20);
   display.println("Ryan Fraser Josh Thaw");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Ryan Fraser");
+  lcd.setCursor(0, 1);
+  lcd.print("Josh Thaw");
   display.display();
   display.setFont();
 }
@@ -114,11 +125,13 @@ void setup()
   Wire.begin(SDA_PIN, SCL_PIN);
 
 #ifndef DISABLE_LCD
+
   lcd.begin();
   lcd.backlight();
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Starting Sensor");
+
 // delay();
 #endif
 
@@ -198,6 +211,12 @@ void setup()
   if (wm.getWiFiIsSaved())
   {
     display.println("Connecting to previously saved WiFi network:");
+    lcd.setCursor(0, 0);
+    lcd.clear();
+    lcd.print("Connecting to WiFi:");
+    lcd.setCursor(0, 1);
+    lcd.print(wm.getWiFiSSID());
+    lcd.setCursor(0, 2);
     display.println(wm.getWiFiSSID());
     display.display();
     WiFi.begin(wm.getWiFiSSID(), wm.getWiFiPass());
@@ -207,6 +226,7 @@ void setup()
     {
       Serial.print('.');
       display.print(".");
+      lcd.print(".");
       digitalWrite(LED15, HIGH);
       display.display();
       delay(500);
@@ -219,16 +239,28 @@ void setup()
         Serial.print("WiFi Failed to connect.");
         display.println();
         display.println("WiFi failed to Connect.\nPress the BOOT button for 3 seconds to start the config.");
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("WiFi Connect Fail");
+        lcd.setCursor(0, 1);
+        lcd.print("Press BOOT for WiFi Config");
         display.display();
       }
       // Serial.print(wait_time);
     }
     Serial.println(WiFi.localIP());
     display.println(WiFi.localIP());
+    lcd.setCursor(0, 3);
+    lcd.print(WiFi.localIP());
     display.display();
   }
   else
   {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("No WiFi Saved");
+    lcd.setCursor(0, 1);
+    lcd.print("Press BOOT for WiFi Config");
     display.println("No WiFi saved.");
     display.println("Press the BOOT button for 3 seconds to start the config.");
     display.display();
@@ -269,42 +301,55 @@ void loop()
 #ifndef DISABLE_LCD
   // For the LCD the first parameter is the Column 0-20
   int lcd_temp = 100;
-  lcd.clear();
-#ifndef DISABLE_DHT11_TEMP
-  lcd.setCursor(0, 0);
-  lcd.print("Temp:");
-  // char tempStr[3];
-  // dtostrf(lcd_temp,3,3,tempStr);
-  lcd.print(readDHT11Temp(), 0);
-  lcd.print(char(223)); // print degree
-  lcd.print("F");
-#endif
-#ifndef DISABLE_ATLAS_pH
-  lcd.setCursor(0, 1);
-  lcd.print("pH:");
-#endif
-#ifndef DISABLE_ATLAS_EC
-  lcd.setCursor(0, 2);
-  lcd.print("EC:");
-#endif
-#ifndef DISABLE_WIFI
-  lcd.setCursor(0, 3);
-  lcd.print("RSSI:");
-  lcd.print(WiFi.RSSI());
-  lcd.print("dBm");
-#endif
-#ifndef DISABLE_DHT11_HUMIDITY
-  lcd.setCursor(10, 0);
-  lcd.print("Humid:");
-  lcd.print(readDHT11humidity(), 0);
-  lcd.print("%");
-#endif
-#ifndef DISABLE_UNIT_DISPLAY
-  lcd.setCursor(10, 1);
-  lcd.print("Unit #");
-  lcd.print(UNIT_NUMBER);
-  // lcd.print("");
-#endif
+  // int last_switch_time = 0;
+  // int cycle_time = 5000;
+  // lcd.clear();
+
+  if (millis() - last_switch_time > cycle_time)
+  {
+    display_current_page++;
+    if (display_current_page == display_page_count)
+    {
+      display_current_page = 0;
+    }
+    last_switch_time = millis();
+  }
+  show_display_page(display_current_page);
+// #ifndef DISABLE_DHT11_TEMP
+//   lcd.setCursor(0, 0);
+//   lcd.print("Temp:");
+//   // char tempStr[3];
+//   // dtostrf(lcd_temp,3,3,tempStr);
+//   lcd.print(readDHT11Temp(), 0);
+//   lcd.print(char(223)); // print degree
+//   lcd.print("F");
+// #endif
+// #ifndef DISABLE_ATLAS_pH
+//   lcd.setCursor(0, 1);
+//   lcd.print("pH:");
+// #endif
+// #ifndef DISABLE_ATLAS_EC
+//   lcd.setCursor(0, 2);
+//   lcd.print("EC:");
+// #endif
+// #ifndef DISABLE_WIFI
+//   lcd.setCursor(0, 3);
+//   lcd.print("RSSI:");
+//   lcd.print(WiFi.RSSI());
+//   lcd.print("dBm");
+// #endif
+// #ifndef DISABLE_DHT11_HUMIDITY
+//   lcd.setCursor(10, 0);
+//   lcd.print("Humid:");
+//   lcd.print(readDHT11humidity(), 0);
+//   lcd.print("%");
+// #endif
+// #ifndef DISABLE_UNIT_DISPLAY
+//   lcd.setCursor(10, 1);
+//   lcd.print("Unit #");
+//   lcd.print(UNIT_NUMBER);
+//   // lcd.print("");
+// #endif
 #endif
 
   if (Serial.available() > 0)
@@ -345,6 +390,7 @@ void loop()
     // {
     config.begin("config");
     display.setTextSize(1);
+
     Serial.println("Button held for WM, starting config portal");
     display.clearDisplay();
     display.setCursor(0, 0);
@@ -352,6 +398,15 @@ void loop()
     String AP_Name = "ESP_UNIT_";
     AP_Name += String(UNIT_NUMBER);
     display.println("Starting Configuration. Join WiFi:");
+    lcd.clear();
+
+    lcd.print("Config - Join WiFi");
+    lcd.setCursor(0, 1);
+    lcd.print(AP_Name);
+    lcd.setCursor(0, 2);
+    lcd.print("fa9s8dS7d92J");
+    lcd.setCursor(0, 3);
+    lcd.print("Go to 192.168.4.1");
     display.println(AP_Name);
     display.println("fa9s8dS7d92J");
     display.println("And go to 192.168.4.1");
@@ -362,6 +417,10 @@ void loop()
 
     if (!wm.startConfigPortal(AP_Name.c_str(), "fa9s8dS7d92J"))
     {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Config Failed...");
+      delay(2000);
     }
   }
 #endif
@@ -817,3 +876,91 @@ void updateGPS()
   }
 }
 #endif
+
+void show_display_page(int pageNum)
+{
+  lcd.clear();
+  if (pageNum == 0)
+  {
+#ifndef DISABLE_DHT11_TEMP
+    lcd.setCursor(0, 0);
+    lcd.print("Temp:");
+    // char tempStr[3];
+    // dtostrf(lcd_temp,3,3,tempStr);
+    lcd.print(readDHT11Temp(), 0);
+    lcd.print(char(223)); // print degree
+    lcd.print("F");
+#endif
+#ifndef DISABLE_ATLAS_TEMP
+    float temperatureF = RTD.read_RTD_temp_F();
+    lcd.setCursor(0, 0);
+    lcd.print("Temp:");
+    lcd.print(temperatureF, 1);
+    lcd.print(char(223)); // print degree
+    lcd.print("F");
+#endif
+#ifndef DISABLE_MCP9701_TEMP
+    float sensorValue = analogRead(MCP9701_temp_Pin);
+    float voltage = sensorValue * (3.3 / 4095.0);
+    float temperatureC = (voltage - 0.5) / 0.01;
+    float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
+    lcd.setCursor(0, 0);
+    lcd.print("Temp:");
+    lcd.print(fahrenheit, 1);
+    lcd.print(char(223)); // print degree
+    lcd.print("F");
+#ifndef LESS_SERIAL_OUTPUT
+    Serial.print("MCP9701 Temperature:\t\t\t");
+    Serial.print(fahrenheit);
+    Serial.print("\xC2\xB0"); // shows degree symbol
+    Serial.println("F");
+#endif
+    float temperatureF = fahrenheit;
+#endif
+#ifndef DISABLE_ATLAS_pH
+    lcd.setCursor(0, 1);
+    lcd.print("pH:");
+#endif
+#ifndef DISABLE_ATLAS_EC
+    lcd.setCursor(0, 2);
+    lcd.print("EC:");
+#endif
+#ifndef DISABLE_WIFI
+    lcd.setCursor(0, 3);
+    lcd.print("RSSI:");
+    lcd.print(WiFi.RSSI());
+    lcd.print("dBm");
+#endif
+#ifndef DISABLE_DHT11_HUMIDITY
+    lcd.setCursor(10, 0);
+    lcd.print("Humid:");
+    lcd.print(readDHT11humidity(), 0);
+    lcd.print("%");
+#endif
+#ifndef DISABLE_UNIT_DISPLAY
+    lcd.setCursor(10, 1);
+    lcd.print("Unit #");
+    lcd.print(UNIT_NUMBER);
+    // lcd.print("");
+#endif
+  }
+  if (pageNum == 1)
+  {
+    lcd.setCursor(0, 0);
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      lcd.print("Connected to WiFi:");
+    }
+    else
+    {
+      lcd.print("Not Connected to: ");
+    }
+    lcd.setCursor(0, 1);
+
+    lcd.print(WiFi.SSID());
+    lcd.setCursor(0, 2);
+    lcd.print(WiFi.localIP());
+    lcd.setCursor(0, 3);
+    lcd.print(WiFi.macAddress());
+  }
+}
