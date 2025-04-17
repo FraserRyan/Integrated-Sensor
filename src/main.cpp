@@ -23,6 +23,10 @@
 #include <Adafruit_Sensor.h>          //Library for Adafruit sensors
 #include <DHT.h>                      // Sensor for Humidity and temperature.
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
+#include <iot_cmd.h>
+#include <sequencer2.h> 
+#include <Ezo_i2c_util.h>  
+
 
 #ifdef ENABLE_GPS
 #include <TinyGPS++.h>
@@ -48,6 +52,30 @@ float EC_float;  // float var used to hold the float value of the conductivity.
 float TDS_float; // float var used to hold the float value of the total dissolved solids.
 float SAL_float; // float var used to hold the float value of the salinity.
 float SG_float;  // float var used to hold the float value of the specific gravity.
+
+#ifndef DISABLE_PERISTALTIC_PUMPS
+Ezo_board PMP1 = Ezo_board(101, "PMP1");    //create an PMP circuit object who's address is 56 and name is "PMP1"
+Ezo_board PMP2 = Ezo_board(102, "PMP2");    //create an PMP circuit object who's address is 57 and name is "PMP2"
+Ezo_board PMP3 = Ezo_board(103, "PMP3");    //create an PMP circuit object who's address is 58 and name is "PMP3"
+Ezo_board device_list[] = {               //an array of boards used for sending commands to all or specific boards
+  PMP1,
+  PMP2,
+  PMP3
+};
+bool process_coms(const String &string_buffer);
+void print_help();
+Ezo_board* default_board = &device_list[0]; //used to store the board were talking to
+//gets the length of the array automatically so we dont have to change the number every time we add new boards
+const uint8_t device_list_len = sizeof(device_list) / sizeof(device_list[0]);
+const unsigned long reading_delay = 1000;                 //how long we wait to receive a response, in milliseconds
+unsigned int poll_delay = 2000 - reading_delay;
+void step1();      //forward declarations of functions to use them in the sequencer before defining them
+void step2();
+Sequencer2 Seq(&step1, reading_delay,   //calls the steps in sequence with time in between them
+               &step2, poll_delay);
+bool polling = true;                                     //variable to determine whether or not were polling the circuits
+#endif
+
 
 Ezo_board EC = Ezo_board(100, "EC"); // create an EC circuit object who's address is 100 and name is "EC"
 void step1();                        // forward declarations of functions to use them in the sequencer before defining them
