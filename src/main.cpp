@@ -15,7 +15,7 @@
 #include <Ezo_i2c.h>    //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #include <sequencer1.h> //imports a 1 function sequencer
 #include <sequencer2.h> //imports a 2 function sequencer
-#ifndef DISABLE_ATLAS_EC
+#ifdef ENABLE_ATLAS_EC
 #include <Ezo_i2c.h> //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #endif
 #include <Wire.h>                     //include arduinos i2c library
@@ -24,7 +24,7 @@
 #include <DHT.h>                      // Sensor for Humidity and temperature.
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
 
-#ifndef DISABLE_GPS
+#ifdef ENABLE_GPS
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 #endif
@@ -89,13 +89,13 @@ int cycle_time = 5000;
 int display_page_count = 2;
 #endif
 
-#if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
+#if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
 DHT dht(DHT11PIN, DHTTYPE);
 float readDHT11Temp();
 float readDHT11humidity();
 #endif
 
-#ifndef DISABLE_GPS
+#ifdef ENABLE_GPS
 SoftwareSerial GPSPort;
 TinyGPSPlus gps;
 float GPS_LAT = 0, GPS_LONG = 0, GPS_ELEV = 0;
@@ -154,7 +154,7 @@ void setup()
   api_id_param.setValue(String(apiId).c_str(), 40);
   api_key_param.setValue(String(apiKey).c_str(), 40);
 
-#ifndef DISABLE_ATLAS_EC
+#ifdef ENABLE_ATLAS_EC
   Seq.reset(); // initialize the sequencer
   delay(3000);
   EC.send_cmd("o,tds,1"); // send command to enable TDS output
@@ -182,11 +182,11 @@ void setup()
   updateDisplay();
   delay(2500);
 
-#if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
+#if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
   dht.begin();
 #endif
 
-#ifndef DISABLE_GPS
+#ifdef ENABLE_GPS
   GPSPort.begin(9600, SWSERIAL_8N1, GPS_RX, GPS_TX, false);
   if (!GPSPort)
   { // If the object did not initialize, then its configuration is invalid
@@ -315,7 +315,7 @@ void loop()
     last_switch_time = millis();
   }
   show_display_page(display_current_page);
-// #ifndef DISABLE_DHT11_TEMP
+// #ifdef ENABLE_DHT11_TEMP
 //   lcd.setCursor(0, 0);
 //   lcd.print("Temp:");
 //   // char tempStr[3];
@@ -324,11 +324,11 @@ void loop()
 //   lcd.print(char(223)); // print degree
 //   lcd.print("F");
 // #endif
-// #ifndef DISABLE_ATLAS_pH
+// #ifdef ENABLE_ATLAS_pH
 //   lcd.setCursor(0, 1);
 //   lcd.print("pH:");
 // #endif
-// #ifndef DISABLE_ATLAS_EC
+// #ifdef ENABLE_ATLAS_EC
 //   lcd.setCursor(0, 2);
 //   lcd.print("EC:");
 // #endif
@@ -338,7 +338,7 @@ void loop()
 //   lcd.print(WiFi.RSSI());
 //   lcd.print("dBm");
 // #endif
-// #ifndef DISABLE_DHT11_HUMIDITY
+// #ifdef ENABLE_DHT11_HUMIDITY
 //   lcd.setCursor(10, 0);
 //   lcd.print("Humid:");
 //   lcd.print(readDHT11humidity(), 0);
@@ -429,7 +429,7 @@ void loop()
   }
 #endif
 
-#ifndef DISABLE_ATLAS_EC
+#ifdef ENABLE_ATLAS_EC
   Seq.run(); // run the sequncer to do the polling
 #endif
 
@@ -441,7 +441,7 @@ void loop()
   display.setTextSize(2);
   display.setCursor(0, 10);
 
-#ifndef DISABLE_ATLAS_TEMP
+#ifdef ENABLE_ATLAS_TEMP
   float temperatureF = RTD.read_RTD_temp_F();
   Serial.print(temperatureF);
   display.print(temperatureF, 1);
@@ -464,7 +464,7 @@ void loop()
 #endif
   float temperatureF = fahrenheit;
 #endif
-#if defined DISABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
+#if !defined ENABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
   display.print("-");
 #endif
 
@@ -481,7 +481,7 @@ void loop()
   display.print("pH: ");
   display.setTextSize(2);
   display.setCursor(0, 45);
-#ifndef DISABLE_ATLAS_pH
+#ifdef ENABLE_ATLAS_pH
   display.print(pH.read_ph(), 1);
 #else
   display.print("-");
@@ -495,7 +495,7 @@ void loop()
   Serial.println("dBm");
 #endif
 
-#ifndef DISABLE_ATLAS_pH
+#ifdef ENABLE_ATLAS_pH
   Serial.print("pH: ");
   Serial.println(pH.read_ph(), 1);
 #endif
@@ -517,14 +517,14 @@ void loop()
   display.println("EC:");
   display.setCursor(72, 44);
   display.setTextSize(2);
-#ifndef DISABLE_ATLAS_EC
+#ifdef ENABLE_ATLAS_EC
   display.print(EC_float / 1000, 1);
 #else
   display.print("-");
 #endif
   // display.print("mS/cm");
 
-#ifndef DISABLE_DHT11_TEMP
+#ifdef ENABLE_DHT11_TEMP
   // float DHT_tempF = readDHTTemp();
   Serial.print("DHT Temperature: \t\t\t");
   Serial.print(readDHT11Temp());
@@ -533,7 +533,7 @@ void loop()
 // display.print(/1000,1);
 #endif
 
-#ifndef DISABLE_DHT11_HUMIDITY
+#ifdef ENABLE_DHT11_HUMIDITY
   // readDHT11humidity();
   Serial.print("\nHumidity: \t\t\t\t");
   Serial.print(readDHT11humidity());
@@ -550,7 +550,7 @@ void loop()
   // Serial.println(apiId);
   if ((counter == 0 || ((millis() - lastTime) > delayTime)) && UNIT_NUMBER != 0 && strcmp(apiId, "") != 0 && strcmp(apiKey, "") != 0)
   {
-#ifndef DISABLE_GPS
+#ifdef ENABLE_GPS
     updateGPS();
     Serial.print("lat: ");
     Serial.println(GPS_LAT);
@@ -594,11 +594,11 @@ void loop()
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"ec\":" + String(EC_float / 1000);
     requestBody += ",\"rssi\":" + String(WiFi.RSSI());
-#if !defined(DISABLE_DHT11_HUMIDITY)
+#if defined(ENABLE_DHT11_HUMIDITY)
     requestBody += ",\"humidity\":" + String(readDHT11humidity());
 #endif
 
-#if !defined(DISABLE_GPS)
+#if defined(ENABLE_GPS)
     Serial.println(GPS_LAT);
     if (GPS_LAT != 0.00)
     {
@@ -793,7 +793,7 @@ void step2()
      SG_float=atof(SG);
   */
 }
-#if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
+#if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
 float readDHT11Temp()
 {
   float DHT11_tempC = dht.readTemperature();
@@ -817,11 +817,11 @@ float readDHT11Temp()
 }
 #endif
 
-#if !defined(DISABLE_DHT11_TEMP) || !defined(DISABLE_DHT11_HUMIDITY)
+#if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
 float readDHT11humidity()
 {
   float humidity = dht.readHumidity();
-#ifndef DISABLE_DHT11_HUMIDITY
+#ifdef ENABLE_DHT11_HUMIDITY
   return humidity;
 #endif
 
@@ -831,7 +831,7 @@ float readDHT11humidity()
 }
 #endif
 
-#ifndef DISABLE_GPS
+#ifdef ENABLE_GPS
 void updateGPS()
 {
   Serial.println("update GPS function");
@@ -862,7 +862,7 @@ void show_display_page(int pageNum)
   lcd.clear();
   if (pageNum == 0)
   {
-#ifndef DISABLE_DHT11_TEMP
+#ifdef ENABLE_DHT11_TEMP
     lcd.setCursor(0, 0);
     lcd.print("Temp:");
     // char tempStr[3];
@@ -871,7 +871,7 @@ void show_display_page(int pageNum)
     lcd.print(char(223)); // print degree
     lcd.print("F");
 #endif
-#ifndef DISABLE_ATLAS_TEMP
+#ifdef ENABLE_ATLAS_TEMP
     float temperatureF = RTD.read_RTD_temp_F();
     lcd.setCursor(0, 0);
     lcd.print("Temp:");
@@ -897,11 +897,11 @@ void show_display_page(int pageNum)
 #endif
     float temperatureF = fahrenheit;
 #endif
-#ifndef DISABLE_ATLAS_pH
+#ifdef ENABLE_ATLAS_pH
     lcd.setCursor(0, 1);
     lcd.print("pH:");
 #endif
-#ifndef DISABLE_ATLAS_EC
+#ifdef ENABLE_ATLAS_EC
     lcd.setCursor(0, 2);
     lcd.print("EC:");
 #endif
@@ -911,7 +911,7 @@ void show_display_page(int pageNum)
     lcd.print(WiFi.RSSI());
     lcd.print("dBm");
 #endif
-#ifndef DISABLE_DHT11_HUMIDITY
+#ifdef ENABLE_DHT11_HUMIDITY
     lcd.setCursor(10, 0);
     lcd.print("Humid:");
     lcd.print(readDHT11humidity(), 0);
