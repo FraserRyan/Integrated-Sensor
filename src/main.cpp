@@ -104,19 +104,21 @@ void updateGPS();
 
 void updateDisplay()
 {
+#ifdef ENABLE_OLED_DISPLAY
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.setTextSize(1);
   display.setFont(&FreeSerifBoldItalic9pt7b);
   display.setCursor(35, 20);
   display.println("Ryan Fraser Josh Thaw");
+  display.display();
+  display.setFont();
+#endif
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Ryan Fraser");
   lcd.setCursor(0, 1);
   lcd.print("Josh Thaw");
-  display.display();
-  display.setFont();
 }
 
 void setup()
@@ -172,7 +174,7 @@ void setup()
     Serial.println("Loaded EEPROM");
   }
 #endif
-
+#ifdef ENABLE_OLED_DISPLAY
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
     Serial.println(F("SSD1306 allocation failed"));
@@ -181,6 +183,7 @@ void setup()
   }
   updateDisplay();
   delay(2500);
+#endif
 
 #if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
   dht.begin();
@@ -203,32 +206,38 @@ void setup()
 #ifndef DISABLE_WIFI
   Serial.println(WiFi.macAddress());
   WiFi.mode(WIFI_STA);
+#ifdef ENABLE_OLED_DISPLAY
   display.setTextColor(WHITE);
   display.clearDisplay();
   display.display();
   display.setCursor(0, 0);
   display.println(WiFi.macAddress());
+#endif
   if (wm.getWiFiIsSaved())
   {
-    display.println("Connecting to previously saved WiFi network:");
     lcd.setCursor(0, 0);
     lcd.clear();
     lcd.print("Connecting to WiFi:");
     lcd.setCursor(0, 1);
     lcd.print(wm.getWiFiSSID());
     lcd.setCursor(0, 2);
+#ifdef ENABLE_OLED_DISPLAY
+    display.println("Connecting to previously saved WiFi network:");
     display.println(wm.getWiFiSSID());
     display.display();
+#endif
     WiFi.begin(wm.getWiFiSSID(), wm.getWiFiPass());
     Serial.print("Connecting to Saved WiFi ..");
     int wait_time = 0;
     while ((WiFi.status() != WL_CONNECTED) && (wait_time < 10))
     {
       Serial.print('.');
+#ifdef ENABLE_OLED_DISPLAY
       display.print(".");
+      display.display();
+#endif
       lcd.print(".");
       digitalWrite(LED15, HIGH);
-      display.display();
       delay(500);
       digitalWrite(LED15, LOW);
       delay(500);
@@ -237,22 +246,26 @@ void setup()
       if (wait_time > 18)
       {
         Serial.print("WiFi Failed to connect.");
+#ifdef ENABLE_OLED_DISPLAY
         display.println();
         display.println("WiFi failed to Connect.\nPress the BOOT button for 3 seconds to start the config.");
+        display.display();
+#endif
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("WiFi Connect Fail");
         lcd.setCursor(0, 1);
         lcd.print("Press BOOT for WiFi Config");
-        display.display();
       }
       // Serial.print(wait_time);
     }
     Serial.println(WiFi.localIP());
+#ifdef ENABLE_OLED_DISPLAY
     display.println(WiFi.localIP());
+    display.display();
+#endif
     lcd.setCursor(0, 3);
     lcd.print(WiFi.localIP());
-    display.display();
   }
   else
   {
@@ -261,16 +274,19 @@ void setup()
     lcd.print("No WiFi Saved");
     lcd.setCursor(0, 1);
     lcd.print("Press BOOT for WiFi Config");
+#ifdef ENABLE_OLED_DISPLAY
     display.println("No WiFi saved.");
     display.println("Press the BOOT button for 3 seconds to start the config.");
     display.display();
+#endif
   }
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   printLocalTime();
   delay(3000);
-
+#ifdef ENABLE_OLED_DISPLAY
   display.clearDisplay();
+#endif
 
   pinMode(WIFIMANAGER_TRIGGER_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(WIFIMANAGER_TRIGGER_PIN), startOnDemandWiFiManager, RISING);
@@ -282,9 +298,10 @@ void setup()
   WiFi.mode(WIFI_MODE_NULL);
 
 #endif
-
+#ifdef ENABLE_OLED_DISPLAY
   display.setTextColor(WHITE);
   display.clearDisplay();
+#endif
 }
 unsigned int lastTime = 0;
 
@@ -389,15 +406,22 @@ void loop()
     // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
     // {
     config.begin("config");
-    display.setTextSize(1);
 
     Serial.println("Button held for WM, starting config portal");
+
+    String AP_Name = "ESP_UNIT_";
+    AP_Name += String(UNIT_NUMBER);
+#ifdef ENABLE_OLED_DISPLAY
+    display.setTextSize(1);
     display.clearDisplay();
     display.setCursor(0, 0);
     display.setTextSize(1);
-    String AP_Name = "ESP_UNIT_";
-    AP_Name += String(UNIT_NUMBER);
     display.println("Starting Configuration. Join WiFi:");
+    display.println(AP_Name);
+    display.println("fa9s8dS7d92J");
+    display.println("And go to 192.168.4.1");
+    display.display();
+#endif
     lcd.clear();
 
     lcd.print("Config - Join WiFi");
@@ -407,10 +431,6 @@ void loop()
     lcd.print("fa9s8dS7d92J");
     lcd.setCursor(0, 3);
     lcd.print("Go to 192.168.4.1");
-    display.println(AP_Name);
-    display.println("fa9s8dS7d92J");
-    display.println("And go to 192.168.4.1");
-    display.display();
     wm.setConfigPortalTimeout(wifiManagerTimeout);
     wm.setBreakAfterConfig(true);
     wm.setSaveConfigCallback(saveWMConfig);
@@ -432,7 +452,7 @@ void loop()
 #ifdef ENABLE_ATLAS_EC
   Seq.run(); // run the sequncer to do the polling
 #endif
-
+#ifdef ENABLE_OLED_DISPLAY
   display.clearDisplay();
   // temperature Display on OLED
   display.setTextSize(1);
@@ -440,22 +460,27 @@ void loop()
   display.print("TEMP: ");
   display.setTextSize(2);
   display.setCursor(0, 10);
+#endif
 
 #ifdef ENABLE_ATLAS_TEMP
   float temperatureF = RTD.read_RTD_temp_F();
   Serial.print(temperatureF);
+#ifdef ENABLE_OLED_DISPLAY
   display.print(temperatureF, 1);
   display.setTextSize(2);
   display.print("F");
+#endif
 #endif
 #ifndef DISABLE_MCP9701_TEMP
   float sensorValue = analogRead(MCP9701_temp_Pin);
   float voltage = sensorValue * (3.3 / 4095.0);
   float temperatureC = (voltage - 0.5) / 0.01;
   float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
+#ifdef ENABLE_OLED_DISPLAY
   display.print(fahrenheit, 1);
   display.setTextSize(2);
   display.print("F");
+#endif
 #ifndef LESS_SERIAL_OUTPUT
   Serial.print("MCP9701 Temperature:\t\t\t");
   Serial.print(fahrenheit);
@@ -465,28 +490,38 @@ void loop()
   float temperatureF = fahrenheit;
 #endif
 #if !defined ENABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
+#ifdef ENABLE_OLED_DISPLAY
   display.print("-");
 #endif
+#endif
 
-  // Serial.print(temperatureF);
-  // display.print(" ");
-  // display.setTextSize(1);
-  // display.cp437(true);
-  // display.write(167);
-  // display.print(fahrenheit);
+// Serial.print(temperatureF);
+// display.print(" ");
+// display.setTextSize(1);
+// display.cp437(true);
+// display.write(167);
+// display.print(fahrenheit);
 
-  // pH Display on OLED
+// pH Display on OLED
+#ifdef ENABLE_OLED_DISPLAY
   display.setTextSize(1);
   display.setCursor(0, 35);
   display.print("pH: ");
   display.setTextSize(2);
   display.setCursor(0, 45);
+#endif
 #ifdef ENABLE_ATLAS_pH
+#ifdef ENABLE_OLED_DISPLAY
   display.print(pH.read_ph(), 1);
+#endif
 #else
+#ifdef ENABLE_OLED_DISPLAY
   display.print("-");
 #endif
+#endif
+#ifdef ENABLE_OLED_DISPLAY
   display.println(" ");
+#endif
 
 #ifndef LESS_SERIAL_OUTPUT
   // Serial.print("RSSI: \t");
@@ -500,25 +535,34 @@ void loop()
   Serial.println(pH.read_ph(), 1);
 #endif
 
-  //
+//
+#ifdef ENABLE_OLED_DISPLAY
   display.setTextSize(1);
   display.setCursor(60, 0);
   display.println("RSSI:");
   display.setCursor(90, 0);
+#endif
 #ifndef DISABLE_WIFI
+#ifdef ENABLE_OLED_DISPLAY
   display.print(WiFi.RSSI());
   display.print("dBm");
+#endif
 #else
+#ifdef ENABLE_OLED_DISPLAY
   display.print("-");
 #endif
-
+#endif
+#ifdef ENABLE_OLED_DISPLAY
   display.setCursor(72, 34);
   display.setTextSize(1);
   display.println("EC:");
   display.setCursor(72, 44);
   display.setTextSize(2);
+#endif
 #ifdef ENABLE_ATLAS_EC
+#ifdef ENABLE_OLED_DISPLAY
   display.print(EC_float / 1000, 1);
+#endif
 #else
   display.print("-");
 #endif
@@ -544,7 +588,9 @@ void loop()
   Serial.println("-----------------------------------------------");
 
 #endif
+#ifdef ENABLE_OLED_DISPLAY
   display.display();
+#endif
 
 #ifndef DISABLE_API_REQUEST
   // Serial.println(apiId);
@@ -557,8 +603,10 @@ void loop()
     Serial.print("long: ");
     Serial.println(GPS_LONG);
 #endif
+#ifdef ENABLE_OLED_DISPLAY
     display.fillTriangle(106, 10, 121, 15, 106, 23, 1);
     display.display();
+#endif
     HTTPClient http;
     WiFiClientSecure client;
     client.setCACert(root_ca);
@@ -623,8 +671,10 @@ void loop()
     lastTime = millis();
     if (httpResponseCode == 200)
     {
+#ifdef ENABLE_OLED_DISPLAY
       display.fillTriangle(106, 10, 121, 15, 106, 23, 0);
       display.display();
+#endif
 
 #ifdef ENABLE_SETPOINT_FETCH
       DeserializationError error = deserializeJson(doc, http.getStream());
