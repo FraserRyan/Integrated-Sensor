@@ -13,8 +13,6 @@
 #include <sequencer1.h> //imports a 1 function sequencer
 #include <sequencer2.h> //imports a 2 function sequencer
 #include <Ezo_i2c.h>    //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
-#include <sequencer1.h> //imports a 1 function sequencer
-#include <sequencer2.h> //imports a 2 function sequencer
 #ifdef ENABLE_ATLAS_EC
 #include <Ezo_i2c.h> //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #endif
@@ -24,7 +22,6 @@
 #include <DHT.h>                      // Sensor for Humidity and temperature.
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
 #include <iot_cmd.h>
-#include <sequencer2.h> 
 #include <Ezo_i2c_util.h>  
 
 
@@ -69,10 +66,10 @@ Ezo_board* default_board = &device_list[0]; //used to store the board were talki
 const uint8_t device_list_len = sizeof(device_list) / sizeof(device_list[0]);
 const unsigned long reading_delay = 1000;                 //how long we wait to receive a response, in milliseconds
 unsigned int poll_delay = 2000 - reading_delay;
-void step1();      //forward declarations of functions to use them in the sequencer before defining them
-void step2();
-Sequencer2 Seq(&step1, reading_delay,   //calls the steps in sequence with time in between them
-               &step2, poll_delay);
+void step3();      //forward declarations of functions to use them in the sequencer before defining them
+void step4();
+Sequencer2 PumpSeq(&step3, reading_delay,   //calls the steps in sequence with time in between them
+               &step4, poll_delay);
 bool polling = true;                                     //variable to determine whether or not were polling the circuits
 #endif
 
@@ -99,8 +96,6 @@ uint8_t user_bytes_received = 0;
 const uint8_t bufferlen = 32;
 char user_data[bufferlen];
 
-void step1(); // forward declarations of functions to use them in the sequencer before defining them
-void step2();
 void parse_cmd(char *string);
 void printLocalTime();
 void startOnDemandWiFiManager();
@@ -751,7 +746,7 @@ String cmd;                             //variable to hold commands we send to t
     }
   }
   if (polling == true) {                 //if polling is turned on, run the sequencer
-    Seq.run();
+    PumpSeq.run();
   }
   delay(50);
 
