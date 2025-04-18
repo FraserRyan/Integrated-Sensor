@@ -22,8 +22,7 @@
 #include <DHT.h>                      // Sensor for Humidity and temperature.
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
 #include <iot_cmd.h>
-#include <Ezo_i2c_util.h>  
-
+#include <Ezo_i2c_util.h>
 
 #ifdef ENABLE_GPS
 #include <TinyGPS++.h>
@@ -36,8 +35,8 @@
 JsonDocument doc;
 
 double EC_MIN, EC_MAX, PH_MIN, PH_MAX;
-double EC_AVG =  (EC_MIN + EC_MAX)/2;
-double PH_AVG =  (PH_MIN + PH_MAX)/2;
+double EC_AVG = (EC_MIN + EC_MAX) / 2;
+double PH_AVG = (PH_MIN + PH_MAX) / 2;
 
 #endif
 
@@ -55,34 +54,32 @@ float SG_float;  // float var used to hold the float value of the specific gravi
 #ifdef ENABLE_PUMPS
 void pump_API();
 int last_Dose = 0;
-int FERTILIZER_DOSAGE = 10;     // 10ml of Part A 5-15-26
-                                // 10ml of Part B 5-0-0 Calcium Nitrate
-                                // These two components of fertilizer will be dosed at the same time.
-int pH_DOSAGE = 10;             // 10ml of Sulfuric Acid or Potassium Hydroxide
-int INTERVAL_TIME = 1*60*1000;  //For testing this is just 1 minute
+int FERTILIZER_DOSAGE = 10;        // 10ml of Part A 5-15-26
+                                   // 10ml of Part B 5-0-0 Calcium Nitrate
+                                   // These two components of fertilizer will be dosed at the same time.
+int pH_DOSAGE = 10;                // 10ml of Sulfuric Acid or Potassium Hydroxide
+int INTERVAL_TIME = 1 * 60 * 1000; // For testing this is just 1 minute
 
-Ezo_board PMP1 = Ezo_board(101, "PMP1");    //create an PMP circuit object who's address is 56 and name is "PMP1"
-Ezo_board PMP2 = Ezo_board(102, "PMP2");    //create an PMP circuit object who's address is 57 and name is "PMP2"
-Ezo_board PMP3 = Ezo_board(103, "PMP3");    //create an PMP circuit object who's address is 58 and name is "PMP3"
-Ezo_board device_list[] = {               //an array of boards used for sending commands to all or specific boards
-  PMP1,
-  PMP2,
-  PMP3
-};
+Ezo_board PMP1 = Ezo_board(101, "PMP1"); // create an PMP circuit object who's address is 56 and name is "PMP1"
+Ezo_board PMP2 = Ezo_board(102, "PMP2"); // create an PMP circuit object who's address is 57 and name is "PMP2"
+Ezo_board PMP3 = Ezo_board(103, "PMP3"); // create an PMP circuit object who's address is 58 and name is "PMP3"
+Ezo_board device_list[] = {              // an array of boards used for sending commands to all or specific boards
+    PMP1,
+    PMP2,
+    PMP3};
 bool process_coms(const String &string_buffer);
 void print_help();
-Ezo_board* default_board = &device_list[0]; //used to store the board were talking to
-//gets the length of the array automatically so we dont have to change the number every time we add new boards
+Ezo_board *default_board = &device_list[0]; // used to store the board were talking to
+// gets the length of the array automatically so we dont have to change the number every time we add new boards
 const uint8_t device_list_len = sizeof(device_list) / sizeof(device_list[0]);
-const unsigned long reading_delay = 1000;                 //how long we wait to receive a response, in milliseconds
+const unsigned long reading_delay = 1000; // how long we wait to receive a response, in milliseconds
 unsigned int poll_delay = 2000 - reading_delay;
-void step3();      //forward declarations of functions to use them in the sequencer before defining them
+void step3(); // forward declarations of functions to use them in the sequencer before defining them
 void step4();
-Sequencer2 PumpSeq(&step3, reading_delay,   //calls the steps in sequence with time in between them
-               &step4, poll_delay);
-bool polling = true;                                     //variable to determine whether or not were polling the circuits
+Sequencer2 PumpSeq(&step3, reading_delay, // calls the steps in sequence with time in between them
+                   &step4, poll_delay);
+bool polling = true; // variable to determine whether or not were polling the circuits
 #endif
-
 
 Ezo_board EC = Ezo_board(100, "EC"); // create an EC circuit object who's address is 100 and name is "EC"
 void step1();                        // forward declarations of functions to use them in the sequencer before defining them
@@ -728,7 +725,7 @@ void loop()
       EC_MAX = doc["setPoints"]["ec"]["max"];
       PH_MIN = doc["setPoints"]["pH"]["min"];
       PH_MAX = doc["setPoints"]["pH"]["max"];
-      
+
 #ifndef LESS_SERIAL_OUTPUT
       Serial.print("EC min: ");
       Serial.println(EC_MIN);
@@ -749,20 +746,20 @@ void loop()
   }
 #endif
 
-String cmd;                             //variable to hold commands we send to the kit
-  if (receive_command(cmd)) {            //if we sent the kit a command it gets put into the cmd variable
-    polling = false;                     //we stop polling
-    if (!process_coms(cmd)) {            //then we evaluate the cmd for kit specific commands
-      process_command(cmd, device_list, device_list_len, default_board);    //then if its not kit specific, pass the cmd to the IOT command processing function
+  String cmd; // variable to hold commands we send to the kit
+  if (receive_command(cmd))
+  {                  // if we sent the kit a command it gets put into the cmd variable
+    polling = false; // we stop polling
+    if (!process_coms(cmd))
+    {                                                                    // then we evaluate the cmd for kit specific commands
+      process_command(cmd, device_list, device_list_len, default_board); // then if its not kit specific, pass the cmd to the IOT command processing function
     }
   }
-  if (polling == true) {                 //if polling is turned on, run the sequencer
+  if (polling == true)
+  { // if polling is turned on, run the sequencer
     PumpSeq.run();
   }
   delay(50);
-
-
-
 }
 
 void parse_cmd(char *string)
@@ -893,33 +890,31 @@ void step2()
   */
 }
 
-
-
-void step3(){
-  if(millis() > last_Dose + INTERVAL_TIME) 
-  {    
+void step3()
+{
+  if (millis() > last_Dose + INTERVAL_TIME)
+  {
     // EC DOSING
-    if((EC_float/1000)<EC_AVG)
-    {  
-      {    
+    if ((EC_float / 1000) < EC_AVG)
+    {
+      {
         PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
         PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       }
-    // PH DOSING
-    if(pH.read_ph()<PH_AVG) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
-    {  
-      {    
-        PMP3.send_cmd_with_num("d,", pH_DOSAGE); //For now just to run the pumps i will put this with these functions.
+      // PH DOSING
+      if (pH.read_ph() < PH_AVG) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
+      {
+        {
+          PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
+        }
       }
     }
   }
 }
-}
 
+void step4()
+{
 
-
-void step4(){
-  
   // receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
   // Serial.print("  ");
   // receive_and_print_reading(PMP2);
@@ -949,8 +944,6 @@ void step4(){
 // Serial.println("Error with webreqest for pump data");
 // }
 // }
-
-
 
 #if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
 float readDHT11Temp()
@@ -1104,32 +1097,40 @@ void show_display_page(int pageNum)
   }
 }
 
-bool process_coms(const String &string_buffer) {      //function to process commands that manipulate global variables and are specifc to certain kits
-  if (string_buffer == "HELP") {
+bool process_coms(const String &string_buffer)
+{ // function to process commands that manipulate global variables and are specifc to certain kits
+  if (string_buffer == "HELP")
+  {
     print_help();
     return true;
   }
-  else if (string_buffer.startsWith("POLL")) {
+  else if (string_buffer.startsWith("POLL"))
+  {
     polling = true;
     Seq.reset();
 
-    int16_t index = string_buffer.indexOf(',');                    //check if were passing a polling delay parameter
-    if (index != -1) {                                              //if there is a polling delay
-      float new_delay = string_buffer.substring(index + 1).toFloat(); //turn it into a float
+    int16_t index = string_buffer.indexOf(','); // check if were passing a polling delay parameter
+    if (index != -1)
+    {                                                                 // if there is a polling delay
+      float new_delay = string_buffer.substring(index + 1).toFloat(); // turn it into a float
 
       float mintime = reading_delay;
-      if (new_delay >= (mintime / 1000.0)) {                                     //make sure its greater than our minimum time
-        Seq.set_step2_time((new_delay * 1000.0) - reading_delay);          //convert to milliseconds and remove the reading delay from our wait
-      } else {
-        Serial.println("delay too short");                          //print an error if the polling time isnt valid
+      if (new_delay >= (mintime / 1000.0))
+      {                                                           // make sure its greater than our minimum time
+        Seq.set_step2_time((new_delay * 1000.0) - reading_delay); // convert to milliseconds and remove the reading delay from our wait
+      }
+      else
+      {
+        Serial.println("delay too short"); // print an error if the polling time isnt valid
       }
     }
     return true;
   }
-  return false;                         //return false if the command is not in the list, so we can scan the other list or pass it to the circuit
+  return false; // return false if the command is not in the list, so we can scan the other list or pass it to the circuit
 }
 
-void print_help() {
+void print_help()
+{
   Serial.println(F("Atlas Scientific Tri PMP sample code                                       "));
   Serial.println(F("Commands:                                                                  "));
   Serial.println(F("poll         Takes readings continuously of all sensors                    "));
