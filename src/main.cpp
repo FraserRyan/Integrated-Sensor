@@ -897,7 +897,7 @@ void step2()
      SG_float=atof(SG);
   */
 }
-
+#ifdef ENABLE_PUMPS
 void step3()
 {
   if (millis() > last_Dose + INTERVAL_TIME)
@@ -931,6 +931,8 @@ void step4()
   // receive_and_print_reading(PMP3);
   // Serial.println();
 }
+
+#endif
 
 // void pump_API(){
 //   http.begin(client, pumpRequestURL.c_str());
