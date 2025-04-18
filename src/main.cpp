@@ -189,6 +189,10 @@ void setup()
   api_id_param.setValue(String(apiId).c_str(), 40);
   api_key_param.setValue(String(apiKey).c_str(), 40);
 
+  #ifdef ENABLE_PUMPS
+  PumpSeq.reset();
+  #endif
+
 #ifdef ENABLE_ATLAS_EC
   Seq.reset(); // initialize the sequencer
   delay(3000);
@@ -1107,7 +1111,7 @@ bool process_coms(const String &string_buffer)
   else if (string_buffer.startsWith("POLL"))
   {
     polling = true;
-    Seq.reset();
+    PumpSeq.reset();
 
     int16_t index = string_buffer.indexOf(','); // check if were passing a polling delay parameter
     if (index != -1)
@@ -1117,7 +1121,7 @@ bool process_coms(const String &string_buffer)
       float mintime = reading_delay;
       if (new_delay >= (mintime / 1000.0))
       {                                                           // make sure its greater than our minimum time
-        Seq.set_step2_time((new_delay * 1000.0) - reading_delay); // convert to milliseconds and remove the reading delay from our wait
+        PumpSeq.set_step2_time((new_delay * 1000.0) - reading_delay); // convert to milliseconds and remove the reading delay from our wait
       }
       else
       {
