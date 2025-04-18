@@ -72,8 +72,8 @@ void print_help();
 Ezo_board *default_board = &device_list[0]; // used to store the board were talking to
 // gets the length of the array automatically so we dont have to change the number every time we add new boards
 const uint8_t device_list_len = sizeof(device_list) / sizeof(device_list[0]);
-const unsigned long reading_delay = 1000; // how long we wait to receive a response, in milliseconds
-unsigned int poll_delay = 2000 - reading_delay;
+const unsigned long reading_delay = 100; // how long we wait to receive a response, in milliseconds decreasing from 1000
+unsigned int poll_delay = 200 - reading_delay; //there is no response so im going to decrease this decreassing from 2000-reading delay
 void step3(); // forward declarations of functions to use them in the sequencer before defining them
 void step4();
 Sequencer2 PumpSeq(&step3, reading_delay, // calls the steps in sequence with time in between them
