@@ -935,7 +935,7 @@ void step4()
   // Serial.println();
 }
 
-#endif
+
 
 void pump_API(){
   http.begin(client, pumpRequestURL.c_str());
@@ -958,6 +958,7 @@ else {
 Serial.println("Error with webreqest for pump data");
 }
 }
+#endif
 
 #if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
 float readDHT11Temp()
