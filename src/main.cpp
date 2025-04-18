@@ -926,6 +926,8 @@ void step2()
 void step3()
 {
   PMP1.send_cmd_with_num("d,", 1,.5);
+  PMP2.send_cmd_with_num("d,", 1,.5);
+  
 //   if (millis() > last_Dose + INTERVAL_TIME)
 //   {
 //     // EC DOSING
