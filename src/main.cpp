@@ -169,6 +169,19 @@ WiFiClientSecure client;
 
 void setup()
 {
+#ifdef ENABLE_ATLAS_TEMP
+  if (RTD.begin())
+  {
+    Serial.println("Loaded EEPROM for Temperature calibration");
+  }
+#endif
+
+#ifdef ENABLE_ATLAS_pH
+  if (pH.begin()) {                                     
+    Serial.println("Loaded EEPROM for pH calibration");
+  }
+#endif
+
 #ifndef DISABLE_LCD
   pages[0] = 0;
   pages[1] = 1;
