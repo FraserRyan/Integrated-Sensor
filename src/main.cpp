@@ -922,7 +922,6 @@ void step3()
     //if(1)
     {
       {
-
         PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
         PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       }
@@ -939,7 +938,9 @@ void step3()
 
 void step4()
 {
-
+  digitalWrite(LED12,1); //blinking led 12 in step4 to debug
+  delay(250);
+  digitalWrite(LED12,0);
   // receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
   // Serial.print("  ");
   // receive_and_print_reading(PMP2);
