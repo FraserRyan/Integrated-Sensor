@@ -36,6 +36,8 @@
 JsonDocument doc;
 
 double EC_MIN, EC_MAX, PH_MIN, PH_MAX;
+double EC_AVG =  (EC_MIN + EC_MAX)/2;
+double PH_AVG =  (PH_MIN + PH_MAX)/2;
 
 #endif
 
@@ -51,6 +53,11 @@ float SAL_float; // float var used to hold the float value of the salinity.
 float SG_float;  // float var used to hold the float value of the specific gravity.
 
 #ifndef DISABLE_PERISTALTIC_PUMPS
+int last_Dose = 0;
+int FERTILIZER_DOSAGE = 10;
+int pH_DOSAGE = 10;
+int INTERVAL_TIME = 2*60*1000; 
+
 Ezo_board PMP1 = Ezo_board(101, "PMP1");    //create an PMP circuit object who's address is 56 and name is "PMP1"
 Ezo_board PMP2 = Ezo_board(102, "PMP2");    //create an PMP circuit object who's address is 57 and name is "PMP2"
 Ezo_board PMP3 = Ezo_board(103, "PMP3");    //create an PMP circuit object who's address is 58 and name is "PMP3"
@@ -882,28 +889,23 @@ void step2()
   */
 }
 
-int last_Dose = 0;
-int FERTILIZER_DOSAGE = 10;
-int pH_DOSAGE = 10;
-int INTERVAL_TIME = 2*60*1000; 
 
-void step3() {
+
+void step3(){
   if(millis() > last_Dose + INTERVAL_TIME) 
   {    
     //
     //This will be for adjusting pH
-    if((EC_float/1000)<PH_AVG){  
+    if((EC_float/1000)<PH_AVG)
+    {  
       {    
         PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
         PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
         PMP3.send_cmd_with_num("d,", pH_DOSAGE); //For now just to run the pumps i will put this with these functions.
       }
+    }
   }
-
-
-
 }
-
 
 
 
