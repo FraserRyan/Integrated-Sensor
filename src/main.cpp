@@ -117,6 +117,8 @@ void show_display_page(int pageNum);
 int last_switch_time = 0;
 int cycle_time = 5000;
 int display_page_count = 2;
+int pages[10];
+
 #endif
 
 #if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
@@ -156,6 +158,10 @@ WiFiClientSecure client;
 
 void setup()
 {
+#ifndef DISABLE_LCD
+  pages[0] = 0;
+  pages[1] = 1;
+#endif
   client.setCACert(root_ca);
   Wire.begin(SDA_PIN, SCL_PIN);
 
@@ -189,9 +195,9 @@ void setup()
   api_id_param.setValue(String(apiId).c_str(), 40);
   api_key_param.setValue(String(apiKey).c_str(), 40);
 
-  #ifdef ENABLE_PUMPS
+#ifdef ENABLE_PUMPS
   PumpSeq.reset();
-  #endif
+#endif
 
 #ifdef ENABLE_ATLAS_EC
   Seq.reset(); // initialize the sequencer
@@ -368,7 +374,7 @@ void loop()
     }
     last_switch_time = millis();
   }
-  show_display_page(display_current_page);
+  show_display_page(pages[display_current_page]);
 // #ifdef ENABLE_DHT11_TEMP
 //   lcd.setCursor(0, 0);
 //   lcd.print("Temp:");
@@ -501,11 +507,11 @@ void loop()
 
 #ifdef ENABLE_ATLAS_TEMP
   float temperatureF = RTD.read_RTD_temp_F();
-  #ifdef LESS_SERIAL_OUTPUT
-    Serial.print("Temp:");
-    Serial.print(temperatureF);
-    Serial.println();
-  #endif
+#ifdef LESS_SERIAL_OUTPUT
+  Serial.print("Temp:");
+  Serial.print(temperatureF);
+  Serial.println();
+#endif
 #ifdef ENABLE_OLED_DISPLAY
   display.print(temperatureF, 1);
   display.setTextSize(2);
@@ -772,7 +778,6 @@ void loop()
 #endif
 }
 
-
 void parse_cmd(char *string)
 {
   strupr(string);
@@ -935,28 +940,29 @@ void step4()
   // Serial.println();
 }
 
-
-
-void pump_API(){
+void pump_API()
+{
   http.begin(client, pumpRequestURL.c_str());
   http.addHeader("Content-Type", "application/json");
- String requestBody = "{\"unitNumber\":\"";
+  String requestBody = "{\"unitNumber\":\"";
 
-    requestBody += String(UNIT_NUMBER) + "\"";
-    requestBody += ",\"pump1\":" + String(FERTILIZER_DOSAGE);
-    requestBody += ",\"pump2\":" + String(FERTILIZER_DOSAGE);
-    requestBody += ",\"pump3\":" + String(pH_DOSAGE);
-    requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
-    requestBody += "}";
-    int httpResponseCode = http.POST(requestBody.c_str());
- Serial.print("on pump post, httpResponseCode: ");
-    Serial.println(httpResponseCode);
-if (httpResponseCode == 200) {
-//code if success
-}
-else {
-Serial.println("Error with webreqest for pump data");
-}
+  requestBody += String(UNIT_NUMBER) + "\"";
+  requestBody += ",\"pump1\":" + String(FERTILIZER_DOSAGE);
+  requestBody += ",\"pump2\":" + String(FERTILIZER_DOSAGE);
+  requestBody += ",\"pump3\":" + String(pH_DOSAGE);
+  requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
+  requestBody += "}";
+  int httpResponseCode = http.POST(requestBody.c_str());
+  Serial.print("on pump post, httpResponseCode: ");
+  Serial.println(httpResponseCode);
+  if (httpResponseCode == 200)
+  {
+    // code if success
+  }
+  else
+  {
+    Serial.println("Error with webreqest for pump data");
+  }
 }
 #endif
 
@@ -1023,47 +1029,71 @@ void updateGPS()
   }
 }
 #endif
+bool multiple_temps = false;
+void setup_pages()
+{
+  int temp_count = 0;
+#ifdef ENABLE_DHT11_TEMP
+  temp_count++;
+#endif
+#ifdef ENABLE_ATLAS_TEMP
+  temp_count++;
+#endif
+#ifndef DISABLE_MCP9701_TEMP
+  temp_count++;
+#endif
+
+  if (temp_count > 1)
+  {
+    pages[display_page_count] = 2;
+    display_page_count++;
+    multiple_temps = true;
+  }
+}
 
 void show_display_page(int pageNum)
 {
   lcd.clear();
   if (pageNum == 0)
   {
+    if (!multiple_temps)
+    {
 #ifdef ENABLE_DHT11_TEMP
-    lcd.setCursor(0, 0);
-    lcd.print("Temp:");
-    // char tempStr[3];
-    // dtostrf(lcd_temp,3,3,tempStr);
-    lcd.print(readDHT11Temp(), 0);
-    lcd.print(char(223)); // print degree
-    lcd.print("F");
+      lcd.setCursor(0, 0);
+      lcd.print("Temp:");
+      // char tempStr[3];
+      // dtostrf(lcd_temp,3,3,tempStr);
+      lcd.print(readDHT11Temp(), 0);
+      lcd.print(char(223)); // print degree
+      lcd.print("F");
 #endif
 #ifdef ENABLE_ATLAS_TEMP
-    float temperatureF = RTD.read_RTD_temp_F();
-    lcd.setCursor(0, 0);
-    lcd.print("Temp:");
-    lcd.print(temperatureF, 1);
-    lcd.print(char(223)); // print degree
-    lcd.print("F");
+      float temperatureF = RTD.read_RTD_temp_F();
+      lcd.setCursor(0, 0);
+      lcd.print("Temp:");
+      lcd.print(temperatureF, 1);
+      lcd.print(char(223)); // print degree
+      lcd.print("F");
 #endif
 #ifndef DISABLE_MCP9701_TEMP
-    float sensorValue = analogRead(MCP9701_temp_Pin);
-    float voltage = sensorValue * (3.3 / 4095.0);
-    float temperatureC = (voltage - 0.5) / 0.01;
-    float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
-    lcd.setCursor(0, 0);
-    lcd.print("Temp:");
-    lcd.print(fahrenheit, 1);
-    lcd.print(char(223)); // print degree
-    lcd.print("F");
+      float sensorValue = analogRead(MCP9701_temp_Pin);
+      float voltage = sensorValue * (3.3 / 4095.0);
+      float temperatureC = (voltage - 0.5) / 0.01;
+      float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
+      lcd.setCursor(0, 0);
+      lcd.print("Temp:");
+      lcd.print(fahrenheit, 1);
+      lcd.print(char(223)); // print degree
+      lcd.print("F");
 #ifndef LESS_SERIAL_OUTPUT
-    Serial.print("MCP9701 Temperature:\t\t\t");
-    Serial.print(fahrenheit);
-    Serial.print("\xC2\xB0"); // shows degree symbol
-    Serial.println("F");
+      Serial.print("MCP9701 Temperature:\t\t\t");
+      Serial.print(fahrenheit);
+      Serial.print("\xC2\xB0"); // shows degree symbol
+      Serial.println("F");
 #endif
-    float temperatureF = fahrenheit;
+      float temperatureF = fahrenheit;
 #endif
+    }
 #ifdef ENABLE_ATLAS_pH
     lcd.setCursor(0, 1);
     lcd.print("pH:");
@@ -1110,6 +1140,39 @@ void show_display_page(int pageNum)
     lcd.setCursor(0, 3);
     lcd.print(WiFi.macAddress());
   }
+  if (pageNum == 2)
+  {
+    int row_count = 0;
+#ifdef ENABLE_DHT11_TEMP
+    lcd.setCursor(0, row_count++);
+    lcd.print("Temp DHT:");
+    // char tempStr[3];
+    // dtostrf(lcd_temp,3,3,tempStr);
+    lcd.print(readDHT11Temp(), 0);
+    lcd.print(char(223)); // print degree
+    lcd.print("F");
+#endif
+#ifdef ENABLE_ATLAS_TEMP
+    float temperatureF = RTD.read_RTD_temp_F();
+    lcd.setCursor(0, row_count++);
+    lcd.print("Temp Atlas:");
+    lcd.print(temperatureF, 1);
+    lcd.print(char(223)); // print degree
+    lcd.print("F");
+#endif
+#ifndef DISABLE_MCP9701_TEMP
+    float sensorValue = analogRead(MCP9701_temp_Pin);
+    float voltage = sensorValue * (3.3 / 4095.0);
+    float temperatureC = (voltage - 0.5) / 0.01;
+    float fahrenheit = (temperatureC * 9.0) / 5.0 + 32;
+    lcd.setCursor(0, row_count++);
+    lcd.print("Temp 9701:");
+    lcd.print(fahrenheit, 1);
+    lcd.print(char(223)); // print degree
+    lcd.print("F");
+    float temperatureF = fahrenheit;
+#endif
+  }
 }
 #ifdef ENABLE_PUMPS
 bool process_coms(const String &string_buffer)
@@ -1131,7 +1194,7 @@ bool process_coms(const String &string_buffer)
 
       float mintime = reading_delay;
       if (new_delay >= (mintime / 1000.0))
-      {                                                           // make sure its greater than our minimum time
+      {                                                               // make sure its greater than our minimum time
         PumpSeq.set_step2_time((new_delay * 1000.0) - reading_delay); // convert to milliseconds and remove the reading delay from our wait
       }
       else
