@@ -894,22 +894,27 @@ void step2()
 void step3(){
   if(millis() > last_Dose + INTERVAL_TIME) 
   {    
-    //
-    //This will be for adjusting pH
-    if((EC_float/1000)<PH_AVG)
+    // EC DOSING
+    if((EC_float/1000)<EC_AVG)
     {  
       {    
         PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
         PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
+      }
+    // PH DOSING
+    if(pH.read_ph()<PH_AVG) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
+    {  
+      {    
         PMP3.send_cmd_with_num("d,", pH_DOSAGE); //For now just to run the pumps i will put this with these functions.
       }
     }
   }
 }
+}
 
 
 
-void step4() {
+void step4(){
   
   // receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
   // Serial.print("  ");
