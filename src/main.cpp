@@ -937,27 +937,27 @@ void step4()
 
 #endif
 
-// void pump_API(){
-//   http.begin(client, pumpRequestURL.c_str());
-//   http.addHeader("Content-Type", "application/json");
-//  String requestBody = "{\"unitNumber\":\"";
+void pump_API(){
+  http.begin(client, pumpRequestURL.c_str());
+  http.addHeader("Content-Type", "application/json");
+ String requestBody = "{\"unitNumber\":\"";
 
-//     requestBody += String(UNIT_NUMBER) + "\"";
-//     requestBody += ",\"pump1\":" + String(FERTILIZER_DOSAGE);
-//     requestBody += ",\"pump2\":" + String(FERTILIZER_DOSAGE);
-//     requestBody += ",\"pump3\":" + String(pH_DOSAGE);
-//     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
-//     requestBody += "}";
-//     int httpResponseCode = http.POST(requestBody.c_str());
-//  Serial.print("on pump post, httpResponseCode: ");
-//     Serial.println(httpResponseCode);
-// if (httpResponseCode == 200) {
-// //code if success
-// }
-// else {
-// Serial.println("Error with webreqest for pump data");
-// }
-// }
+    requestBody += String(UNIT_NUMBER) + "\"";
+    requestBody += ",\"pump1\":" + String(FERTILIZER_DOSAGE);
+    requestBody += ",\"pump2\":" + String(FERTILIZER_DOSAGE);
+    requestBody += ",\"pump3\":" + String(pH_DOSAGE);
+    requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
+    requestBody += "}";
+    int httpResponseCode = http.POST(requestBody.c_str());
+ Serial.print("on pump post, httpResponseCode: ");
+    Serial.println(httpResponseCode);
+if (httpResponseCode == 200) {
+//code if success
+}
+else {
+Serial.println("Error with webreqest for pump data");
+}
+}
 
 #if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
 float readDHT11Temp()
