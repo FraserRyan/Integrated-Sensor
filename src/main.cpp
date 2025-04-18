@@ -118,6 +118,7 @@ int last_switch_time = 0;
 int cycle_time = 5000;
 int display_page_count = 2;
 int pages[10];
+void setup_pages();
 
 #endif
 
@@ -161,6 +162,7 @@ void setup()
 #ifndef DISABLE_LCD
   pages[0] = 0;
   pages[1] = 1;
+  setup_pages();
 #endif
   client.setCACert(root_ca);
   Wire.begin(SDA_PIN, SCL_PIN);
@@ -1029,6 +1031,8 @@ void updateGPS()
   }
 }
 #endif
+
+#ifndef DISABLE_LCD
 bool multiple_temps = false;
 void setup_pages()
 {
@@ -1050,6 +1054,7 @@ void setup_pages()
     multiple_temps = true;
   }
 }
+#endif
 
 void show_display_page(int pageNum)
 {
