@@ -1110,7 +1110,7 @@ void show_display_page(int pageNum)
     lcd.print(WiFi.macAddress());
   }
 }
-
+#ifdef ENABLE_PUMPS
 bool process_coms(const String &string_buffer)
 { // function to process commands that manipulate global variables and are specifc to certain kits
   if (string_buffer == "HELP")
@@ -1159,3 +1159,4 @@ void print_help()
   Serial.println();
   iot_cmd_print_allcmd_help();
 }
+#endif
