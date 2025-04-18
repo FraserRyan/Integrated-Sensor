@@ -754,6 +754,7 @@ void loop()
   }
 #endif
 
+#ifdef ENABLE_PUMPS
   String cmd; // variable to hold commands we send to the kit
   if (receive_command(cmd))
   {                  // if we sent the kit a command it gets put into the cmd variable
@@ -768,7 +769,9 @@ void loop()
     PumpSeq.run();
   }
   delay(50);
+#endif
 }
+
 
 void parse_cmd(char *string)
 {
