@@ -918,7 +918,8 @@ void step3()
   if (millis() > last_Dose + INTERVAL_TIME)
   {
     // EC DOSING
-    if ((EC_float / 1000) < EC_AVG)
+    if ((EC_float / 1000) < EC_MAX)
+    //if(1)
     {
       {
 
