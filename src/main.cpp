@@ -501,7 +501,11 @@ void loop()
 
 #ifdef ENABLE_ATLAS_TEMP
   float temperatureF = RTD.read_RTD_temp_F();
-  Serial.print(temperatureF);
+  #ifdef LESS_SERIAL_OUTPUT
+    Serial.print("Temp:");
+    Serial.print(temperatureF);
+    Serial.println();
+  #endif
 #ifdef ENABLE_OLED_DISPLAY
   display.print(temperatureF, 1);
   display.setTextSize(2);
@@ -902,6 +906,7 @@ void step3()
     if ((EC_float / 1000) < EC_AVG)
     {
       {
+
         PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
         PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       }
