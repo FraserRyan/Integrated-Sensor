@@ -154,9 +154,12 @@ void updateDisplay()
   lcd.print("Josh Thaw");
 }
 
+HTTPClient http;
+WiFiClientSecure client;
+
 void setup()
 {
-
+  client.setCACert(root_ca);
   Wire.begin(SDA_PIN, SCL_PIN);
 
 #ifndef DISABLE_LCD
@@ -640,9 +643,7 @@ void loop()
     display.fillTriangle(106, 10, 121, 15, 106, 23, 1);
     display.display();
 #endif
-    HTTPClient http;
-    WiFiClientSecure client;
-    client.setCACert(root_ca);
+
 #ifdef ENABLE_SETPOINT_FETCH
     http.useHTTP10(true);
 #endif
