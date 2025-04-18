@@ -189,12 +189,13 @@ void setup()
 #endif
 
   Serial.begin(115200);
-
+  #ifdef LESS_SERIAL_OUTPUT
   Serial.println("");
   Serial.print("MAC Address: ");
   Serial.println(WiFi.macAddress());
   Serial.println("Starting Integrated Sensor");
   Serial.println("");
+  #endif
   pinMode(LED15, OUTPUT);
 
   config.begin("config");
@@ -925,34 +926,31 @@ void step2()
 #ifdef ENABLE_PUMPS
 void step3()
 {
-  PMP1.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
+
 
   
-//   if (millis() > last_Dose + INTERVAL_TIME)
-//   {
-//     // EC DOSING
-//     if ((EC_float/1000) < EC_MAX)
-//     // if(1)
-//     {
-//       {
-//  //       PMP1.send_cmd_with_num("d,", 1,.5);
-//         // PMP2.send_cmd_with_num("d,", 1,.5);
-//       }
-//       // PH DOSING
-//       if (pH.read_ph() < PH_AVG) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
-//       {
-//         {
-//           //
-//           PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
-//         }
-//       }
-//     }
-//   }
+  if (millis() > last_Dose + INTERVAL_TIME)
+  {
+    // EC DOSING
+    if ((EC_float/1000) < EC_MAX)
+    {
+    last_Dose=millis();
+    PMP1.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
+    PMP2.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
+      // PH DOSING
+      if (pH.read_ph() > PH_AVG) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
+      {
+        {
+          PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
+        }
+      }
+    }
+  }
 }
 
 void step4()
 {
-  PMP2.send_cmd_with_num("d,", 10);
+  //PMP2.send_cmd_with_num("d,", 10);
   // receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
   // Serial.print("  ");
   // receive_and_print_reading(PMP2);
