@@ -926,26 +926,26 @@ void step2()
 void step3()
 {
   PMP1.send_cmd_with_num("d,", 1,.5);
-  if (millis() > last_Dose + INTERVAL_TIME)
-  {
-    // EC DOSING
-    if ((EC_float/1000) < EC_MAX)
-    // if(1)
-    {
-      {
- //       PMP1.send_cmd_with_num("d,", 1,.5);
-        // PMP2.send_cmd_with_num("d,", 1,.5);
-      }
-      // PH DOSING
-      if (pH.read_ph() < PH_AVG) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
-      {
-        {
-          //
-          PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
-        }
-      }
-    }
-  }
+//   if (millis() > last_Dose + INTERVAL_TIME)
+//   {
+//     // EC DOSING
+//     if ((EC_float/1000) < EC_MAX)
+//     // if(1)
+//     {
+//       {
+//  //       PMP1.send_cmd_with_num("d,", 1,.5);
+//         // PMP2.send_cmd_with_num("d,", 1,.5);
+//       }
+//       // PH DOSING
+//       if (pH.read_ph() < PH_AVG) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
+//       {
+//         {
+//           //
+//           PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
+//         }
+//       }
+//     }
+//   }
 }
 
 void step4()
