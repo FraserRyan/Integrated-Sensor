@@ -54,9 +54,11 @@ float SG_float;  // float var used to hold the float value of the specific gravi
 
 #ifndef DISABLE_PERISTALTIC_PUMPS
 int last_Dose = 0;
-int FERTILIZER_DOSAGE = 10;
-int pH_DOSAGE = 10;
-int INTERVAL_TIME = 2*60*1000; 
+int FERTILIZER_DOSAGE = 10;     // 10ml of Part A 5-15-26
+                                // 10ml of Part B 5-0-0 Calcium Nitrate
+                                // These two components of fertilizer will be dosed at the same time.
+int pH_DOSAGE = 10;             // 10ml of Sulfuric Acid or Potassium Hydroxide
+int INTERVAL_TIME = 1*60*1000;  //For testing this is just 1 minute
 
 Ezo_board PMP1 = Ezo_board(101, "PMP1");    //create an PMP circuit object who's address is 56 and name is "PMP1"
 Ezo_board PMP2 = Ezo_board(102, "PMP2");    //create an PMP circuit object who's address is 57 and name is "PMP2"
@@ -923,6 +925,28 @@ void step4(){
   // receive_and_print_reading(PMP3);
   // Serial.println();
 }
+
+// void pump_API(){
+//   http.begin(client, pumpRequestURL.c_str());
+//   http.addHeader("Content-Type", "application/json");
+//  String requestBody = "{\"unitNumber\":\"";
+
+//     requestBody += String(UNIT_NUMBER) + "\"";
+//     requestBody += ",\"pump1\":" + String(FERTILIZER_DOSAGE);
+//     requestBody += ",\"pump2\":" + String(FERTILIZER_DOSAGE);
+//     requestBody += ",\"pump3\":" + String(pH_DOSAGE);
+//     requestBody += ",\"id\": \"" + String(apiId) + String("\",\"key\": \"") + String(apiKey) + String("\"");
+//     requestBody += "}";
+//     int httpResponseCode = http.POST(requestBody.c_str());
+//  Serial.print("on pump post, httpResponseCode: ");
+//     Serial.println(httpResponseCode);
+// if (httpResponseCode == 200) {
+// //code if success
+// }
+// else {
+// Serial.println("Error with webreqest for pump data");
+// }
+// }
 
 
 
