@@ -135,6 +135,10 @@ float GPS_LAT = 0, GPS_LONG = 0, GPS_ELEV = 0;
 void updateGPS();
 #endif
 
+#ifdef ENABLE_ATLAS_TEMP
+float atlasTemp;
+#endif
+
 void updateDisplay()
 {
 #ifdef ENABLE_OLED_DISPLAY
@@ -509,6 +513,7 @@ void loop()
 
 #ifdef ENABLE_ATLAS_TEMP
   float temperatureF = RTD.read_RTD_temp_F();
+  atlasTemp = temperatureF;
 #ifdef LESS_SERIAL_OUTPUT
   Serial.print("Temp:");
   Serial.print(temperatureF);
@@ -1073,7 +1078,8 @@ void show_display_page(int pageNum)
       lcd.print("F");
 #endif
 #ifdef ENABLE_ATLAS_TEMP
-      float temperatureF = RTD.read_RTD_temp_F();
+      // float temperatureF = RTD.read_RTD_temp_F();
+      float temperatureF = atlasTemp;
       lcd.setCursor(0, 0);
       lcd.print("Temp:");
       lcd.print(temperatureF, 1);
@@ -1158,7 +1164,8 @@ void show_display_page(int pageNum)
     lcd.print("F");
 #endif
 #ifdef ENABLE_ATLAS_TEMP
-    float temperatureF = RTD.read_RTD_temp_F();
+    // float temperatureF = RTD.read_RTD_temp_F();
+    float temperatureF = atlasTemp;
     lcd.setCursor(0, row_count++);
     lcd.print("Temp Atlas:");
     lcd.print(temperatureF, 1);
