@@ -138,6 +138,12 @@ void updateGPS();
 #ifdef ENABLE_ATLAS_TEMP
 float atlasTemp;
 #endif
+#ifdef ENABLE_ATLAS_pH
+float atlasPH;
+#endif
+#ifdef ENABLE_ATLAS_EC
+float atlasEC;
+#endif
 
 void updateDisplay()
 {
@@ -565,6 +571,7 @@ void loop()
   display.setCursor(0, 45);
 #endif
 #ifdef ENABLE_ATLAS_pH
+  atlasPH = pH.read_ph();
 #ifdef ENABLE_OLED_DISPLAY
   display.print(pH.read_ph(), 1);
 #endif
@@ -586,7 +593,7 @@ void loop()
 
 #ifdef ENABLE_ATLAS_pH
   Serial.print("pH: ");
-  Serial.println(pH.read_ph(), 1);
+  Serial.println(atlasPH);
 #endif
 
 //
@@ -614,6 +621,7 @@ void loop()
   display.setTextSize(2);
 #endif
 #ifdef ENABLE_ATLAS_EC
+  atlasEC = EC_float / 1000;
 #ifdef ENABLE_OLED_DISPLAY
   display.print(EC_float / 1000, 1);
 #endif
@@ -919,7 +927,7 @@ void step3()
   {
     // EC DOSING
     if ((EC_float / 1000) < EC_MAX)
-    //if(1)
+    // if(1)
     {
       {
         PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
@@ -1110,10 +1118,12 @@ void show_display_page(int pageNum)
 #ifdef ENABLE_ATLAS_pH
     lcd.setCursor(0, 1);
     lcd.print("pH:");
+    lcd.print(atlasPH);
 #endif
 #ifdef ENABLE_ATLAS_EC
     lcd.setCursor(0, 2);
     lcd.print("EC:");
+    lcd.print(atlasEC);
 #endif
 #ifndef DISABLE_WIFI
     lcd.setCursor(0, 3);
