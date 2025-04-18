@@ -27,7 +27,7 @@ const int   daylightOffset_sec    = 3600;
 //#define ENABLE_ATLAS_pH
 #define DISABLE_CELSIUS
 #define DHTTYPE DHT11
-#define DISABLE_CALIBRATION_MODE
+#define ENABLE_CALIBRATION
 //#define DISABLE_FAHRENHEIT
 #define ENABLE_DHT11_TEMP
 #define ENABLE_DHT11_HUMIDITY

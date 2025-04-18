@@ -169,18 +169,7 @@ WiFiClientSecure client;
 
 void setup()
 {
-#ifdef ENABLE_ATLAS_TEMP
-  if (RTD.begin())
-  {
-    Serial.println("Loaded EEPROM for Temperature calibration");
-  }
-#endif
 
-#ifdef ENABLE_ATLAS_pH
-  if (pH.begin()) {                                     
-    Serial.println("Loaded EEPROM for pH calibration");
-  }
-#endif
 
 #ifndef DISABLE_LCD
   pages[0] = 0;
@@ -203,6 +192,26 @@ void setup()
 
   Serial.begin(115200);
   #ifdef LESS_SERIAL_OUTPUT
+    #ifdef ENABLE_ATLAS_TEMP
+    if (RTD.begin())
+    {
+      Serial.println("Loaded EEPROM for Temperature calibration");
+    }
+    else
+    {
+      Serial.println("Failed to Loaded EEPROM for Temperature calibration");    
+    }
+  #endif
+
+  #ifdef ENABLE_ATLAS_pH
+    if (pH.begin()) {                                     
+      Serial.println("Loaded EEPROM for pH calibration");
+    }
+    else
+    {
+      Serial.println("Failed to Loaded EEPROM for pH calibration");    
+    }
+  #endif
   Serial.println("");
   Serial.print("MAC Address: ");
   Serial.println(WiFi.macAddress());
@@ -236,7 +245,7 @@ void setup()
   delay(300);
 #endif
 
-#ifndef CALIBRATION_MODE
+#ifdef ENABLE_CALIBRATION
   Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
   if (RTD.begin())
   {
@@ -438,17 +447,6 @@ void loop()
 // #endif
 #endif
 
-  if (Serial.available() > 0)
-  {
-    user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
-  }
-
-  if (user_bytes_received)
-  {
-    parse_cmd(user_data);
-    user_bytes_received = 0;
-    memset(user_data, 0, sizeof(user_data));
-  }
 
 // Serial.println(RTD.read_RTD_temp_C());
 
@@ -809,29 +807,31 @@ void loop()
 #endif
 }
 
-void parse_cmd(char *string)
-{
-  strupr(string);
-  String cmd = String(string);
-  if (cmd.startsWith("CAL"))
+#ifdef ENABLE_CALIBRATION
+  void parse_cmd(char *string)
   {
-    int index = cmd.indexOf(',');
-    if (index != -1)
+    strupr(string);
+    String cmd = String(string);
+    if (cmd.startsWith("CAL"))
     {
-      String param = cmd.substring(index + 1, cmd.length());
-      if (param.equals("CLEAR"))
+      int index = cmd.indexOf(',');
+      if (index != -1)
       {
-        RTD.cal_clear();
-        Serial.println("CALIBRATION CLEARED");
-      }
-      else
-      {
-        RTD.cal(param.toFloat());
-        Serial.println("RTD CALIBRATED");
+        String param = cmd.substring(index + 1, cmd.length());
+        if (param.equals("CLEAR"))
+        {
+          RTD.cal_clear();
+          Serial.println("CALIBRATION CLEARED");
+        }
+        else
+        {
+          RTD.cal(param.toFloat());
+          Serial.println("RTD CALIBRATED");
+        }
       }
     }
   }
-}
+#endif
 
 void printLocalTime()
 {
