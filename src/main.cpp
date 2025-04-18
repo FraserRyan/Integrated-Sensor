@@ -72,8 +72,8 @@ void print_help();
 Ezo_board *default_board = &device_list[0]; // used to store the board were talking to
 // gets the length of the array automatically so we dont have to change the number every time we add new boards
 const uint8_t device_list_len = sizeof(device_list) / sizeof(device_list[0]);
-const unsigned long reading_delay = 100; // how long we wait to receive a response, in milliseconds decreasing from 1000
-unsigned int poll_delay = 200 - reading_delay; //there is no response so im going to decrease this decreassing from 2000-reading delay
+const unsigned long reading_delay = 1000; // how long we wait to receive a response, in milliseconds decreasing from 1000
+unsigned int poll_delay = 2000 - reading_delay; //there is no response so im going to decrease this decreassing from 2000-reading delay
 void step3(); // forward declarations of functions to use them in the sequencer before defining them
 void step4();
 Sequencer2 PumpSeq(&step3, reading_delay, // calls the steps in sequence with time in between them
@@ -926,7 +926,7 @@ void step2()
 void step3()
 {
   PMP1.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
-  PMP2.send_cmd_with_num("d,", 10);
+
   
 //   if (millis() > last_Dose + INTERVAL_TIME)
 //   {
@@ -952,9 +952,7 @@ void step3()
 
 void step4()
 {
-  digitalWrite(LED12,1); //blinking led 12 in step4 to debug
-  delay(250);
-  digitalWrite(LED12,0);
+  PMP2.send_cmd_with_num("d,", 10);
   // receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
   // Serial.print("  ");
   // receive_and_print_reading(PMP2);
