@@ -210,9 +210,9 @@ void setup()
   #ifdef ENABLE_ATLAS_pH
     if (pH.begin()) {                                     
       Serial.println("Loaded EEPROM for pH calibration");
-      // Serial.print("mid_cal: "); Serial.println(pH.pH.mid_cal);
-      // Serial.print("low_cal: "); Serial.println(pH.pH.low_cal);
-      // Serial.print("high_cal: "); Serial.println(pH.pH.high_cal);
+      Serial.print("mid_cal: "); Serial.println(pH.pH.mid_cal);
+      Serial.print("low_cal: "); Serial.println(pH.pH.low_cal);
+      Serial.print("high_cal: "); Serial.println(pH.pH.high_cal);
     }
     else
     {

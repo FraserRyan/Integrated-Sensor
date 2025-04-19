@@ -1,4 +1,3 @@
-
 #if ARDUINO >= 100
 #include "Arduino.h"
 #else
@@ -8,12 +7,23 @@
 #include "ph_surveyor.h"
 #include "EEPROM.h"
 
+// Constructor
 Surveyor_pH::Surveyor_pH(uint8_t pin)
 {
   this->pin = pin;
-  this->EEPROM_offset = (pin)*EEPROM_SIZE_CONST;
-  // to lay the calibration parameters out in EEPROM we map their locations to the analog pin numbers
-  // we assume a maximum size of EEPROM_SIZE_CONST for every struct we're saving
+  this->EEPROM_offset = (pin) * EEPROM_SIZE_CONST;
+
+  
+}
+
+// Method definition to print calibration values (in the .cpp file)
+void Surveyor_pH::print_calibration_values() {
+  Serial.print("Low Calibration: ");
+  Serial.println(this->pH.low_cal);
+  Serial.print("Mid Calibration: ");
+  Serial.println(this->pH.mid_cal);
+  Serial.print("High Calibration: ");
+  Serial.println(this->pH.high_cal);
 }
 
 bool Surveyor_pH::begin()
@@ -35,10 +45,6 @@ float Surveyor_pH::read_voltage()
   for (int i = 0; i < volt_avg_len; ++i)
   {
 #if defined(ESP32)
-    // ESP32 has significant nonlinearity in its ADC, we will attempt to compensate
-    // but you're on your own to some extent
-    // this compensation is only for the ESP32
-    // https://github.com/espressif/arduino-esp32/issues/92
     voltage_mV += analogRead(this->pin) / 4095.0 * 3300.0 + 130;
 #else
     voltage_mV += analogRead(this->pin) / 1024.0 * 5000.0;
@@ -51,7 +57,7 @@ float Surveyor_pH::read_voltage()
 float Surveyor_pH::read_ph(float voltage_mV)
 {
   if (voltage_mV > pH.mid_cal)
-  { // high voltage = low ph
+  { 
     return 7.0 - 3.0 / (this->pH.low_cal - this->pH.mid_cal) * (voltage_mV - this->pH.mid_cal);
   }
   else
@@ -114,3 +120,12 @@ void Surveyor_pH::cal_clear()
   this->pH.high_cal = 975;
   EEPROM.put(this->EEPROM_offset, pH);
 }
+
+// void Surveyor_pH::print_calibration_values() {
+//   Serial.print("Low Calibration: ");
+//   Serial.println(this->pH.low_cal);
+//   Serial.print("Mid Calibration: ");
+//   Serial.println(this->pH.mid_cal);
+//   Serial.print("High Calibration: ");
+//   Serial.println(this->pH.high_cal);
+// }
