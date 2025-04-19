@@ -175,12 +175,12 @@ WiFiClientSecure client;
 
 void setup()
 {
-  pinMode(LED12,OUTPUT);
-  pinMode(LED13,OUTPUT);
-  pinMode(LED14,OUTPUT);
-  pinMode(LED15,OUTPUT);
-  pinMode(LED16,OUTPUT);
-  pinMode(LED17,OUTPUT);
+  // pinMode(LED12,OUTPUT);
+  // pinMode(LED13,OUTPUT);
+  // pinMode(LED14,OUTPUT);
+  // pinMode(LED15,OUTPUT);
+  // pinMode(LED16,OUTPUT);
+  // pinMode(LED17,OUTPUT);
 
   Serial.begin(115200);
 
