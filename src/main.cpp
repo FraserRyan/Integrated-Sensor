@@ -247,10 +247,12 @@ void setup()
 
 #ifdef ENABLE_CALIBRATION
   Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
-  if (RTD.begin())
-  {
-    Serial.println("Loaded EEPROM");
-  }
+  Serial.println(F("Use commands \"PHCAL,7\", \"PHCAL,4\", and \"PHCAL,10\" to calibrate the circuit to those respective values"));
+  Serial.println(F("Use command \"PHCAL,CLEAR\" to clear the calibration"));
+  // if (RTD.begin())
+  // {
+  //   Serial.println("Loaded EEPROM");
+  // }
 #endif
 #ifdef ENABLE_OLED_DISPLAY
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
@@ -823,32 +825,28 @@ void loop()
           RTD.cal_clear();
           Serial.println("CALIBRATION CLEARED");
         }
-        else
-        {
           RTD.cal(param.toFloat());
           Serial.println("RTD CALIBRATED");
         }
+      }
 
-        if (strcmp(string, "PHCAL,7") == 0) {       
-          pH.cal_mid();                                
-          Serial.println("MID CALIBRATED");
-        }
-        else if (strcmp(string, "PHCAL,4") == 0) {            
-          pH.cal_low();                                
-          Serial.println("LOW CALIBRATED");
-        }
-        else if (strcmp(string, "PHCAL,10") == 0) {      
-          pH.cal_high();                               
-          Serial.println("HIGH CALIBRATED");
-        }
-        else if (strcmp(string, "PHCAL,CLEAR") == 0) { 
-          pH.cal_clear();                              
-          Serial.println("pH CALIBRATION CLEARED");
-        }
-
+      if (strcmp(string, "PHCAL,7") == 0) {       
+        pH.cal_mid();                                
+        Serial.println("MID CALIBRATED");
+      }
+      else if (strcmp(string, "PHCAL,4") == 0) {            
+        pH.cal_low();                                
+        Serial.println("LOW CALIBRATED");
+      }
+      else if (strcmp(string, "PHCAL,10") == 0) {      
+        pH.cal_high();                               
+        Serial.println("HIGH CALIBRATED");
+      }
+      else if (strcmp(string, "PHCAL,CLEAR") == 0) { 
+        pH.cal_clear();                              
+        Serial.println("pH CALIBRATION CLEARED");
       }
     }
-  }
 #endif
 
 void printLocalTime()
