@@ -1001,23 +1001,27 @@ void step3()
     initial += FERTILIZER_DOSAGE;
       }
     }
-      // PH DOSING
-    if (pH.read_ph() < PH_MIN) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
+    
+    if (millis() - last_Dose > INTERVAL_TIME)
     {
+          // PH DOSING
+        if (pH.read_ph() < PH_MIN) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
+        {
+          {
+            PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
+            #ifdef LESS_SERIAL_OUTPUT
+              Serial.print("10ml BASE -> ");
+            #endif
+          }
+      }
+      else if(pH.read_ph()>PH_MAX)
       {
         PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
         #ifdef LESS_SERIAL_OUTPUT
-          Serial.print("10ml BASE -> ");
+          Serial.print("10ml ACID -> ");
         #endif
       }
-  }
-  else if(pH.read_ph()>PH_MAX)
-  {
-    PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
-    #ifdef LESS_SERIAL_OUTPUT
-      Serial.print("10ml ACID -> ");
-    #endif
-  }
+    }
 }
 
 void step4()
