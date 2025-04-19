@@ -984,10 +984,10 @@ void step2()
 void step3()
 {
   int initial = 0;
-  if (millis() > last_Dose + INTERVAL_TIME)
+  if (millis() - last_Dose > INTERVAL_TIME)
   {
     // EC DOSING
-    if (((EC_float/1000) < EC_MAX) && (initial - ContainerVolume))
+    if (((EC_float/1000) < EC_MAX) && (initial+FERTILIZER_DOSAGE <= ContainerVolume))
     {
     last_Dose=millis();
     PMP1.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
@@ -998,7 +998,7 @@ void step3()
     #ifdef LESS_SERIAL_OUTPUT
     Serial.print("10ml Part B -> ");
     #endif
-    initial = initial + 10;
+    initial += FERTILIZER_DOSAGE;
       }
     }
     //   // PH DOSING
