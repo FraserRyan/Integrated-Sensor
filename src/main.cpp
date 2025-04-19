@@ -169,7 +169,7 @@ WiFiClientSecure client;
 
 void setup()
 {
-
+  Serial.begin(115200);
 
 #ifndef DISABLE_LCD
   pages[0] = 0;
@@ -190,7 +190,7 @@ void setup()
 // delay();
 #endif
 
-  Serial.begin(115200);
+
   #ifdef LESS_SERIAL_OUTPUT
     #ifdef ENABLE_ATLAS_TEMP
     if (RTD.begin())
