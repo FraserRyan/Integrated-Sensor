@@ -734,7 +734,9 @@ void loop()
     Serial.println(timeWeekDay);
     Serial.println();
     #endif
-
+#ifndef ENABLE_ATLAS_TEMP
+  int temperatureF = 0;
+#endif
     String requestBody = "{\"unitNumber\":\"";
 
     requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
@@ -1095,7 +1097,9 @@ float readDHT11Temp()
 {
   float DHT11_tempC = dht.readTemperature();
   float DHT11_tempF = (DHT11_tempC * 9.0) / 5.0 + 32;
-
+  // #ifndef ENABLE_ATLAS_TEMP
+  //   double temperatureF = DHT11_tempF;
+  // #endif
 #ifndef DISABLE_FAHRENEIT
   // Serial.print("DHT11 Temperature: ");
   // Serial.print(DHT11_tempF);

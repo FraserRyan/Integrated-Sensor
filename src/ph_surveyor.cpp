@@ -17,14 +17,14 @@ Surveyor_pH::Surveyor_pH(uint8_t pin)
 }
 
 // Method definition to print calibration values (in the .cpp file)
-void Surveyor_pH::print_calibration_values() {
-  Serial.print("Low Calibration: ");
-  Serial.println(this->pH.low_cal);
-  Serial.print("Mid Calibration: ");
-  Serial.println(this->pH.mid_cal);
-  Serial.print("High Calibration: ");
-  Serial.println(this->pH.high_cal);
-}
+// void Surveyor_pH::print_calibration_values() {
+//   Serial.print("Low Calibration: ");
+//   Serial.println(this->pH.low_cal);
+//   Serial.print("Mid Calibration: ");
+//   Serial.println(this->pH.mid_cal);
+//   Serial.print("High Calibration: ");
+//   Serial.println(this->pH.high_cal);
+// }
 
 bool Surveyor_pH::begin()
 {
