@@ -54,6 +54,7 @@ float SG_float;  // float var used to hold the float value of the specific gravi
 #ifdef ENABLE_PUMPS
 void pump_API();
 int last_Dose = 0;
+int initial = 0;
 int FERTILIZER_DOSAGE = 10;        // 10ml of Part A 5-15-26
                                    // 10ml of Part B 5-0-0 Calcium Nitrate
 const int ContainerVolume = 50;
@@ -141,6 +142,7 @@ void updateGPS();
 float atlasTemp;
 #endif
 #ifdef ENABLE_ATLAS_pH
+float get_stable_ph();
 float atlasPH;
 #endif
 #ifdef ENABLE_ATLAS_EC
@@ -208,6 +210,9 @@ void setup()
   #ifdef ENABLE_ATLAS_pH
     if (pH.begin()) {                                     
       Serial.println("Loaded EEPROM for pH calibration");
+      // Serial.print("mid_cal: "); Serial.println(pH.pH.mid_cal);
+      // Serial.print("low_cal: "); Serial.println(pH.pH.low_cal);
+      // Serial.print("high_cal: "); Serial.println(pH.pH.high_cal);
     }
     else
     {
@@ -845,6 +850,7 @@ void loop()
           RTD.cal(param.toFloat());
           Serial.println("RTD CALIBRATED");
           delay(1000);
+          return;
         }
       }
 
@@ -983,46 +989,65 @@ void step2()
 #ifdef ENABLE_PUMPS
 void step3()
 {
-  int initial = 0;
+  float ph_value = get_stable_ph();  // Get stable pH average once
+
   if (millis() - last_Dose > INTERVAL_TIME)
   {
-    // EC DOSING
-    if (((EC_float/1000) < EC_MAX) && (initial+FERTILIZER_DOSAGE <= ContainerVolume))
+    bool dosed = false;  // Track if we did any dosing this cycle
+
+    // --- EC DOSING ---
+    if (((EC_float / 1000.0) < EC_MAX) && (initial + FERTILIZER_DOSAGE <= ContainerVolume))
     {
-    last_Dose=millis();
-    PMP1.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
-    #ifdef LESS_SERIAL_OUTPUT
-    Serial.print("10ml Part A -> ");
-    #endif
-    PMP2.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
-    #ifdef LESS_SERIAL_OUTPUT
-    Serial.print("10ml Part B -> ");
-    #endif
-    initial += FERTILIZER_DOSAGE;
-      }
+      PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
+      #ifdef LESS_SERIAL_OUTPUT
+      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
+      #endif
+
+      PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
+      #ifdef LESS_SERIAL_OUTPUT
+      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
+      #endif
+
+      initial += FERTILIZER_DOSAGE;
+      dosed = true;
     }
-    
-    if (millis() - last_Dose > INTERVAL_TIME)
+
+    // --- PH DOSING ---
+    if (ph_value >= 0 && ph_value <= 14)
     {
-          // PH DOSING
-        if (pH.read_ph() < PH_MIN) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
-        {
-          {
-            PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
-            #ifdef LESS_SERIAL_OUTPUT
-              Serial.print("10ml BASE -> ");
-            #endif
-          }
-      }
-      else if(pH.read_ph()>PH_MAX)
+      if (ph_value < PH_MIN)
       {
-        PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
+        PMP3.send_cmd_with_num("d,", pH_DOSAGE);
         #ifdef LESS_SERIAL_OUTPUT
-          Serial.print("10ml ACID -> ");
+        Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
         #endif
+        dosed = true;
+      }
+      else if (ph_value > PH_MAX)
+      {
+        PMP3.send_cmd_with_num("d,", pH_DOSAGE);
+        #ifdef LESS_SERIAL_OUTPUT
+        Serial.print(String(pH_DOSAGE) + "ml ACID -> ");
+        Serial.print("PH OF:");
+        Serial.println(ph_value, 2);
+        #endif
+        dosed = true;
       }
     }
+    else
+    {
+      #ifdef LESS_SERIAL_OUTPUT
+      Serial.println("Invalid pH reading: " + String(ph_value));
+      #endif
+    }
+
+    if (dosed)
+    {
+      last_Dose = millis(); // Only reset timer if something was dosed
+    }
+  }
 }
+
 
 void step4()
 {
@@ -1338,3 +1363,16 @@ void print_help()
   iot_cmd_print_allcmd_help();
 }
 #endif
+
+
+float get_stable_ph()
+{
+  float total = 0;
+  const int samples = 10;
+  for (int i = 0; i < samples; i++)
+  {
+    total += pH.read_ph();
+    delay(100); // small delay between samples
+  }
+  return total / samples;
+}
