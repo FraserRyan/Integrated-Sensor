@@ -32,4 +32,5 @@ class Surveyor_Base{
         
         int16_t EEPROM_offset = 0;
 };
+
 #endif

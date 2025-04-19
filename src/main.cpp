@@ -23,6 +23,8 @@
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
 #include <iot_cmd.h>
 #include <Ezo_i2c_util.h>
+#include "ph_surveyor.h" 
+
 
 #ifdef ENABLE_GPS
 #include <TinyGPS++.h>
@@ -210,9 +212,11 @@ void setup()
   #ifdef ENABLE_ATLAS_pH
     if (pH.begin()) {                                     
       Serial.println("Loaded EEPROM for pH calibration");
+      pH.print_calibration_values();
       // Serial.print("mid_cal: "); Serial.println(pH.pH.mid_cal);
       // Serial.print("low_cal: "); Serial.println(pH.pH.low_cal);
       // Serial.print("high_cal: "); Serial.println(pH.pH.high_cal);
+      
     }
     else
     {
@@ -730,7 +734,9 @@ void loop()
     Serial.println(timeWeekDay);
     Serial.println();
     #endif
-
+#ifndef ENABLE_ATLAS_TEMP
+  int temperatureF = 0;
+#endif
     String requestBody = "{\"unitNumber\":\"";
 
     requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
@@ -1091,7 +1097,9 @@ float readDHT11Temp()
 {
   float DHT11_tempC = dht.readTemperature();
   float DHT11_tempF = (DHT11_tempC * 9.0) / 5.0 + 32;
-
+  // #ifndef ENABLE_ATLAS_TEMP
+  //   double temperatureF = DHT11_tempF;
+  // #endif
 #ifndef DISABLE_FAHRENEIT
   // Serial.print("DHT11 Temperature: ");
   // Serial.print(DHT11_tempF);
