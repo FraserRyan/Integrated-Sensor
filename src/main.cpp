@@ -23,6 +23,8 @@
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
 #include <iot_cmd.h>
 #include <Ezo_i2c_util.h>
+#include "ph_surveyor.h" 
+
 
 #ifdef ENABLE_GPS
 #include <TinyGPS++.h>
@@ -210,9 +212,11 @@ void setup()
   #ifdef ENABLE_ATLAS_pH
     if (pH.begin()) {                                     
       Serial.println("Loaded EEPROM for pH calibration");
-      Serial.print("mid_cal: "); Serial.println(pH.pH.mid_cal);
-      Serial.print("low_cal: "); Serial.println(pH.pH.low_cal);
-      Serial.print("high_cal: "); Serial.println(pH.pH.high_cal);
+      pH_sensor.print_calibration_values();
+      // Serial.print("mid_cal: "); Serial.println(pH.pH.mid_cal);
+      // Serial.print("low_cal: "); Serial.println(pH.pH.low_cal);
+      // Serial.print("high_cal: "); Serial.println(pH.pH.high_cal);
+      
     }
     else
     {
