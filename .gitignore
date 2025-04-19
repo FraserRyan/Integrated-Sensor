@@ -11,3 +11,4 @@
 src/*.txt
 src/headers.h
 *.crt
+platformio.ini
