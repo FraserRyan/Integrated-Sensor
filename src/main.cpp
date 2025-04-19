@@ -56,6 +56,8 @@ void pump_API();
 int last_Dose = 0;
 int FERTILIZER_DOSAGE = 10;        // 10ml of Part A 5-15-26
                                    // 10ml of Part B 5-0-0 Calcium Nitrate
+const int ContainerVolume = 50;
+
                                    // These two components of fertilizer will be dosed at the same time.
 int pH_DOSAGE = 10;                // 10ml of Sulfuric Acid or Potassium Hydroxide
 int INTERVAL_TIME = 1 * 30 * 1000; // For testing this is just 1/2 minute its taking forever
@@ -981,13 +983,11 @@ void step2()
 #ifdef ENABLE_PUMPS
 void step3()
 {
-
-
-  
+  int initial = 0;
   if (millis() > last_Dose + INTERVAL_TIME)
   {
     // EC DOSING
-    if ((EC_float/1000) < EC_MAX)
+    if (((EC_float/1000) < EC_MAX) && (initial - ContainerVolume))
     {
     last_Dose=millis();
     PMP1.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
@@ -998,6 +998,7 @@ void step3()
     #ifdef LESS_SERIAL_OUTPUT
     Serial.print("10ml Part B -> ");
     #endif
+    initial = initial + 10;
       }
     }
     //   // PH DOSING
