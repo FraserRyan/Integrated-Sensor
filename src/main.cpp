@@ -394,6 +394,17 @@ int button_held_wifi_manager = 0;
 
 void loop()
 {
+  #ifdef ENABLE_CALIBRATION
+    if (Serial.available() > 0) {                                                      
+      user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));   
+    }
+
+    if (user_bytes_received) {                                                      
+      parse_cmd(user_data);                                                          
+      user_bytes_received = 0;                                                        
+      memset(user_data, 0, sizeof(user_data));                                         
+    }
+  #endif
 
 #ifndef DISABLE_LCD
   // For the LCD the first parameter is the Column 0-20
@@ -824,27 +835,33 @@ void loop()
         {
           RTD.cal_clear();
           Serial.println("CALIBRATION CLEARED");
+          delay(1000);
         }
           RTD.cal(param.toFloat());
           Serial.println("RTD CALIBRATED");
+          delay(1000);
         }
       }
 
       if (strcmp(string, "PHCAL,7") == 0) {       
         pH.cal_mid();                                
-        Serial.println("MID CALIBRATED");
+        Serial.println("pH 7 MID CALIBRATED");
+        delay(1000);
       }
       else if (strcmp(string, "PHCAL,4") == 0) {            
         pH.cal_low();                                
-        Serial.println("LOW CALIBRATED");
+        Serial.println("pH 4 LOW CALIBRATED");
+        delay(1000);
       }
       else if (strcmp(string, "PHCAL,10") == 0) {      
         pH.cal_high();                               
-        Serial.println("HIGH CALIBRATED");
+        Serial.println("pH 10 HIGH CALIBRATED");
+        delay(1000);
       }
       else if (strcmp(string, "PHCAL,CLEAR") == 0) { 
         pH.cal_clear();                              
         Serial.println("pH CALIBRATION CLEARED");
+        delay(1000);
       }
     }
 #endif
@@ -965,15 +982,24 @@ void step3()
     {
     last_Dose=millis();
     PMP1.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
+    #ifdef LESS_SERIAL_OUTPUT
+    Serial.print("10ml Part A -> ");
+    #endif
     PMP2.send_cmd_with_num("d,", 10); // This dispenses 10 ml of fluid
-      // PH DOSING
-      if (pH.read_ph() > PH_AVG) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
-      {
-        {
-          PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
-        }
+    #ifdef LESS_SERIAL_OUTPUT
+    Serial.print("10ml Part B -> ");
+    #endif
       }
     }
+    //   // PH DOSING
+    // if (pH.read_ph() > PH_AVG) // This needs to be a more stable value than just a instantaneous pH reading.  pH average should be implemented
+    // {
+    //   {
+    //     PMP3.send_cmd_with_num("d,", pH_DOSAGE); // For now just to run the pumps i will put this with these functions.
+    //     Serial.print("10ml ACID -> ");
+    //     //Serial.print("10ml BASE -> ");
+    //   }
+
   }
 }
 
@@ -1228,7 +1254,19 @@ void show_display_page(int pageNum)
     float temperatureF = fahrenheit;
 #endif
   }
+  if(pageNum == 3)
+{
+
 }
+
+
+
+
+}
+
+
+
+
 #ifdef ENABLE_PUMPS
 // bool process_coms(const String &string_buffer)
 // { // function to process commands that manipulate global variables and are specifc to certain kits
