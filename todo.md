@@ -5,3 +5,5 @@
 - [ ] add millis to peristaltic pump call
 - [ ] wifi multi
 - [x] reset after changing wifi
+- [ ] add LEDS with blinks for wifi/other functions
+- [ ] add calibration of temp and ph to website
