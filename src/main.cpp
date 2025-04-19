@@ -246,13 +246,11 @@ void setup()
 #endif
 
 #ifdef ENABLE_CALIBRATION
-  Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
-  Serial.println(F("Use commands \"PHCAL,7\", \"PHCAL,4\", and \"PHCAL,10\" to calibrate the circuit to those respective values"));
-  Serial.println(F("Use command \"PHCAL,CLEAR\" to clear the calibration"));
-  // if (RTD.begin())
-  // {
-  //   Serial.println("Loaded EEPROM");
-  // }
+  #ifdef LESS_SERIAL_OUTPUT
+    Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
+    Serial.println(F("Use commands \"PHCAL,7\", \"PHCAL,4\", and \"PHCAL,10\" to calibrate the circuit to those respective values"));
+    Serial.println(F("Use command \"PHCAL,CLEAR\" to clear the calibration"));
+  #endif
 #endif
 #ifdef ENABLE_OLED_DISPLAY
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
@@ -709,17 +707,22 @@ void loop()
       Serial.println("Failed to obtain time");
       return;
     }
-    Serial.println("Time variables");
+
+
     char timeHour[3];
     char timeMinute[3];
     strftime(timeHour, 3, "%H", &timeinfo);
-    Serial.println(timeHour);
     strftime(timeMinute, 3, "%M", &timeinfo);
-    Serial.println(timeMinute);
     char timeWeekDay[10];
     strftime(timeWeekDay, 10, "%A", &timeinfo);
+
+    #ifndef LESS_SERIAL_OUTPUT
+    Serial.println("Time variables");
+    Serial.println(timeHour);
+    Serial.println(timeMinute);
     Serial.println(timeWeekDay);
     Serial.println();
+    #endif
 
     String requestBody = "{\"unitNumber\":\"";
 
@@ -871,9 +874,13 @@ void printLocalTime()
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo))
   {
-    Serial.println("Failed to obtain time");
+    #ifdef LESS_SERIAL_OUTPUT
+      Serial.println("Failed to obtain time");
+    #endif
     return;
   }
+  #ifdef LESS_SERIAL_OUTPUT
+  Serial.println("Time variables");
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
   Serial.print("Day of week: ");
   Serial.println();
@@ -891,8 +898,8 @@ void printLocalTime()
   Serial.println(&timeinfo, "%M");
   Serial.print("Second: ");
   Serial.println(&timeinfo, "%S");
+  #endif
 
-  Serial.println("Time variables");
   char timeHour[3];
   strftime(timeHour, 3, "%H", &timeinfo);
   Serial.println(timeHour);
@@ -904,7 +911,9 @@ void printLocalTime()
 
 void IRAM_ATTR startOnDemandWiFiManager()
 {
-  Serial.println("Interrupt started");
+  #ifdef LESS_SERIAL_OUTPUT
+    Serial.println("Interrupt started");
+  #endif
   onDemandManagerTrigger = true;
   lastButtonPress = millis();
   return;
@@ -930,8 +939,6 @@ void step1()
 {
   // send a read command using send_cmd because we're parsing it ourselves
   EC.send_cmd("r");
-  // for DO we use the send_read_cmd function so the library can parse it
-  // DO.send_read_cmd();
 }
 
 void step2()
@@ -957,7 +964,9 @@ void step2()
   Serial.println(SG);    // this is the specific gravity point.
 
   // receive_and_print_reading(DO);             //get the reading from the DO circuit
-  Serial.println();
+  #ifdef LESS_SERIAL_OUTPUT
+    Serial.println();
+  #endif
 
   EC_float = atof(EC_str);
   // DO.send_cmd_with_num("s,", EC_float);
