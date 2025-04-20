@@ -7,3 +7,7 @@
 - [x] reset after changing wifi
 - [ ] add LEDS with blinks for wifi/other functions
 - [ ] add calibration of temp and ph to website
+- [ ] scale dosage for how far off the ph is 
+- [ ] safety check to know wheter the chemicals are too strong/too weak.
+- [ ] set the website and dosages to start occuring at a time of the day.
+- [ ] if both of the fertilizers are injected at the same time as when it fertigates it would be ok to let the water go dry and then only dose at that same time the next day. 

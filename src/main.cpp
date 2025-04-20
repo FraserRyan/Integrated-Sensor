@@ -1001,12 +1001,12 @@ void step3()
     {
       PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       #ifdef LESS_SERIAL_OUTPUT
-      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
+        Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
       #endif
 
       PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       #ifdef LESS_SERIAL_OUTPUT
-      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
+        Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
       #endif
 
       initial += FERTILIZER_DOSAGE;
@@ -1020,17 +1020,17 @@ void step3()
       {
         PMP3.send_cmd_with_num("d,", pH_DOSAGE);
         #ifdef LESS_SERIAL_OUTPUT
-        Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
+          Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
         #endif
         dosed = true;
       }
-      else if (ph_value > PH_MAX)
+      else if (ph_value > PH_MAX) // Dose down
       {
         PMP3.send_cmd_with_num("d,", pH_DOSAGE);
         #ifdef LESS_SERIAL_OUTPUT
-        Serial.print(String(pH_DOSAGE) + "ml ACID -> ");
-        Serial.print("PH OF:");
-        Serial.println(ph_value, 2);
+          Serial.print(String(pH_DOSAGE) + "ml ACID -> ");
+          Serial.print("PH OF:");
+          Serial.println(ph_value, 2);
         #endif
         dosed = true;
       }
@@ -1066,7 +1066,6 @@ void pump_API()
   http.begin(client, pumpRequestURL.c_str());
   http.addHeader("Content-Type", "application/json");
   String requestBody = "{\"unitNumber\":\"";
-
   requestBody += String(UNIT_NUMBER) + "\"";
   requestBody += ",\"pump1\":" + String(FERTILIZER_DOSAGE);
   requestBody += ",\"pump2\":" + String(FERTILIZER_DOSAGE);
