@@ -175,7 +175,7 @@ void setup()
   // pinMode(LED12,OUTPUT);
   // pinMode(LED13,OUTPUT);
   // pinMode(LED14,OUTPUT);
-  // pinMode(LED15,OUTPUT);
+  pinMode(LED15,OUTPUT);
   // pinMode(LED16,OUTPUT);
   // pinMode(LED17,OUTPUT);
 
@@ -216,7 +216,7 @@ void setup()
   #ifdef ENABLE_ATLAS_pH
     if (pH.begin()) {                                     
       Serial.println("Loaded EEPROM for pH calibration");
-      //pH.print_calibration_values(); if you need this go to ph branch it will work
+      // pH.print_calibration_values(); if you need this go to ph branch it will work
       // Serial.print("mid_cal: "); Serial.println(pH.pH.mid_cal);
       // Serial.print("low_cal: "); Serial.println(pH.pH.low_cal);
       // Serial.print("high_cal: "); Serial.println(pH.pH.high_cal);
@@ -250,13 +250,13 @@ void setup()
 #endif
 
 #ifdef ENABLE_ATLAS_EC
-  Seq.reset(); // initialize the sequencer
+  Seq.reset();            // initialize the sequencer
   delay(3000);
   EC.send_cmd("o,tds,1"); // send command to enable TDS output
   delay(300);
-  EC.send_cmd("o,s,1"); // send command to enable salinity output
+  EC.send_cmd("o,s,1");   // send command to enable salinity output
   delay(300);
-  EC.send_cmd("o,sg,1"); // send command to enable specific gravity output
+  EC.send_cmd("o,sg,1");  // send command to enable specific gravity output
   delay(300);
 #endif
 
@@ -475,7 +475,6 @@ void loop()
 
 
 // Serial.println(RTD.read_RTD_temp_C());
-
 // uncomment for readings in F
 // Serial.println(RTD.read_RTD_temp_F());
 #ifndef DISABLE_WIFI
@@ -493,7 +492,7 @@ void loop()
     didLastManager = millis() + 5000 + (wifiManagerTimeout * 1000);
     onDemandManagerTrigger == false;
     // { // button pressed
-    // nneds to be held for 3 seconds
+    // needs to be held for 3 seconds
 
     // delay(3000);
     // if (digitalRead(WIFIMANAGER_TRIGGER_PIN) == 0)
@@ -543,7 +542,7 @@ void loop()
 #endif
 
 #ifdef ENABLE_ATLAS_EC
-  Seq.run(); // run the sequncer to do the polling
+  Seq.run(); // Sequence function to read the EC sensor
 #endif
 #ifdef ENABLE_OLED_DISPLAY
   display.clearDisplay();
@@ -634,7 +633,6 @@ void loop()
   Serial.println(atlasPH);
 #endif
 
-//
 #ifdef ENABLE_OLED_DISPLAY
   display.setTextSize(1);
   display.setCursor(60, 0);
@@ -792,7 +790,6 @@ void loop()
       }
 
       // Fetch the values
-      //
       // Most of the time, you can rely on the implicit casts.
       // In other case, you can do doc["time"].as<long>();
       EC_MIN = doc["setPoints"]["ec"]["min"];
@@ -834,8 +831,7 @@ void loop()
   // { // if polling is turned on, run the sequencer
   //   PumpSeq.run();
   // }
-  delay(50);
-
+  // delay(50);
   PumpSeq.run();
 #endif
 }
@@ -955,34 +951,29 @@ void saveWMConfig()
 
 void step1()
 {
-  // send a read command using send_cmd because we're parsing it ourselves
-  EC.send_cmd("r");
+  EC.send_cmd("r");   // send a read command using send_cmd because we're parsing it ourselves
 }
 
 void step2()
 {
 
-  EC.receive_cmd(EC_data, 32); // put the response into the buffer
-
+  EC.receive_cmd(EC_data, 32);   // put the response into the buffer
   EC_str = strtok(EC_data, ","); // let's parse the string at each comma.
   TDS = strtok(NULL, ",");       // let's parse the string at each comma.
   SAL = strtok(NULL, ",");       // let's parse the string at each comma
   SG = strtok(NULL, ",");        // let's parse the string at each comma.
-
-  Serial.print("EC: "); // we now print each value we parsed separately.
-  Serial.print(EC_str); // this is the EC value.
-
-  Serial.print(" TDS: "); // we now print each value we parsed separately.
-  Serial.print(TDS);      // this is the TDS value.
-
-  Serial.print(" SAL: "); // we now print each value we parsed separately.
-  Serial.print(SAL);      // this is the salinity point.
-
-  Serial.print(" SG: "); // we now print each value we parsed separately.
-  Serial.println(SG);    // this is the specific gravity point.
-
-  // receive_and_print_reading(DO);             //get the reading from the DO circuit
   #ifdef LESS_SERIAL_OUTPUT
+    Serial.print("EC: ");     // we now print each value we parsed separately.
+    Serial.print(EC_str);     // this is the EC value.
+
+    Serial.print(" TDS: ");     // we now print each value we parsed separately.
+    Serial.print(TDS);          // this is the TDS value.
+
+    Serial.print(" SAL: ");     // we now print each value we parsed separately.
+    Serial.print(SAL);          // this is the salinity point.
+
+    Serial.print(" SG: ");      // we now print each value we parsed separately.
+    Serial.println(SG);         // this is the specific gravity point.
     Serial.println();
   #endif
 
@@ -1003,7 +994,7 @@ void step3()
 
   if (millis() - last_Dose > INTERVAL_TIME)
   {
-    bool dosed = false;  // Track if we did any dosing this cycle
+    bool dosed = false;             // Track if we did any dosing this cycle
 
     // --- EC DOSING ---
     if (((EC_float / 1000.0) < EC_MAX) && (initial + FERTILIZER_DOSAGE <= ContainerVolume))
@@ -1053,7 +1044,7 @@ void step3()
 
     if (dosed)
     {
-      last_Dose = millis(); // Only reset timer if something was dosed
+      last_Dose = millis();           // Only reset timer if something was dosed
     }
   }
 }
@@ -1061,7 +1052,7 @@ void step3()
 
 void step4()
 {
-  //PMP2.send_cmd_with_num("d,", 10);
+  // PMP2.send_cmd_with_num("d,", 10);
   // receive_and_print_reading(PMP1);             //get the reading from the PMP1 circuit
   // Serial.print("  ");
   // receive_and_print_reading(PMP2);
