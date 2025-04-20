@@ -10,10 +10,10 @@
 #include "time.h"
 #include "ph_surveyor.h"
 #include "rtd_surveyor.h"
-#include <sequencer1.h> //imports a 1 function sequencer
-#include <sequencer2.h> //imports a 2 function sequencer
-#include <Ezo_i2c.h>    //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
-#include <Ezo_i2c.h> //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
+#include <sequencer1.h>               // imports a 1 function sequencer
+#include <sequencer2.h>               // imports a 2 function sequencer
+#include <Ezo_i2c.h>                  // include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
+#include <Ezo_i2c.h>                  //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #include <Wire.h>                     //include arduinos i2c library
 #include <Ezo_i2c_util.h>             //brings in common print statements
 #include <Adafruit_Sensor.h>          //Library for Adafruit sensors
@@ -55,13 +55,12 @@ float SG_float;  // float var used to hold the float value of the specific gravi
 void pump_API();
 int last_Dose = 0;
 int initial = 0;
-int FERTILIZER_DOSAGE = 10;        // 10ml of Part A 5-15-26
-                                   // 10ml of Part B 5-0-0 Calcium Nitrate
-const int ContainerVolume = 50;
-
-                                   // These two components of fertilizer will be dosed at the same time.
-int pH_DOSAGE = 10;                // 10ml of Sulfuric Acid or Potassium Hydroxide
-int INTERVAL_TIME = 1 * 30 * 1000; // For testing this is just 1/2 minute its taking forever
+int FERTILIZER_DOSAGE = 10;         // 10ml of Part A 5-15-26
+                                    // 10ml of Part B 5-0-0 Calcium Nitrate
+const int ContainerVolume = 50;     //
+                                    // These two components of fertilizer will be dosed at the same time.
+int pH_DOSAGE = 10;                 // 10ml of Sulfuric Acid or Potassium Hydroxide
+int INTERVAL_TIME = 1 * 30 * 1000;  // For testing this is just 1/2 minute its taking forever
 
 Ezo_board PMP1 = Ezo_board(101, "PMP1"); // create an PMP circuit object who's address is 56 and name is "PMP1"
 Ezo_board PMP2 = Ezo_board(102, "PMP2"); // create an PMP circuit object who's address is 57 and name is "PMP2"
@@ -72,25 +71,25 @@ Ezo_board device_list[] = {              // an array of boards used for sending 
     PMP3};
 bool process_coms(const String &string_buffer);
 void print_help();
-Ezo_board *default_board = &device_list[0]; // used to store the board were talking to
-// gets the length of the array automatically so we dont have to change the number every time we add new boards
+Ezo_board *default_board = &device_list[0];     // used to store the board were talking to
+                                                // gets the length of the array automatically so we dont have to change the number every time we add new boards
 const uint8_t device_list_len = sizeof(device_list) / sizeof(device_list[0]);
-const unsigned long reading_delay = 1000; // how long we wait to receive a response, in milliseconds decreasing from 1000
+const unsigned long reading_delay = 1000;       // how long we wait to receive a response, in milliseconds decreasing from 1000
 unsigned int poll_delay = 2000 - reading_delay; //there is no response so im going to decrease this decreassing from 2000-reading delay
-void step3(); // forward declarations of functions to use them in the sequencer before defining them
+void step3();                                   // forward declarations of functions to use them in the sequencer before defining them
 void step4();
-Sequencer2 PumpSeq(&step3, reading_delay, // calls the steps in sequence with time in between them
+Sequencer2 PumpSeq(&step3, reading_delay,       // calls the steps in sequence with time in between them
                    &step4, poll_delay);
-bool polling = false; // variable to determine whether or not were polling the circuits
+bool polling = false;                           // variable to determine whether or not were polling the circuits
 #endif
 
-Ezo_board EC = Ezo_board(100, "EC"); // create an EC circuit object who's address is 100 and name is "EC"
-void step1();                        // forward declarations of functions to use them in the sequencer before defining them
+Ezo_board EC = Ezo_board(100, "EC");            // create an EC circuit object who's address is 100 and name is "EC"
+void step1();                                   // forward declarations of functions to use them in the sequencer before defining them
 void step2();
 Sequencer2 Seq(&step1, 1000, &step2, 300);
 Surveyor_RTD RTD = Surveyor_RTD(A1_temp_Pin);
 Surveyor_pH pH = Surveyor_pH(pH_Pin);
-int wifiManagerTimeout = 120; // in seconds
+int wifiManagerTimeout = 120;                   // in seconds
 
 WiFiManager wm;
 Preferences config;
