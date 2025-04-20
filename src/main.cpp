@@ -1024,16 +1024,16 @@ void step3()
         #endif
         dosed = true;
       }
-      else if (ph_value > PH_MAX) // Dose down
-      {
-        PMP3.send_cmd_with_num("d,", pH_DOSAGE);
-        #ifdef LESS_SERIAL_OUTPUT
-          Serial.print(String(pH_DOSAGE) + "ml ACID -> ");
-          Serial.print("PH OF:");
-          Serial.println(ph_value, 2);
-        #endif
-        dosed = true;
-      }
+      // else if (ph_value > PH_MAX) // Dose down
+      // {
+      //   PMP3.send_cmd_with_num("d,", pH_DOSAGE);
+      //   #ifdef LESS_SERIAL_OUTPUT
+      //     Serial.print(String(pH_DOSAGE) + "ml ACID -> ");
+      //     Serial.print("PH OF:");
+      //     Serial.println(ph_value, 2);
+      //   #endif
+      //   dosed = true;
+      // }
     }
     else
     {
