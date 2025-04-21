@@ -773,7 +773,7 @@ void loop()
 
     String requestBody = "{\"unitNumber\":\"";
 
-    requestBody += String(UNIT_NUMBER) + ",\"temp\":" + String(temperatureF);
+    requestBody += String(UNIT_NUMBER) + "\",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"rssi\":" + String(rssi);
 #ifdef ENABLE_DHT11_HUMIDITY
