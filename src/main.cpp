@@ -727,7 +727,7 @@ void loop()
 
 #ifndef DISABLE_API_REQUEST
   // Serial.println(apiId);
-  if ((counter == 0 || ((millis() - lastTime) > delayTime)) && UNIT_NUMBER != 0 && strcmp(apiId, "") != 0 && strcmp(apiKey, "") != 0)
+  if ((counter > 1 || ((millis() - lastTime) > delayTime)) && UNIT_NUMBER != 0 && strcmp(apiId, "") != 0 && strcmp(apiKey, "") != 0)
   {
 #ifdef ENABLE_GPS
     updateGPS();
