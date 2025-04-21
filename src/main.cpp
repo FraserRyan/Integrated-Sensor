@@ -1033,6 +1033,11 @@ void step3()
       initial += FERTILIZER_DOSAGE;
       dosed = true;
     }
+    else if ((initial + FERTILIZER_DOSAGE) > ContainerVolume)
+{
+  #ifdef LESS_SERIAL_OUTPUT
+    Serial.println("Fertilizer depleted: container volume exceeded");
+  #endif
 
     // --- PH DOSING ---
     if (ph_value >= 0 && ph_value <= 14)
