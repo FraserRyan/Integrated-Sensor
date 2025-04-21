@@ -416,6 +416,10 @@ int button_held_wifi_manager = 0;
 
 void loop()
 {
+  #ifdef ENABLE_DHT11_TEMP
+    float temperatureF = readDHT11Temp();
+  #endif
+
 #ifdef ENABLE_CALIBRATION
   if (Serial.available() > 0)
   {
@@ -563,6 +567,11 @@ void loop()
   display.setTextSize(2);
   display.setCursor(0, 10);
 #endif
+#ifdef ENABLE_DHT11_TEMP
+  display.print(temperatureF, 1);
+  display.setTextSize(1);
+  display.print("F");
+  #endif
 
 #ifdef ENABLE_ATLAS_TEMP
   float temperatureF = RTD.read_RTD_temp_F();
@@ -596,7 +605,12 @@ void loop()
 #endif
   float temperatureF = fahrenheit;
 #endif
-#if !defined ENABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP
+// #ifdef ENABLE_DHT11_TEMP
+//   display.print(fahrenheit, 1);
+//   display.setTextSize(2);
+//   display.print("F");
+// #endif
+#if !defined ENABLE_ATLAS_TEMP && defined DISABLE_MCP9701_TEMP && !defined ENABLE_DHT11_TEMP
 #ifdef ENABLE_OLED_DISPLAY
   display.print("-");
 #endif
@@ -744,9 +758,6 @@ void loop()
     Serial.println(timeMinute);
     Serial.println(timeWeekDay);
     Serial.println();
-#endif
-#ifdef ENABLE_DHT11_TEMP
-    float temperatureF = readDHT11Temp();
 #endif
     String requestBody = "{\"unitNumber\":\"";
 
