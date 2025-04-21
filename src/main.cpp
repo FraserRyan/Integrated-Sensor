@@ -57,7 +57,7 @@ int last_Dose = 0;
 int initial = 0;
 int FERTILIZER_DOSAGE = 10;         // 10ml of Part A 5-15-26
                                     // 10ml of Part B 5-0-0 Calcium Nitrate
-const int ContainerVolume = 50;     //
+const int ContainerVolume = 1000;   //  using 1Liter as the volume so that the pumps wont run dry
                                     // These two components of fertilizer will be dosed at the same time.
 int pH_DOSAGE = 10;                 // 10ml of Sulfuric Acid or Potassium Hydroxide
 int INTERVAL_TIME = 1 * 30 * 1000;  // For testing this is just 1/2 minute its taking forever
@@ -169,6 +169,20 @@ void updateDisplay()
 
 HTTPClient http;
 WiFiClientSecure client;
+
+// Define a simple 8x8 arrow bitmap
+const unsigned char upArrowBitmap[] PROGMEM = {
+  0b00011000,
+  0b00011000,
+  0b00111100,
+  0b00111100,
+  0b01111110,
+  0b11111111,
+  0b00011000,
+  0b00011000
+};
+
+
 
 void setup()
 {
@@ -1003,11 +1017,18 @@ void step3()
       #ifdef LESS_SERIAL_OUTPUT
         Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
       #endif
-
+      
       PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       #ifdef LESS_SERIAL_OUTPUT
         Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
       #endif
+
+      // show_display_page(1);    @joshthaw I really want to show when the pumps are dosing, but I want you to check this display function.
+      // lcd.setCursor(10, 2);
+      // lcd.print("Dose A&B");
+      // lcd.print(UNIT_NUMBER);    
+      // lcd.setCursor(10, 1);
+
 
       initial += FERTILIZER_DOSAGE;
       dosed = true;
@@ -1022,6 +1043,7 @@ void step3()
         #ifdef LESS_SERIAL_OUTPUT
           Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
         #endif
+        //drawUpArrow(10, 20);
         dosed = true;
       }
       // else if (ph_value > PH_MAX) // Dose down
@@ -1377,4 +1399,9 @@ float get_stable_ph()
     delay(100); // small delay between samples
   }
   return total / samples;
+}
+
+// Example usage
+void drawUpArrow(int x, int y) {
+  display.drawBitmap(x, y, upArrowBitmap, 8, 8, SSD1306_WHITE);
 }
