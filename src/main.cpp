@@ -1035,10 +1035,10 @@ void step3()
 {
   float ecDoseAmount = 0.0;
   float phDoseAmount = 0.0;
-  
+  bool ecDosed = false;
+  bool phDosed = false;
   if (millis() - last_Dose > INTERVAL_TIME)
   {
-    bool dosed = false; // Track if we did any dosing this cycle
 
     // --- EC DOSING ---
     #ifdef ENABLE_ATLAS_EC
@@ -1059,9 +1059,9 @@ void step3()
       // lcd.print("Dose A&B");
       // lcd.print(UNIT_NUMBER);
       // lcd.setCursor(10, 1);
-
+      ecDoseAmount = FERTILIZER_DOSAGE;
+      ecDosed = true;
       initial += FERTILIZER_DOSAGE;
-      dosed = true;
     }
     else if ((initial + FERTILIZER_DOSAGE) > ContainerVolume)
     {
@@ -1074,25 +1074,29 @@ void step3()
     #ifdef ENABLE_ATLAS_pH
     if (atlasPH >= 0 && atlasPH <= 14)
     {
-      if (atlasPH < PH_MIN)
-      {
-        PMP3.send_cmd_with_num("d,", pH_DOSAGE);
-    #ifdef LESS_SERIAL_OUTPUT
-        Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
-    #endif
-        // drawUpArrow(10, 20);
-        dosed = true;
-      }
-      // else if (ph_value > PH_MAX) // Dose down
-      // {
-      //   PMP3.send_cmd_with_num("d,", pH_DOSAGE);
-      //   #ifdef LESS_SERIAL_OUTPUT
-      //     Serial.print(String(pH_DOSAGE) + "ml ACID -> ");
-      //     Serial.print("PH OF:");
-      //     Serial.println(ph_value, 2);
-      //   #endif
-      //   dosed = true;
-      // }
+      #ifdef ENABLE_PH_UP
+        if (atlasPH < PH_MIN)     // Dose up
+        {
+          PMP3.send_cmd_with_num("d,", pH_DOSAGE);
+          #ifdef LESS_SERIAL_OUTPUT
+              Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
+          #endif
+          // drawUpArrow(10, 20);
+          phDoseAmount = pH_DOSAGE;
+          phDosed = true;
+        }
+        #endif
+      #ifdef ENABLE_PH_DOWN 
+        else if (atlasPH > PH_MAX) // Dose down
+        {
+          PMP3.send_cmd_with_num("d,", pH_DOSAGE);
+          #ifdef LESS_SERIAL_OUTPUT
+            Serial.print(String(pH_DOSAGE) + "ml ACID -> ");
+          #endif
+          phDoseAmount = pH_DOSAGE;
+          phDosed = true;
+        }
+      #endif
     }
     else
     {
@@ -1101,7 +1105,7 @@ void step3()
     #endif
     }
       #endif
-    if (dosed)
+    if (ecDosed || phDosed)
     {
       pump_API(ecDoseAmount, phDoseAmount); // Send actual doses
       last_Dose = millis();                 // Reset timer

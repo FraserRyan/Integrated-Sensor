@@ -41,6 +41,8 @@ const int   daylightOffset_sec    = 3600;
 //#define LCD_ADDR 0x3F //This is for the LCD without a backlight
 #define ENABLE_OLED_DISPLAY
 #define ENABLE_PUMPS
+#define ENABLE_PH_UP
+#define ENABLE_PH_DOWN
 
 
 /*
