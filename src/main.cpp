@@ -51,7 +51,7 @@ float SAL_float; // float var used to hold the float value of the salinity.
 float SG_float;  // float var used to hold the float value of the specific gravity.
 
 #ifdef ENABLE_PUMPS
-void pump_API();
+void pump_API(float ecDoseAmount, float phDoseAmount);
 int last_Dose = 0;
 int initial = 0;
 int FERTILIZER_DOSAGE = 10;        // 10ml of Part A 5-15-26
@@ -1033,25 +1033,26 @@ void step2()
 #ifdef ENABLE_PUMPS
 void step3()
 {
-
+  float ecDoseAmount = 0.0;
+  float phDoseAmount = 0.0;
+  
   if (millis() - last_Dose > INTERVAL_TIME)
   {
     bool dosed = false; // Track if we did any dosing this cycle
 
-// --- EC DOSING ---
-#ifdef ENABLE_ATLAS_EC
+    // --- EC DOSING ---
+    #ifdef ENABLE_ATLAS_EC
     if (((atlasEC) < EC_MAX) && (initial + FERTILIZER_DOSAGE <= ContainerVolume))
     {
-      pump_API(); // request the pump data to the API
       PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
-#ifdef LESS_SERIAL_OUTPUT
-      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
-#endif
+      #ifdef LESS_SERIAL_OUTPUT
+            Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
+      #endif
 
       PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
-#ifdef LESS_SERIAL_OUTPUT
-      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
-#endif
+      #ifdef LESS_SERIAL_OUTPUT
+            Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
+      #endif
 
       // show_display_page(1);    @joshthaw I really want to show when the pumps are dosing, but I want you to check this display function.
       // lcd.setCursor(10, 2);
@@ -1064,21 +1065,21 @@ void step3()
     }
     else if ((initial + FERTILIZER_DOSAGE) > ContainerVolume)
     {
-#ifdef LESS_SERIAL_OUTPUT
-      Serial.println("Fertilizer depleted: container volume exceeded");
-#endif
+    #ifdef LESS_SERIAL_OUTPUT
+          Serial.println("Fertilizer depleted: container volume exceeded");
+    #endif
     }
-#endif
-// --- PH DOSING ---
-#ifdef ENABLE_ATLAS_pH
+    #endif
+    // --- PH DOSING ---
+    #ifdef ENABLE_ATLAS_pH
     if (atlasPH >= 0 && atlasPH <= 14)
     {
       if (atlasPH < PH_MIN)
       {
         PMP3.send_cmd_with_num("d,", pH_DOSAGE);
-#ifdef LESS_SERIAL_OUTPUT
+    #ifdef LESS_SERIAL_OUTPUT
         Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
-#endif
+    #endif
         // drawUpArrow(10, 20);
         dosed = true;
       }
@@ -1095,14 +1096,15 @@ void step3()
     }
     else
     {
-#ifdef LESS_SERIAL_OUTPUT
+    #ifdef LESS_SERIAL_OUTPUT
       Serial.println("Invalid pH reading: " + String(atlasPH));
-#endif
+    #endif
     }
-#endif
+      #endif
     if (dosed)
     {
-      last_Dose = millis(); // Only reset timer if something was dosed
+      pump_API(ecDoseAmount, phDoseAmount); // Send actual doses
+      last_Dose = millis();                 // Reset timer
     }
   }
 }
@@ -1118,7 +1120,7 @@ void step4()
   // Serial.println();
 }
 
-void pump_API()
+void pump_API(float ecDoseAmount, float phDoseAmount)
 {
   http.begin(client, pumpRequestURL.c_str());
   http.addHeader("Content-Type", "application/json");
