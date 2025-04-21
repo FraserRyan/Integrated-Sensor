@@ -135,6 +135,9 @@ TinyGPSPlus gps;
 float GPS_LAT = 0, GPS_LONG = 0, GPS_ELEV = 0;
 void updateGPS();
 #endif
+#ifndef DISABLE_WIFI
+int rssi = WiFi.RSSI(); // signal strength in dBm
+#endif
 
 #ifdef ENABLE_ATLAS_TEMP
 float atlasTemp;
@@ -414,13 +417,25 @@ int lastButtonPress = 0;
 int didLastManager = 0;
 int button_held_wifi_manager = 0;
 
+
 void loop()
 {
+  #ifdef ENABLE_ATLAS_pH
+    atlasPH = get_stable_ph(); // Get stable pH average
+  #endif
   #ifdef ENABLE_DHT11_TEMP
     float temperatureF = readDHT11Temp();
   #endif
-
-#ifdef ENABLE_CALIBRATION
+  #ifdef ENABLE_DHT11_HUMIDITY
+    float dht_humidity = readDHT11humidity();
+  #endif
+  #ifdef ENABLE_ATLAS_EC
+    Seq.run(); // Sequence function to read the EC sensor
+  #endif
+  #ifndef DISABLE_WIFI
+    int rssi = WiFi.RSSI(); 
+  #endif
+    #ifdef ENABLE_CALIBRATION
   if (Serial.available() > 0)
   {
     user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
@@ -555,9 +570,7 @@ void loop()
   }
 #endif
 
-#ifdef ENABLE_ATLAS_EC
-  Seq.run(); // Sequence function to read the EC sensor
-#endif
+
 #ifdef ENABLE_OLED_DISPLAY
   display.clearDisplay();
   // temperature Display on OLED
@@ -571,7 +584,7 @@ void loop()
   display.print(temperatureF, 1);
   display.setTextSize(1);
   display.print("F");
-  #endif
+#endif
 
 #ifdef ENABLE_ATLAS_TEMP
   float temperatureF = RTD.read_RTD_temp_F();
@@ -632,9 +645,9 @@ void loop()
   display.setCursor(0, 45);
 #endif
 #ifdef ENABLE_ATLAS_pH
-  atlasPH = pH.read_ph();
+  // atlasPH = pH.read_ph();
 #ifdef ENABLE_OLED_DISPLAY
-  display.print(pH.read_ph(), 1);
+  display.print(atlasPH, 1);
 #endif
 #else
 #ifdef ENABLE_OLED_DISPLAY
@@ -648,7 +661,7 @@ void loop()
 #ifndef LESS_SERIAL_OUTPUT
   // Serial.print("RSSI: \t");
   Serial.print("Received Signal Strength Indicator:\t");
-  Serial.print(WiFi.RSSI());
+  Serial.print(rssi);
   Serial.println("dBm");
 #endif
 
@@ -665,7 +678,7 @@ void loop()
 #endif
 #ifndef DISABLE_WIFI
 #ifdef ENABLE_OLED_DISPLAY
-  display.print(WiFi.RSSI());
+  display.print(rssi);
   display.print("dBm");
 #endif
 #else
@@ -683,7 +696,7 @@ void loop()
 #ifdef ENABLE_ATLAS_EC
   atlasEC = EC_float / 1000;
 #ifdef ENABLE_OLED_DISPLAY
-  display.print(EC_float / 1000, 1);
+  display.print(atlasEC, 1);
 #endif
 #else
   display.print("-");
@@ -693,18 +706,16 @@ void loop()
 #ifdef ENABLE_DHT11_TEMP
   // float DHT_tempF = readDHTTemp();
   Serial.print("DHT Temperature: \t\t\t");
-  Serial.print(readDHT11Temp());
+  Serial.print(temperatureF);
   Serial.print("\xC2\xB0"); // shows degree symbol
   Serial.print("F\t");
 // display.print(/1000,1);
 #endif
 
 #ifdef ENABLE_DHT11_HUMIDITY
-  // readDHT11humidity();
   Serial.print("\nHumidity: \t\t\t\t");
-  Serial.print(readDHT11humidity());
+  Serial.print(dht_humidity);
   Serial.println(" %");
-// display.print(/1000,1);
 #endif
 #ifndef LESS_SERIAL_OUTPUT
   Serial.println("-----------------------------------------------");
@@ -761,14 +772,12 @@ void loop()
 #endif
     String requestBody = "{\"unitNumber\":\"";
 
-    requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(pH.read_ph()) + ",\"temp\":" + String(temperatureF);
+    requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(atlasPH) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
-    requestBody += ",\"ec\":" + String(EC_float / 1000);
-    requestBody += ",\"rssi\":" + String(WiFi.RSSI());
-#if defined(ENABLE_DHT11_HUMIDITY)
-    float dht_humidity = readDHT11humidity();
+    requestBody += ",\"ec\":" + String(atlasEC);
+    requestBody += ",\"rssi\":" + String(rssi);
     requestBody += ",\"humidity\":" + String(dht_humidity);
-#endif
+
 
 #if defined(ENABLE_GPS)
     Serial.println(GPS_LAT);
@@ -1015,14 +1024,13 @@ void step2()
 #ifdef ENABLE_PUMPS
 void step3()
 {
-  float ph_value = get_stable_ph(); // Get stable pH average once
 
   if (millis() - last_Dose > INTERVAL_TIME)
   {
     bool dosed = false; // Track if we did any dosing this cycle
 
     // --- EC DOSING ---
-    if (((EC_float / 1000.0) < EC_MAX) && (initial + FERTILIZER_DOSAGE <= ContainerVolume))
+    if (((atlasEC) < EC_MAX) && (initial + FERTILIZER_DOSAGE <= ContainerVolume))
     {
       pump_API(); // request the pump data to the API
       PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
@@ -1051,9 +1059,9 @@ void step3()
 #endif
     }
     // --- PH DOSING ---
-    if (ph_value >= 0 && ph_value <= 14)
+    if (atlasPH >= 0 && atlasPH <= 14)
     {
-      if (ph_value < PH_MIN)
+      if (atlasPH < PH_MIN)
       {
         PMP3.send_cmd_with_num("d,", pH_DOSAGE);
 #ifdef LESS_SERIAL_OUTPUT
@@ -1076,7 +1084,7 @@ void step3()
     else
     {
 #ifdef LESS_SERIAL_OUTPUT
-      Serial.println("Invalid pH reading: " + String(ph_value));
+      Serial.println("Invalid pH reading: " + String(atlasPH));
 #endif
     }
 
@@ -1270,7 +1278,7 @@ void show_display_page(int pageNum)
 #ifndef DISABLE_WIFI
     lcd.setCursor(0, 3);
     lcd.print("RSSI:");
-    lcd.print(WiFi.RSSI());
+    lcd.print(rssi);
     lcd.print("dBm");
 #endif
 #ifdef ENABLE_DHT11_HUMIDITY
