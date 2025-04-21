@@ -1278,7 +1278,7 @@ void show_display_page(int pageNum)
 #ifndef DISABLE_WIFI
     lcd.setCursor(0, 3);
     lcd.print("RSSI:");
-    lcd.print(rssi);
+    lcd.print(rssi); //@joshthaw can you take a look at why this wont display on the LCD?
     lcd.print("dBm");
 #endif
 #ifdef ENABLE_DHT11_HUMIDITY
