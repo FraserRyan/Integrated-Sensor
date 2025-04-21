@@ -1013,6 +1013,7 @@ void step3()
     // --- EC DOSING ---
     if (((EC_float / 1000.0) < EC_MAX) && (initial + FERTILIZER_DOSAGE <= ContainerVolume))
     {
+      pump_API(); // request the pump data to the API
       PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       #ifdef LESS_SERIAL_OUTPUT
         Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
