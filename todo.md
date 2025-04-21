@@ -12,3 +12,4 @@
 - [ ] set the website and dosages to start occuring at a time of the day.
 - [ ] if both of the fertilizers are injected at the same time as when it fertigates it would be ok to let the water go dry and then only dose at that same time the next day. 
 - [ ] precalculating and setting flags to know what the expectation of the system is. For example fertilizer will increase the acid or base a certain amount. 
+- [ ] add ph and ec to graphs on robotic sensing.
