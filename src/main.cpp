@@ -745,8 +745,8 @@ void loop()
     Serial.println(timeWeekDay);
     Serial.println();
 #endif
-#ifndef ENABLE_ATLAS_TEMP
-    int temperatureF = 0;
+#ifdef ENABLE_DHT11_TEMP
+    float temperatureF = readDHT11Temp();
 #endif
     String requestBody = "{\"unitNumber\":\"";
 
