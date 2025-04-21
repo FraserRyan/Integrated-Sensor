@@ -417,27 +417,26 @@ int lastButtonPress = 0;
 int didLastManager = 0;
 int button_held_wifi_manager = 0;
 
-
 void loop()
 {
-  #ifdef ENABLE_ATLAS_pH
-    atlasPH = get_stable_ph(); // Get stable pH average
-  #endif
-  #ifdef ENABLE_ATLAS_EC
-    Seq.run(); // Sequence function to read the EC sensor
-    atlasEC = EC_float / 1000; // Convert to mS/cm
-  #endif
-  #ifdef ENABLE_DHT11_TEMP
-    float temperatureF = readDHT11Temp();
-  #endif
-  #ifdef ENABLE_DHT11_HUMIDITY
-    float dht_humidity = readDHT11humidity();
-  #endif
+#ifdef ENABLE_ATLAS_pH
+  atlasPH = get_stable_ph(); // Get stable pH average
+#endif
+#ifdef ENABLE_ATLAS_EC
+  Seq.run();                 // Sequence function to read the EC sensor
+  atlasEC = EC_float / 1000; // Convert to mS/cm
+#endif
+#ifdef ENABLE_DHT11_TEMP
+  float temperatureF = readDHT11Temp();
+#endif
+#ifdef ENABLE_DHT11_HUMIDITY
+  float dht_humidity = readDHT11humidity();
+#endif
 
-  #ifndef DISABLE_WIFI
-    int rssi = WiFi.RSSI(); 
-  #endif
-    #ifdef ENABLE_CALIBRATION
+#ifndef DISABLE_WIFI
+  int rssi = WiFi.RSSI();
+#endif
+#ifdef ENABLE_CALIBRATION
   if (Serial.available() > 0)
   {
     user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
@@ -571,7 +570,6 @@ void loop()
     }
   }
 #endif
-
 
 #ifdef ENABLE_OLED_DISPLAY
   display.clearDisplay();
@@ -723,9 +721,9 @@ void loop()
   Serial.println("-----------------------------------------------");
 
 #endif
-// #ifdef ENABLE_OLED_DISPLAY
-//   display.display();
-// #endif
+  // #ifdef ENABLE_OLED_DISPLAY
+  //   display.display();
+  // #endif
 
 #ifndef DISABLE_API_REQUEST
   // Serial.println(apiId);
@@ -772,14 +770,23 @@ void loop()
     Serial.println(timeWeekDay);
     Serial.println();
 #endif
+
     String requestBody = "{\"unitNumber\":\"";
 
-    requestBody += String(UNIT_NUMBER) + "\",\"pH\":" + String(atlasPH) + ",\"temp\":" + String(temperatureF);
+    requestBody += String(UNIT_NUMBER) + ",\"temp\":" + String(temperatureF);
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
-    requestBody += ",\"ec\":" + String(atlasEC);
     requestBody += ",\"rssi\":" + String(rssi);
+#ifdef ENABLE_DHT11_HUMIDITY
     requestBody += ",\"humidity\":" + String(dht_humidity);
+#endif
 
+#ifdef ENABLE_ATLAS_pH
+    requestBody += ",\"pH\":" + String(atlasPH);
+#endif
+
+#ifdef ENABLE_ATLAS_EC
+    requestBody += ",\"ec\":" + String(atlasEC);
+#endif
 
 #if defined(ENABLE_GPS)
     Serial.println(GPS_LAT);
@@ -989,7 +996,7 @@ void step1()
 {
   EC.send_cmd("r"); // send a read command using send_cmd because we're parsing it ourselves
 }
-        
+
 void step2()
 {
 
@@ -1031,7 +1038,8 @@ void step3()
   {
     bool dosed = false; // Track if we did any dosing this cycle
 
-    // --- EC DOSING ---
+// --- EC DOSING ---
+#ifdef ENABLE_ATLAS_EC
     if (((atlasEC) < EC_MAX) && (initial + FERTILIZER_DOSAGE <= ContainerVolume))
     {
       pump_API(); // request the pump data to the API
@@ -1060,7 +1068,9 @@ void step3()
       Serial.println("Fertilizer depleted: container volume exceeded");
 #endif
     }
-    // --- PH DOSING ---
+#endif
+// --- PH DOSING ---
+#ifdef ENABLE_ATLAS_pH
     if (atlasPH >= 0 && atlasPH <= 14)
     {
       if (atlasPH < PH_MIN)
@@ -1089,7 +1099,7 @@ void step3()
       Serial.println("Invalid pH reading: " + String(atlasPH));
 #endif
     }
-
+#endif
     if (dosed)
     {
       last_Dose = millis(); // Only reset timer if something was dosed
@@ -1280,7 +1290,7 @@ void show_display_page(int pageNum)
 #ifndef DISABLE_WIFI
     lcd.setCursor(0, 3);
     lcd.print("RSSI:");
-    //lcd.print(rssi); //@joshthaw can you take a look at why this wont display on the LCD?
+    // lcd.print(rssi); //@joshthaw can you take a look at why this wont display on the LCD?
     lcd.print(WiFi.RSSI());
     lcd.print("dBm");
 #endif
