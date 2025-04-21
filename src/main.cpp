@@ -423,6 +423,9 @@ void loop()
   #ifdef ENABLE_ATLAS_pH
     atlasPH = get_stable_ph(); // Get stable pH average
   #endif
+  #ifdef ENABLE_ATLAS_EC
+    atlasEC = EC_float / 1000; // Convert to mS/cm
+  #endif
   #ifdef ENABLE_DHT11_TEMP
     float temperatureF = readDHT11Temp();
   #endif
@@ -576,12 +579,12 @@ void loop()
   // temperature Display on OLED
   display.setTextSize(1);
   display.setCursor(0, 0);
-  display.print("TEMP: ");
+  display.print("TMP: ");
   display.setTextSize(2);
   display.setCursor(0, 10);
 #endif
 #ifdef ENABLE_DHT11_TEMP
-  display.print(temperatureF, 1);
+  display.print(temperatureF, 0);
   display.setTextSize(1);
   display.print("F");
 #endif
@@ -647,7 +650,7 @@ void loop()
 #ifdef ENABLE_ATLAS_pH
   // atlasPH = pH.read_ph();
 #ifdef ENABLE_OLED_DISPLAY
-  display.print(atlasPH, 1);
+  display.print(atlasPH, 2);
 #endif
 #else
 #ifdef ENABLE_OLED_DISPLAY
@@ -694,9 +697,8 @@ void loop()
   display.setTextSize(2);
 #endif
 #ifdef ENABLE_ATLAS_EC
-  atlasEC = EC_float / 1000;
 #ifdef ENABLE_OLED_DISPLAY
-  display.print(atlasEC, 1);
+  display.print(atlasEC, 2);
 #endif
 #else
   display.print("-");
@@ -1230,7 +1232,7 @@ void show_display_page(int pageNum)
     {
 #ifdef ENABLE_DHT11_TEMP
       lcd.setCursor(0, 0);
-      lcd.print("Temp:");
+      lcd.print("Tmp:");
       // char tempStr[3];
       // dtostrf(lcd_temp,3,3,tempStr);
       lcd.print(readDHT11Temp(), 0);
