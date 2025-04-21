@@ -424,6 +424,7 @@ void loop()
     atlasPH = get_stable_ph(); // Get stable pH average
   #endif
   #ifdef ENABLE_ATLAS_EC
+    Seq.run(); // Sequence function to read the EC sensor
     atlasEC = EC_float / 1000; // Convert to mS/cm
   #endif
   #ifdef ENABLE_DHT11_TEMP
@@ -432,9 +433,7 @@ void loop()
   #ifdef ENABLE_DHT11_HUMIDITY
     float dht_humidity = readDHT11humidity();
   #endif
-  #ifdef ENABLE_ATLAS_EC
-    Seq.run(); // Sequence function to read the EC sensor
-  #endif
+
   #ifndef DISABLE_WIFI
     int rssi = WiFi.RSSI(); 
   #endif
@@ -699,6 +698,7 @@ void loop()
 #ifdef ENABLE_ATLAS_EC
 #ifdef ENABLE_OLED_DISPLAY
   display.print(atlasEC, 2);
+  display.display();
 #endif
 #else
   display.print("-");
@@ -723,9 +723,9 @@ void loop()
   Serial.println("-----------------------------------------------");
 
 #endif
-#ifdef ENABLE_OLED_DISPLAY
-  display.display();
-#endif
+// #ifdef ENABLE_OLED_DISPLAY
+//   display.display();
+// #endif
 
 #ifndef DISABLE_API_REQUEST
   // Serial.println(apiId);
@@ -989,7 +989,7 @@ void step1()
 {
   EC.send_cmd("r"); // send a read command using send_cmd because we're parsing it ourselves
 }
-
+        
 void step2()
 {
 
