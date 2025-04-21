@@ -21,8 +21,7 @@
 #include "FreeSerifBoldItalic9pt7b.h" // For the cool font at the startup
 #include <iot_cmd.h>
 #include <Ezo_i2c_util.h>
-#include "ph_surveyor.h" 
-
+#include "ph_surveyor.h"
 
 #ifdef ENABLE_GPS
 #include <TinyGPS++.h>
@@ -55,12 +54,12 @@ float SG_float;  // float var used to hold the float value of the specific gravi
 void pump_API();
 int last_Dose = 0;
 int initial = 0;
-int FERTILIZER_DOSAGE = 10;         // 10ml of Part A 5-15-26
-                                    // 10ml of Part B 5-0-0 Calcium Nitrate
-const int ContainerVolume = 1000;   //  using 1Liter as the volume so that the pumps wont run dry
-                                    // These two components of fertilizer will be dosed at the same time.
-int pH_DOSAGE = 10;                 // 10ml of Sulfuric Acid or Potassium Hydroxide
-int INTERVAL_TIME = 1 * 30 * 1000;  // For testing this is just 1/2 minute its taking forever
+int FERTILIZER_DOSAGE = 10;        // 10ml of Part A 5-15-26
+                                   // 10ml of Part B 5-0-0 Calcium Nitrate
+const int ContainerVolume = 1000;  //  using 1Liter as the volume so that the pumps wont run dry
+                                   // These two components of fertilizer will be dosed at the same time.
+int pH_DOSAGE = 10;                // 10ml of Sulfuric Acid or Potassium Hydroxide
+int INTERVAL_TIME = 1 * 30 * 1000; // For testing this is just 1/2 minute its taking forever
 
 Ezo_board PMP1 = Ezo_board(101, "PMP1"); // create an PMP circuit object who's address is 56 and name is "PMP1"
 Ezo_board PMP2 = Ezo_board(102, "PMP2"); // create an PMP circuit object who's address is 57 and name is "PMP2"
@@ -71,25 +70,25 @@ Ezo_board device_list[] = {              // an array of boards used for sending 
     PMP3};
 bool process_coms(const String &string_buffer);
 void print_help();
-Ezo_board *default_board = &device_list[0];     // used to store the board were talking to
-                                                // gets the length of the array automatically so we dont have to change the number every time we add new boards
+Ezo_board *default_board = &device_list[0]; // used to store the board were talking to
+                                            // gets the length of the array automatically so we dont have to change the number every time we add new boards
 const uint8_t device_list_len = sizeof(device_list) / sizeof(device_list[0]);
 const unsigned long reading_delay = 1000;       // how long we wait to receive a response, in milliseconds decreasing from 1000
-unsigned int poll_delay = 2000 - reading_delay; //there is no response so im going to decrease this decreassing from 2000-reading delay
+unsigned int poll_delay = 2000 - reading_delay; // there is no response so im going to decrease this decreassing from 2000-reading delay
 void step3();                                   // forward declarations of functions to use them in the sequencer before defining them
 void step4();
-Sequencer2 PumpSeq(&step3, reading_delay,       // calls the steps in sequence with time in between them
+Sequencer2 PumpSeq(&step3, reading_delay, // calls the steps in sequence with time in between them
                    &step4, poll_delay);
-bool polling = false;                           // variable to determine whether or not were polling the circuits
+bool polling = false; // variable to determine whether or not were polling the circuits
 #endif
 
-Ezo_board EC = Ezo_board(100, "EC");            // create an EC circuit object who's address is 100 and name is "EC"
-void step1();                                   // forward declarations of functions to use them in the sequencer before defining them
+Ezo_board EC = Ezo_board(100, "EC"); // create an EC circuit object who's address is 100 and name is "EC"
+void step1();                        // forward declarations of functions to use them in the sequencer before defining them
 void step2();
 Sequencer2 Seq(&step1, 1000, &step2, 300);
 Surveyor_RTD RTD = Surveyor_RTD(A1_temp_Pin);
 Surveyor_pH pH = Surveyor_pH(pH_Pin);
-int wifiManagerTimeout = 120;                   // in seconds
+int wifiManagerTimeout = 120; // in seconds
 
 WiFiManager wm;
 Preferences config;
@@ -172,24 +171,21 @@ WiFiClientSecure client;
 
 // Define a simple 8x8 arrow bitmap
 const unsigned char upArrowBitmap[] PROGMEM = {
-  0b00011000,
-  0b00011000,
-  0b00111100,
-  0b00111100,
-  0b01111110,
-  0b11111111,
-  0b00011000,
-  0b00011000
-};
-
-
+    0b00011000,
+    0b00011000,
+    0b00111100,
+    0b00111100,
+    0b01111110,
+    0b11111111,
+    0b00011000,
+    0b00011000};
 
 void setup()
 {
   // pinMode(LED12,OUTPUT);
   // pinMode(LED13,OUTPUT);
   // pinMode(LED14,OUTPUT);
-  pinMode(LED15,OUTPUT);
+  pinMode(LED15, OUTPUT);
   // pinMode(LED16,OUTPUT);
   // pinMode(LED17,OUTPUT);
 
@@ -214,39 +210,38 @@ void setup()
 // delay();
 #endif
 
+#ifdef LESS_SERIAL_OUTPUT
+#ifdef ENABLE_ATLAS_TEMP
+  if (RTD.begin())
+  {
+    Serial.println("Loaded EEPROM for Temperature calibration");
+  }
+  else
+  {
+    Serial.println("Failed to Loaded EEPROM for Temperature calibration");
+  }
+#endif
 
-  #ifdef LESS_SERIAL_OUTPUT
-    #ifdef ENABLE_ATLAS_TEMP
-    if (RTD.begin())
-    {
-      Serial.println("Loaded EEPROM for Temperature calibration");
-    }
-    else
-    {
-      Serial.println("Failed to Loaded EEPROM for Temperature calibration");    
-    }
-  #endif
-
-  #ifdef ENABLE_ATLAS_pH
-    if (pH.begin()) {                                     
-      Serial.println("Loaded EEPROM for pH calibration");
-      // pH.print_calibration_values(); if you need this go to ph branch it will work
-      // Serial.print("mid_cal: "); Serial.println(pH.pH.mid_cal);
-      // Serial.print("low_cal: "); Serial.println(pH.pH.low_cal);
-      // Serial.print("high_cal: "); Serial.println(pH.pH.high_cal);
-      
-    }
-    else
-    {
-      Serial.println("Failed to Loaded EEPROM for pH calibration");    
-    }
-  #endif
+#ifdef ENABLE_ATLAS_pH
+  if (pH.begin())
+  {
+    Serial.println("Loaded EEPROM for pH calibration");
+    // pH.print_calibration_values(); if you need this go to ph branch it will work
+    // Serial.print("mid_cal: "); Serial.println(pH.pH.mid_cal);
+    // Serial.print("low_cal: "); Serial.println(pH.pH.low_cal);
+    // Serial.print("high_cal: "); Serial.println(pH.pH.high_cal);
+  }
+  else
+  {
+    Serial.println("Failed to Loaded EEPROM for pH calibration");
+  }
+#endif
   Serial.println("");
   Serial.print("MAC Address: ");
   Serial.println(WiFi.macAddress());
   Serial.println("Starting Integrated Sensor");
   Serial.println("");
-  #endif
+#endif
   pinMode(LED15, OUTPUT);
 
   config.begin("config");
@@ -264,22 +259,22 @@ void setup()
 #endif
 
 #ifdef ENABLE_ATLAS_EC
-  Seq.reset();            // initialize the sequencer
+  Seq.reset(); // initialize the sequencer
   delay(3000);
   EC.send_cmd("o,tds,1"); // send command to enable TDS output
   delay(300);
-  EC.send_cmd("o,s,1");   // send command to enable salinity output
+  EC.send_cmd("o,s,1"); // send command to enable salinity output
   delay(300);
-  EC.send_cmd("o,sg,1");  // send command to enable specific gravity output
+  EC.send_cmd("o,sg,1"); // send command to enable specific gravity output
   delay(300);
 #endif
 
 #ifdef ENABLE_CALIBRATION
-  #ifdef LESS_SERIAL_OUTPUT
-    Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
-    Serial.println(F("Use commands \"PHCAL,7\", \"PHCAL,4\", and \"PHCAL,10\" to calibrate the circuit to those respective values"));
-    Serial.println(F("Use command \"PHCAL,CLEAR\" to clear the calibration"));
-  #endif
+#ifdef LESS_SERIAL_OUTPUT
+  Serial.println(F("Use command \"CAL,nnn.n\" to calibrate the circuit to a specific temperature\n\"CAL,CLEAR\" clears the calibration"));
+  Serial.println(F("Use commands \"PHCAL,7\", \"PHCAL,4\", and \"PHCAL,10\" to calibrate the circuit to those respective values"));
+  Serial.println(F("Use command \"PHCAL,CLEAR\" to clear the calibration"));
+#endif
 #endif
 #ifdef ENABLE_OLED_DISPLAY
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
@@ -421,17 +416,19 @@ int button_held_wifi_manager = 0;
 
 void loop()
 {
-  #ifdef ENABLE_CALIBRATION
-    if (Serial.available() > 0) {                                                      
-      user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));   
-    }
+#ifdef ENABLE_CALIBRATION
+  if (Serial.available() > 0)
+  {
+    user_bytes_received = Serial.readBytesUntil(13, user_data, sizeof(user_data));
+  }
 
-    if (user_bytes_received) {                                                      
-      parse_cmd(user_data);                                                          
-      user_bytes_received = 0;                                                        
-      memset(user_data, 0, sizeof(user_data));                                         
-    }
-  #endif
+  if (user_bytes_received)
+  {
+    parse_cmd(user_data);
+    user_bytes_received = 0;
+    memset(user_data, 0, sizeof(user_data));
+  }
+#endif
 
 #ifndef DISABLE_LCD
   // For the LCD the first parameter is the Column 0-20
@@ -486,7 +483,6 @@ void loop()
 //   // lcd.print("");
 // #endif
 #endif
-
 
 // Serial.println(RTD.read_RTD_temp_C());
 // uncomment for readings in F
@@ -735,7 +731,6 @@ void loop()
       return;
     }
 
-
     char timeHour[3];
     char timeMinute[3];
     strftime(timeHour, 3, "%H", &timeinfo);
@@ -743,15 +738,15 @@ void loop()
     char timeWeekDay[10];
     strftime(timeWeekDay, 10, "%A", &timeinfo);
 
-    #ifndef LESS_SERIAL_OUTPUT
+#ifndef LESS_SERIAL_OUTPUT
     Serial.println("Time variables");
     Serial.println(timeHour);
     Serial.println(timeMinute);
     Serial.println(timeWeekDay);
     Serial.println();
-    #endif
+#endif
 #ifndef ENABLE_ATLAS_TEMP
-  int temperatureF = 0;
+    int temperatureF = 0;
 #endif
     String requestBody = "{\"unitNumber\":\"";
 
@@ -760,7 +755,8 @@ void loop()
     requestBody += ",\"ec\":" + String(EC_float / 1000);
     requestBody += ",\"rssi\":" + String(WiFi.RSSI());
 #if defined(ENABLE_DHT11_HUMIDITY)
-    requestBody += ",\"humidity\":" + String(readDHT11humidity());
+    float dht_humidity = readDHT11humidity();
+    requestBody += ",\"humidity\":" + String(dht_humidity);
 #endif
 
 #if defined(ENABLE_GPS)
@@ -851,50 +847,54 @@ void loop()
 }
 
 #ifdef ENABLE_CALIBRATION
-  void parse_cmd(char *string)
+void parse_cmd(char *string)
+{
+  strupr(string);
+  String cmd = String(string);
+  if (cmd.startsWith("CAL"))
   {
-    strupr(string);
-    String cmd = String(string);
-    if (cmd.startsWith("CAL"))
+    int index = cmd.indexOf(',');
+    if (index != -1)
     {
-      int index = cmd.indexOf(',');
-      if (index != -1)
+      String param = cmd.substring(index + 1, cmd.length());
+      if (param.equals("CLEAR"))
       {
-        String param = cmd.substring(index + 1, cmd.length());
-        if (param.equals("CLEAR"))
-        {
-          RTD.cal_clear();
-          Serial.println("CALIBRATION CLEARED");
-          delay(1000);
-        }
-          RTD.cal(param.toFloat());
-          Serial.println("RTD CALIBRATED");
-          delay(1000);
-          return;
-        }
-      }
-
-      if (strcmp(string, "PHCAL,7") == 0) {       
-        pH.cal_mid();                                
-        Serial.println("pH 7 MID CALIBRATED");
+        RTD.cal_clear();
+        Serial.println("CALIBRATION CLEARED");
         delay(1000);
       }
-      else if (strcmp(string, "PHCAL,4") == 0) {            
-        pH.cal_low();                                
-        Serial.println("pH 4 LOW CALIBRATED");
-        delay(1000);
-      }
-      else if (strcmp(string, "PHCAL,10") == 0) {      
-        pH.cal_high();                               
-        Serial.println("pH 10 HIGH CALIBRATED");
-        delay(1000);
-      }
-      else if (strcmp(string, "PHCAL,CLEAR") == 0) { 
-        pH.cal_clear();                              
-        Serial.println("pH CALIBRATION CLEARED");
-        delay(1000);
-      }
+      RTD.cal(param.toFloat());
+      Serial.println("RTD CALIBRATED");
+      delay(1000);
+      return;
     }
+  }
+
+  if (strcmp(string, "PHCAL,7") == 0)
+  {
+    pH.cal_mid();
+    Serial.println("pH 7 MID CALIBRATED");
+    delay(1000);
+  }
+  else if (strcmp(string, "PHCAL,4") == 0)
+  {
+    pH.cal_low();
+    Serial.println("pH 4 LOW CALIBRATED");
+    delay(1000);
+  }
+  else if (strcmp(string, "PHCAL,10") == 0)
+  {
+    pH.cal_high();
+    Serial.println("pH 10 HIGH CALIBRATED");
+    delay(1000);
+  }
+  else if (strcmp(string, "PHCAL,CLEAR") == 0)
+  {
+    pH.cal_clear();
+    Serial.println("pH CALIBRATION CLEARED");
+    delay(1000);
+  }
+}
 #endif
 
 void printLocalTime()
@@ -902,12 +902,12 @@ void printLocalTime()
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo))
   {
-    #ifdef LESS_SERIAL_OUTPUT
-      Serial.println("Failed to obtain time");
-    #endif
+#ifdef LESS_SERIAL_OUTPUT
+    Serial.println("Failed to obtain time");
+#endif
     return;
   }
-  #ifdef LESS_SERIAL_OUTPUT
+#ifdef LESS_SERIAL_OUTPUT
   Serial.println("Time variables");
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
   Serial.print("Day of week: ");
@@ -926,7 +926,7 @@ void printLocalTime()
   Serial.println(&timeinfo, "%M");
   Serial.print("Second: ");
   Serial.println(&timeinfo, "%S");
-  #endif
+#endif
 
   char timeHour[3];
   strftime(timeHour, 3, "%H", &timeinfo);
@@ -939,9 +939,9 @@ void printLocalTime()
 
 void IRAM_ATTR startOnDemandWiFiManager()
 {
-  #ifdef LESS_SERIAL_OUTPUT
-    Serial.println("Interrupt started");
-  #endif
+#ifdef LESS_SERIAL_OUTPUT
+  Serial.println("Interrupt started");
+#endif
   onDemandManagerTrigger = true;
   lastButtonPress = millis();
   return;
@@ -965,7 +965,7 @@ void saveWMConfig()
 
 void step1()
 {
-  EC.send_cmd("r");   // send a read command using send_cmd because we're parsing it ourselves
+  EC.send_cmd("r"); // send a read command using send_cmd because we're parsing it ourselves
 }
 
 void step2()
@@ -976,20 +976,20 @@ void step2()
   TDS = strtok(NULL, ",");       // let's parse the string at each comma.
   SAL = strtok(NULL, ",");       // let's parse the string at each comma
   SG = strtok(NULL, ",");        // let's parse the string at each comma.
-  #ifdef LESS_SERIAL_OUTPUT
-    Serial.print("EC: ");     // we now print each value we parsed separately.
-    Serial.print(EC_str);     // this is the EC value.
+#ifdef LESS_SERIAL_OUTPUT
+  Serial.print("EC: "); // we now print each value we parsed separately.
+  Serial.print(EC_str); // this is the EC value.
 
-    Serial.print(" TDS: ");     // we now print each value we parsed separately.
-    Serial.print(TDS);          // this is the TDS value.
+  Serial.print(" TDS: "); // we now print each value we parsed separately.
+  Serial.print(TDS);      // this is the TDS value.
 
-    Serial.print(" SAL: ");     // we now print each value we parsed separately.
-    Serial.print(SAL);          // this is the salinity point.
+  Serial.print(" SAL: "); // we now print each value we parsed separately.
+  Serial.print(SAL);      // this is the salinity point.
 
-    Serial.print(" SG: ");      // we now print each value we parsed separately.
-    Serial.println(SG);         // this is the specific gravity point.
-    Serial.println();
-  #endif
+  Serial.print(" SG: "); // we now print each value we parsed separately.
+  Serial.println(SG);    // this is the specific gravity point.
+  Serial.println();
+#endif
 
   EC_float = atof(EC_str);
   // DO.send_cmd_with_num("s,", EC_float);
@@ -1004,52 +1004,51 @@ void step2()
 #ifdef ENABLE_PUMPS
 void step3()
 {
-  float ph_value = get_stable_ph();  // Get stable pH average once
+  float ph_value = get_stable_ph(); // Get stable pH average once
 
   if (millis() - last_Dose > INTERVAL_TIME)
   {
-    bool dosed = false;             // Track if we did any dosing this cycle
+    bool dosed = false; // Track if we did any dosing this cycle
 
     // --- EC DOSING ---
     if (((EC_float / 1000.0) < EC_MAX) && (initial + FERTILIZER_DOSAGE <= ContainerVolume))
     {
       pump_API(); // request the pump data to the API
       PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
-      #ifdef LESS_SERIAL_OUTPUT
-        Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
-      #endif
-      
+#ifdef LESS_SERIAL_OUTPUT
+      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
+#endif
+
       PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
-      #ifdef LESS_SERIAL_OUTPUT
-        Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
-      #endif
+#ifdef LESS_SERIAL_OUTPUT
+      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
+#endif
 
       // show_display_page(1);    @joshthaw I really want to show when the pumps are dosing, but I want you to check this display function.
       // lcd.setCursor(10, 2);
       // lcd.print("Dose A&B");
-      // lcd.print(UNIT_NUMBER);    
+      // lcd.print(UNIT_NUMBER);
       // lcd.setCursor(10, 1);
-
 
       initial += FERTILIZER_DOSAGE;
       dosed = true;
     }
     else if ((initial + FERTILIZER_DOSAGE) > ContainerVolume)
-      {
-        #ifdef LESS_SERIAL_OUTPUT
-          Serial.println("Fertilizer depleted: container volume exceeded");
-        #endif
-      }
+    {
+#ifdef LESS_SERIAL_OUTPUT
+      Serial.println("Fertilizer depleted: container volume exceeded");
+#endif
+    }
     // --- PH DOSING ---
     if (ph_value >= 0 && ph_value <= 14)
     {
       if (ph_value < PH_MIN)
       {
         PMP3.send_cmd_with_num("d,", pH_DOSAGE);
-        #ifdef LESS_SERIAL_OUTPUT
-          Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
-        #endif
-        //drawUpArrow(10, 20);
+#ifdef LESS_SERIAL_OUTPUT
+        Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
+#endif
+        // drawUpArrow(10, 20);
         dosed = true;
       }
       // else if (ph_value > PH_MAX) // Dose down
@@ -1065,18 +1064,17 @@ void step3()
     }
     else
     {
-      #ifdef LESS_SERIAL_OUTPUT
+#ifdef LESS_SERIAL_OUTPUT
       Serial.println("Invalid pH reading: " + String(ph_value));
-      #endif
+#endif
     }
 
     if (dosed)
     {
-      last_Dose = millis();           // Only reset timer if something was dosed
+      last_Dose = millis(); // Only reset timer if something was dosed
     }
   }
 }
-
 
 void step4()
 {
@@ -1330,18 +1328,10 @@ void show_display_page(int pageNum)
     float temperatureF = fahrenheit;
 #endif
   }
-  if(pageNum == 3)
-{
-
+  if (pageNum == 3)
+  {
+  }
 }
-
-
-
-
-}
-
-
-
 
 #ifdef ENABLE_PUMPS
 // bool process_coms(const String &string_buffer)
@@ -1394,7 +1384,6 @@ void print_help()
 }
 #endif
 
-
 float get_stable_ph()
 {
   float total = 0;
@@ -1408,6 +1397,7 @@ float get_stable_ph()
 }
 
 // Example usage
-void drawUpArrow(int x, int y) {
+void drawUpArrow(int x, int y)
+{
   display.drawBitmap(x, y, upArrowBitmap, 8, 8, SSD1306_WHITE);
 }
