@@ -192,6 +192,9 @@ void setup()
   pinMode(LED15, OUTPUT);
   pinMode(LED16,OUTPUT);
   pinMode(LED17,OUTPUT);
+  digitalWrite(LED15, LOW);
+  digitalWrite(LED16, LOW);
+  digitalWrite(LED17, LOW);
 
   Serial.begin(115200);
 
@@ -1048,13 +1051,13 @@ void step3()
       PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       #ifdef LESS_SERIAL_OUTPUT
             Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
-            blinkLED(LED15, 10, 250);
+            blinkLED(LED15, FERTILIZER_DOSAGE, 250);
       #endif
 
       PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       #ifdef LESS_SERIAL_OUTPUT
             Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
-            blinkLED(LED16, 10, 250);
+            blinkLED(LED16, FERTILIZER_DOSAGE, 250);
       #endif
 
       // show_display_page(1);    @joshthaw I really want to show when the pumps are dosing, but I want you to check this display function.
@@ -1083,7 +1086,7 @@ void step3()
           PMP3.send_cmd_with_num("d,", pH_DOSAGE);
           #ifdef LESS_SERIAL_OUTPUT
               Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
-              blinkLED(LED17, 10, 250);
+              blinkLED(LED17, pH_DOSAGE, 250);
           #endif
           // drawUpArrow(10, 20);
           phDoseAmount = pH_DOSAGE;
