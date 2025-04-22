@@ -150,7 +150,7 @@ float atlasPH;
 #ifdef ENABLE_ATLAS_EC
 float atlasEC;
 #endif
-
+void designDisplay();
 void updateDisplay()
 {
 #ifdef ENABLE_OLED_DISPLAY
@@ -291,6 +291,17 @@ void setup()
   }
   updateDisplay();
   delay(2500);
+#endif
+#ifdef ENABLE_OLED_ED2_DISPLAY
+if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+{
+  Serial.println(F("SSD1306 allocation failed"));
+  for (;;)
+    ;
+}
+updateDisplay();
+delay(2500);
+  designDisplay();
 #endif
 
 #if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
@@ -1457,4 +1468,16 @@ float get_stable_ph()
 void drawUpArrow(int x, int y)
 {
   display.drawBitmap(x, y, upArrowBitmap, 8, 8, SSD1306_WHITE);
+}
+
+void designDisplay() {
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    display.setTextSize(1);
+    display.setFont(&FreeSerifBoldItalic9pt7b);
+    display.setCursor(15, 30);
+    display.println("Senior Design");
+    display.setCursor(45, 50);
+    display.print("2025");
+    display.display();
 }

@@ -43,7 +43,7 @@ const int   daylightOffset_sec    = 3600;
 #define ENABLE_PUMPS
 #define ENABLE_PH_UP
 #define ENABLE_PH_DOWN
-
+#define ENABLE_OLED_ED2_DISPLAY
 
 /*
     Server Information
