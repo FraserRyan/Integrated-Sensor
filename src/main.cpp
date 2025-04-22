@@ -150,10 +150,22 @@ float atlasPH;
 #ifdef ENABLE_ATLAS_EC
 float atlasEC;
 #endif
+#ifdef ENABLE_OLED_ED2_DISPLAY
 void designDisplay();
+// void updateDisplay(){
+//   display.clearDisplay();
+//   display.setTextColor(WHITE);
+//   display.setTextSize(1);
+//   display.setFont(&FreeSerifBoldItalic9pt7b);
+//   display.setCursor(35, 20);
+//   display.println("Ryan Fraser Josh Thaw");
+//   display.display();
+//   display.setFont();
+// }
+#endif
 void updateDisplay()
 {
-#ifdef ENABLE_OLED_DISPLAY
+#if defined(ENABLE_OLED_DISPLAY) || defined(ENABLE_OLED_ED2_DISPLAY)
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.setTextSize(1);
@@ -292,17 +304,7 @@ void setup()
   updateDisplay();
   delay(2500);
 #endif
-#ifdef ENABLE_OLED_ED2_DISPLAY
-if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
-{
-  Serial.println(F("SSD1306 allocation failed"));
-  for (;;)
-    ;
-}
-updateDisplay();
-delay(2500);
-  designDisplay();
-#endif
+
 
 #if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
   dht.begin();
@@ -404,6 +406,20 @@ delay(2500);
 
   printLocalTime();
   delay(3000);
+
+  #ifdef ENABLE_OLED_ED2_DISPLAY
+if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+{
+  Serial.println(F("SSD1306 allocation failed"));
+  for (;;)
+    ;
+}
+  updateDisplay();
+  delay(2500);
+  display.clearDisplay();
+  designDisplay();
+#endif
+
 #ifdef ENABLE_OLED_DISPLAY
   display.clearDisplay();
 #endif
@@ -434,6 +450,10 @@ int button_held_wifi_manager = 0;
 
 void loop()
 {
+  #ifdef ENABLE_OLED_ED2_DISPLAY
+    display.display();
+  #endif
+
 #ifdef ENABLE_ATLAS_pH
   atlasPH = get_stable_ph(); // Get stable pH average
 #endif
@@ -787,7 +807,7 @@ void loop()
 #endif
 
     String requestBody = "{\"unitNumber\":\"";
-#ifdef ENABLE_DHT11_TEMP || (!DISABLE_MCP9701_TEMP) || ENABLE_ATLAS_TEMP
+#if defined(ENABLE_DHT11_TEMP) || !defined(DISABLE_MCP9701_TEMP) || defined(ENABLE_ATLAS_TEMP)
     requestBody += String(UNIT_NUMBER) + "\",\"temp\":" + String(temperatureF);
 #endif    
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
@@ -1471,6 +1491,8 @@ void drawUpArrow(int x, int y)
 }
 
 void designDisplay() {
+  // time_t now = time(nullptr);
+  // struct tm* timeinfo = localtime(&now);
     display.clearDisplay();
     display.setTextColor(WHITE);
     display.setTextSize(1);
@@ -1479,5 +1501,29 @@ void designDisplay() {
     display.println("Senior Design");
     display.setCursor(45, 50);
     display.print("2025");
+    // Set font back to default small font for time
+    display.setFont(); // resets to default 5x7 font
+    display.setTextSize(1);
+    display.setCursor(0, 57); // bottom-left corner (row 8 of 8, leaving a few pixels from the bottom)
+
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo)) {
+    display.fillRect(0, 56, 128, 8, BLACK); // clears just the bottom line
+
+    display.setFont();         // Use default small font
+    display.setTextSize(1);
+    display.setCursor(0, 57);  // Adjust position if needed
+     // Print date: MM/DD
+    display.printf("%02d/%02d ", timeinfo.tm_mon + 1, timeinfo.tm_mday);
+    // Optional: convert to 12-hour format with AM/PM
+    int hour12 = timeinfo.tm_hour % 12;
+    if (hour12 == 0) hour12 = 12;
+    // display.print("Time: ");
+    display.print(hour12);
+    display.print(":");
+    if (timeinfo.tm_min < 10) display.print("0");
+    display.print(timeinfo.tm_min);
+    display.print(timeinfo.tm_hour < 12 ? " AM" : " PM");
     display.display();
+  }
 }
