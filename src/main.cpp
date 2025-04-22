@@ -776,8 +776,9 @@ void loop()
 #endif
 
     String requestBody = "{\"unitNumber\":\"";
-
+#ifdef ENABLE_DHT11_TEMP || (!DISABLE_MCP9701_TEMP) || ENABLE_ATLAS_TEMP
     requestBody += String(UNIT_NUMBER) + "\",\"temp\":" + String(temperatureF);
+#endif    
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"rssi\":" + String(rssi);
 #ifdef ENABLE_DHT11_HUMIDITY

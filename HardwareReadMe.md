@@ -1,3 +1,31 @@
+This is the header config for a board with no connection to any sensors:
+//#define ENABLE_ATLAS_EC
+//#define ENABLE_ATLAS_TEMP
+//#define ENABLE_ATLAS_pH
+#define DISABLE_CELSIUS
+#define DHTTYPE DHT11
+//#define ENABLE_CALIBRATION
+//#define DISABLE_FAHRENHEIT
+//#define ENABLE_DHT11_TEMP
+//#define ENABLE_DHT11_HUMIDITY
+#define DISABLE_MCP9701_TEMP
+//#define DISABLE_WIFI
+//#define DISABLE_API_REQUEST
+// #define ENABLE_GPS
+#define ENABLE_SETPOINT_FETCH
+#define LESS_SERIAL_OUTPUT
+#define LCD_ADDR 0x27  // Define I2C Address where the PCF8574A (Blue blacklight)
+//#define LCD_ADDR 0x3F //This is for the LCD without a backlight
+#define ENABLE_OLED_DISPLAY
+//#define ENABLE_PUMPS
+//#define ENABLE_PH_UP
+//#define ENABLE_PH_DOWN
+
+
+
+
+
+
 Here is pin mapping for ESP32-S3
 Do not use strapping pins
 https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/peripherals/gpio.html
