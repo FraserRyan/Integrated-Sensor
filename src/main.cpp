@@ -39,6 +39,7 @@ double PH_AVG = (PH_MIN + PH_MAX) / 2;
 
 #endif
 
+void blinkLED(int ledPin, int blinkCount, int blinkDelay);
 char EC_data[32]; // we make a 32-byte character array to hold incoming data from the EC sensor.
 char *EC_str;     // char pointer used in string parsing.
 char *TDS;        // char pointer used in string parsing.
@@ -189,8 +190,8 @@ void setup()
   // pinMode(LED13,OUTPUT);
   // pinMode(LED14,OUTPUT);
   pinMode(LED15, OUTPUT);
-  // pinMode(LED16,OUTPUT);
-  // pinMode(LED17,OUTPUT);
+  pinMode(LED16,OUTPUT);
+  pinMode(LED17,OUTPUT);
 
   Serial.begin(115200);
 
@@ -245,7 +246,6 @@ void setup()
   Serial.println("Starting Integrated Sensor");
   Serial.println("");
 #endif
-  pinMode(LED15, OUTPUT);
 
   config.begin("config");
   UNIT_NUMBER = config.getInt("unit_number", 0);
@@ -364,6 +364,7 @@ void setup()
       }
       // Serial.print(wait_time);
     }
+    digitalWrite(LED15, LOW);
     Serial.println(WiFi.localIP());
 #ifdef ENABLE_OLED_DISPLAY
     display.println(WiFi.localIP());
@@ -1047,11 +1048,13 @@ void step3()
       PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       #ifdef LESS_SERIAL_OUTPUT
             Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
+            blinkLED(LED15, 10, 250);
       #endif
 
       PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
       #ifdef LESS_SERIAL_OUTPUT
             Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
+            blinkLED(LED16, 10, 250);
       #endif
 
       // show_display_page(1);    @joshthaw I really want to show when the pumps are dosing, but I want you to check this display function.
@@ -1080,6 +1083,7 @@ void step3()
           PMP3.send_cmd_with_num("d,", pH_DOSAGE);
           #ifdef LESS_SERIAL_OUTPUT
               Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
+              blinkLED(LED17, 10, 250);
           #endif
           // drawUpArrow(10, 20);
           phDoseAmount = pH_DOSAGE;
@@ -1122,6 +1126,17 @@ void step4()
   // Serial.print("  ");
   // receive_and_print_reading(PMP3);
   // Serial.println();
+}
+
+void blinkLED(int ledPin, int blinkCount, int blinkDelay)
+{
+  for (int i = 0; i < blinkCount; i++)
+  {
+    digitalWrite(ledPin, HIGH);
+    delay(blinkDelay);
+    digitalWrite(ledPin, LOW);
+    delay(blinkDelay);
+  }
 }
 
 void pump_API(float ecDoseAmount, float phDoseAmount)
