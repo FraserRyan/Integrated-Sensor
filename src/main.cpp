@@ -863,7 +863,7 @@ void loop()
         Serial.println(error.f_str());
         // return;
       }
-
+      else {
       // Fetch the values
       // Most of the time, you can rely on the implicit casts.
       // In other case, you can do doc["time"].as<long>();
@@ -871,6 +871,7 @@ void loop()
       EC_MAX = doc["setPoints"]["ec"]["max"];
       PH_MIN = doc["setPoints"]["pH"]["min"];
       PH_MAX = doc["setPoints"]["pH"]["max"];
+      }
 
 #ifndef LESS_SERIAL_OUTPUT
       Serial.print("EC min: ");
