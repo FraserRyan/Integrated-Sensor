@@ -202,8 +202,8 @@ void setup()
   // pinMode(LED13,OUTPUT);
   // pinMode(LED14,OUTPUT);
   pinMode(LED15, OUTPUT);
-  pinMode(LED16,OUTPUT);
-  pinMode(LED17,OUTPUT);
+  pinMode(LED16, OUTPUT);
+  pinMode(LED17, OUTPUT);
   digitalWrite(LED15, LOW);
   digitalWrite(LED16, LOW);
   digitalWrite(LED17, LOW);
@@ -304,7 +304,6 @@ void setup()
   updateDisplay();
   delay(2500);
 #endif
-
 
 #if defined(ENABLE_DHT11_TEMP) || defined(ENABLE_DHT11_HUMIDITY)
   dht.begin();
@@ -407,13 +406,13 @@ void setup()
   printLocalTime();
   delay(3000);
 
-  #ifdef ENABLE_OLED_ED2_DISPLAY
-if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
-{
-  Serial.println(F("SSD1306 allocation failed"));
-  for (;;)
-    ;
-}
+#ifdef ENABLE_OLED_ED2_DISPLAY
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;)
+      ;
+  }
   updateDisplay();
   delay(2500);
   display.clearDisplay();
@@ -450,9 +449,9 @@ int button_held_wifi_manager = 0;
 
 void loop()
 {
-  #ifdef ENABLE_OLED_ED2_DISPLAY
-    display.display();
-  #endif
+#ifdef ENABLE_OLED_ED2_DISPLAY
+  display.display();
+#endif
 
 #ifdef ENABLE_ATLAS_pH
   atlasPH = get_stable_ph(); // Get stable pH average
@@ -809,7 +808,7 @@ void loop()
     String requestBody = "{\"unitNumber\":\"";
 #if defined(ENABLE_DHT11_TEMP) || !defined(DISABLE_MCP9701_TEMP) || defined(ENABLE_ATLAS_TEMP)
     requestBody += String(UNIT_NUMBER) + "\",\"temp\":" + String(temperatureF);
-#endif    
+#endif
     requestBody += ",\"timeRecorded\": \"" + String(timeWeekDay) + "-" + String(timeHour) + ":" + String(timeMinute) + "\"";
     requestBody += ",\"rssi\":" + String(rssi);
 #ifdef ENABLE_DHT11_HUMIDITY
@@ -863,14 +862,15 @@ void loop()
         Serial.println(error.f_str());
         // return;
       }
-      else {
-      // Fetch the values
-      // Most of the time, you can rely on the implicit casts.
-      // In other case, you can do doc["time"].as<long>();
-      EC_MIN = doc["setPoints"]["ec"]["min"];
-      EC_MAX = doc["setPoints"]["ec"]["max"];
-      PH_MIN = doc["setPoints"]["pH"]["min"];
-      PH_MAX = doc["setPoints"]["pH"]["max"];
+      else
+      {
+        // Fetch the values
+        // Most of the time, you can rely on the implicit casts.
+        // In other case, you can do doc["time"].as<long>();
+        EC_MIN = doc["setPoints"]["ec"]["min"];
+        EC_MAX = doc["setPoints"]["ec"]["max"];
+        PH_MIN = doc["setPoints"]["pH"]["min"];
+        PH_MAX = doc["setPoints"]["pH"]["max"];
       }
 
 #ifndef LESS_SERIAL_OUTPUT
@@ -1077,21 +1077,21 @@ void step3()
   if (millis() - last_Dose > INTERVAL_TIME)
   {
 
-    // --- EC DOSING ---
-    #ifdef ENABLE_ATLAS_EC
+// --- EC DOSING ---
+#ifdef ENABLE_ATLAS_EC
     if (((atlasEC) < EC_MAX) && (initial + FERTILIZER_DOSAGE <= ContainerVolume))
     {
       PMP1.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
-      #ifdef LESS_SERIAL_OUTPUT
-            Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
-            blinkLED(LED15, FERTILIZER_DOSAGE, 250);
-      #endif
+#ifdef LESS_SERIAL_OUTPUT
+      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part A -> ");
+      blinkLED(LED15, FERTILIZER_DOSAGE, 250);
+#endif
 
       PMP2.send_cmd_with_num("d,", FERTILIZER_DOSAGE);
-      #ifdef LESS_SERIAL_OUTPUT
-            Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
-            blinkLED(LED16, FERTILIZER_DOSAGE, 250);
-      #endif
+#ifdef LESS_SERIAL_OUTPUT
+      Serial.print(String(FERTILIZER_DOSAGE) + "ml Part B -> ");
+      blinkLED(LED16, FERTILIZER_DOSAGE, 250);
+#endif
 
       // show_display_page(1);    @joshthaw I really want to show when the pumps are dosing, but I want you to check this display function.
       // lcd.setCursor(10, 2);
@@ -1104,47 +1104,47 @@ void step3()
     }
     else if ((initial + FERTILIZER_DOSAGE) > ContainerVolume)
     {
-    #ifdef LESS_SERIAL_OUTPUT
-          Serial.println("Fertilizer depleted: container volume exceeded");
-    #endif
+#ifdef LESS_SERIAL_OUTPUT
+      Serial.println("Fertilizer depleted: container volume exceeded");
+#endif
     }
-    #endif
-    // --- PH DOSING ---
-    #ifdef ENABLE_ATLAS_pH
+#endif
+// --- PH DOSING ---
+#ifdef ENABLE_ATLAS_pH
     if (atlasPH >= 0 && atlasPH <= 14)
     {
-      #ifdef ENABLE_PH_UP
-        if (atlasPH < PH_MIN)     // Dose up
-        {
-          PMP3.send_cmd_with_num("d,", pH_DOSAGE);
-          #ifdef LESS_SERIAL_OUTPUT
-              Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
-              blinkLED(LED17, pH_DOSAGE, 250);
-          #endif
-          // drawUpArrow(10, 20);
-          phDoseAmount = pH_DOSAGE;
-          phDosed = true;
-        }
-        #endif
-      #ifdef ENABLE_PH_DOWN 
-        else if (atlasPH > PH_MAX) // Dose down
-        {
-          PMP3.send_cmd_with_num("d,", pH_DOSAGE);
-          #ifdef LESS_SERIAL_OUTPUT
-            Serial.print(String(pH_DOSAGE) + "ml ACID -> ");
-          #endif
-          phDoseAmount = pH_DOSAGE;
-          phDosed = true;
-        }
-      #endif
+#ifdef ENABLE_PH_UP
+      if (atlasPH < PH_MIN) // Dose up
+      {
+        PMP3.send_cmd_with_num("d,", pH_DOSAGE);
+#ifdef LESS_SERIAL_OUTPUT
+        Serial.print(String(pH_DOSAGE) + "ml BASE -> ");
+        blinkLED(LED17, pH_DOSAGE, 250);
+#endif
+        // drawUpArrow(10, 20);
+        phDoseAmount = pH_DOSAGE;
+        phDosed = true;
+      }
+#endif
+#ifdef ENABLE_PH_DOWN
+      else if (atlasPH > PH_MAX) // Dose down
+      {
+        PMP3.send_cmd_with_num("d,", pH_DOSAGE);
+#ifdef LESS_SERIAL_OUTPUT
+        Serial.print(String(pH_DOSAGE) + "ml ACID -> ");
+#endif
+        phDoseAmount = pH_DOSAGE;
+        phDosed = true;
+      }
+#endif
     }
     else
     {
-    #ifdef LESS_SERIAL_OUTPUT
+#ifdef LESS_SERIAL_OUTPUT
       Serial.println("Invalid pH reading: " + String(atlasPH));
-    #endif
+#endif
     }
-      #endif
+#endif
     if (ecDosed || phDosed)
     {
       pump_API(ecDoseAmount, phDoseAmount); // Send actual doses
@@ -1491,38 +1491,42 @@ void drawUpArrow(int x, int y)
   display.drawBitmap(x, y, upArrowBitmap, 8, 8, SSD1306_WHITE);
 }
 
-void designDisplay() {
+void designDisplay()
+{
   // time_t now = time(nullptr);
   // struct tm* timeinfo = localtime(&now);
-    display.clearDisplay();
-    display.setTextColor(WHITE);
-    display.setTextSize(1);
-    display.setFont(&FreeSerifBoldItalic9pt7b);
-    display.setCursor(15, 30);
-    display.println("Senior Design");
-    display.setCursor(45, 50);
-    display.print("2025");
-    // Set font back to default small font for time
-    display.setFont(); // resets to default 5x7 font
-    display.setTextSize(1);
-    display.setCursor(0, 57); // bottom-left corner (row 8 of 8, leaving a few pixels from the bottom)
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setFont(&FreeSerifBoldItalic9pt7b);
+  display.setCursor(15, 30);
+  display.println("Senior Design");
+  display.setCursor(45, 50);
+  display.print("2025");
+  // Set font back to default small font for time
+  display.setFont(); // resets to default 5x7 font
+  display.setTextSize(1);
+  display.setCursor(0, 57); // bottom-left corner (row 8 of 8, leaving a few pixels from the bottom)
 
-    struct tm timeinfo;
-    if (getLocalTime(&timeinfo)) {
+  struct tm timeinfo;
+  if (getLocalTime(&timeinfo))
+  {
     display.fillRect(0, 56, 128, 8, BLACK); // clears just the bottom line
 
-    display.setFont();         // Use default small font
+    display.setFont(); // Use default small font
     display.setTextSize(1);
-    display.setCursor(0, 57);  // Adjust position if needed
-     // Print date: MM/DD
+    display.setCursor(0, 57); // Adjust position if needed
+                              // Print date: MM/DD
     display.printf("%02d/%02d ", timeinfo.tm_mon + 1, timeinfo.tm_mday);
     // Optional: convert to 12-hour format with AM/PM
     int hour12 = timeinfo.tm_hour % 12;
-    if (hour12 == 0) hour12 = 12;
+    if (hour12 == 0)
+      hour12 = 12;
     // display.print("Time: ");
     display.print(hour12);
     display.print(":");
-    if (timeinfo.tm_min < 10) display.print("0");
+    if (timeinfo.tm_min < 10)
+      display.print("0");
     display.print(timeinfo.tm_min);
     display.print(timeinfo.tm_hour < 12 ? " AM" : " PM");
     display.display();
